@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useTransform } from "framer-motion";
 
 const insights = [
   {
@@ -23,8 +23,12 @@ const insights = [
   },
 ];
 
-export default function InsightSections() {
-  const { scrollYProgress } = useScroll();
+interface InsightSectionsProps {
+  scrollProgress: any; // MotionValue<number>
+}
+
+export default function InsightSections({ scrollProgress }: InsightSectionsProps) {
+  const scrollYProgress = scrollProgress;
 
   return (
     <div className="absolute inset-0 pointer-events-none z-40">

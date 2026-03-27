@@ -1,106 +1,172 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
-export default function SavingsGraph() {
+interface SavingsGraphProps {
+  data: number[];
+}
+
+export default function SavingsGraph({ data }: SavingsGraphProps) {
   const [hoveredPoint, setHoveredPoint] = useState<number | null>(null);
 
-  // Sample data points for the energy curve
-  const points = [80, 75, 90, 60, 45, 55, 30, 20];
-  const maxVal = 100;
-  const width = 300;
-  const height = 150;
+  // Constants for SVG scaling
+  const maxVal = Math.max(10, ...data) * 1.25; // Headroom
+  const width = 1000;
+  const height = 400;
 
-  const getPath = (data: number[]) => {
-    return data.map((d, i) => {
-      const x = (i / (data.length - 1)) * width;
+  // Bezier Smoothing Logic (Catmull-Rom to Cubic Bezier)
+  const bezierPath = useMemo(() => {
+    if (data.length < 2) return "";
+    
+    return data.reduce((acc, d, i, arr) => {
+      const x = (i / (arr.length - 1)) * width;
       const y = height - (d / maxVal) * height;
-      return `${i === 0 ? "M" : "L"} ${x} ${y}`;
-    }).join(" ");
-  };
 
-  const getPoint = (d: number, i: number) => {
-    const x = (i / (points.length - 1)) * width;
-    const y = height - (d / maxVal) * height;
-    return { x, y };
-  };
+      if (i === 0) return `M ${x} ${y}`;
+
+      const prevX = ((i - 1) / (arr.length - 1)) * width;
+      const prevY = height - (arr[i - 1] / maxVal) * height;
+
+      // Control points for smoothing
+      const cp1x = prevX + (x - prevX) / 2;
+      const cp1y = prevY;
+      const cp2x = prevX + (x - prevX) / 2;
+      const cp2y = y;
+
+      return `${acc} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${x} ${y}`;
+    }, "");
+  }, [data, maxVal]);
 
   return (
-    <div className="bg-white p-12 rounded-[3.5rem] border border-slate-200 shadow-2xl relative w-full overflow-hidden">
-      <div className="flex justify-between items-start mb-12">
+    <div className="bg-slate-900/40 backdrop-blur-3xl p-16 rounded-[4rem] border border-white/5 shadow-2xl relative w-full overflow-hidden">
+      {/* Background Radar Mesh */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: "radial-gradient(#00F0FF 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
+      
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-16 gap-8 relative z-10">
         <div>
-          <h4 className="text-slate-900 font-black text-2xl uppercase tracking-tighter">Efficiency Analytics</h4>
-          <p className="text-slate-400 font-mono text-[9px] uppercase tracking-[0.2em] font-bold">24H Consumption Cycle</p>
+          <h4 className="text-white font-black text-4xl uppercase tracking-tighter italic">Live Usage <span className="text-accent-cyber">Radar</span></h4>
+          <p className="text-white/40 font-mono text-[10px] uppercase tracking-[0.4em] font-bold">Real-time Digital Signature | Adjusted for Grid Load</p>
         </div>
-        <div className="px-4 py-2 rounded-2xl bg-slate-50 border border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-           Live Feed
+        <div className="flex gap-4">
+           <div className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-white flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-accent-cyber animate-ping shadow-[0_0_10px_#00F0FF]" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-accent-cyber">Live Stream</span>
+           </div>
         </div>
       </div>
 
-      <div className="relative h-[250px] w-full mt-8">
-        {/* Y-AXIS LABEL */}
-        <div className="absolute -left-12 top-1/2 -translate-y-1/2 -rotate-90 text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] whitespace-nowrap">
+      <div className="relative h-[450px] w-full mt-12 bg-black/20 rounded-[3rem] border border-white/5 p-16 overflow-visible pr-24">
+        {/* Y-AXIS LABELS */}
+        <div className="absolute left-6 inset-y-16 flex flex-col justify-between text-[8px] font-mono text-white/40 font-bold uppercase tracking-widest">
+           <span>{(maxVal).toFixed(1)} kW</span>
+           <span>{(maxVal * 0.75).toFixed(1)}</span>
+           <span>{(maxVal * 0.5).toFixed(1)}</span>
+           <span>{(maxVal * 0.25).toFixed(1)}</span>
+           <span>0.0 kW</span>
+        </div>
+
+        {/* X-AXIS LABELS */}
+        <div className="absolute bottom-6 left-16 right-24 flex justify-between text-[8px] font-mono text-white/40 font-bold uppercase tracking-widest">
+           <span>-30s</span>
+           <span>-20s</span>
+           <span>-10s</span>
+           <span>NOW</span>
+        </div>
+
+        {/* Labels Overlay */}
+        <div className="absolute -left-20 top-1/2 -translate-y-1/2 -rotate-90 text-[10px] font-black text-white/10 uppercase tracking-[0.4em] whitespace-nowrap">
           Grid Load (kW)
         </div>
 
-        {/* X-AXIS LABEL */}
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] mt-8 py-4">
-          Cycle Time (24H)
-        </div>
-
-        <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height + 40}`} preserveAspectRatio="none" className="overflow-visible">
-          {/* Grid Lines */}
+        <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" className="overflow-visible ml-4">
+          {/* Radar Grid Lines */}
           {[0, 0.25, 0.5, 0.75, 1].map((p, i) => (
             <line 
               key={i} 
               x1="0" y1={height * p} 
               x2={width} y2={height * p} 
-              stroke="#F1F5F9" 
-              strokeWidth="1" 
+              stroke="white" 
+              strokeWidth="0.5" 
+              opacity="0.05"
+            />
+          ))}
+          {[0, 0.25, 0.5, 0.75, 1].map((p, i) => (
+            <line 
+              key={i} 
+              x1={width * p} y1="0" 
+              x2={width * p} y2={height} 
+              stroke="white" 
+              strokeWidth="0.5" 
+              opacity="0.05"
             />
           ))}
 
-          {/* Main Area Gradient */}
+          {/* Area Gradient */}
           <defs>
-            <linearGradient id="gradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#10B981" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#10B981" stopOpacity="0" />
+            <linearGradient id="live-gradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#00F0FF" stopOpacity="0.15" />
+              <stop offset="100%" stopColor="#00F0FF" stopOpacity="0" />
             </linearGradient>
           </defs>
 
           {/* Fill Area */}
           <path
-            d={`${getPath(points)} L ${width} ${height} L 0 ${height} Z`}
-            fill="url(#gradient)"
+            d={`${bezierPath} L ${width} ${height} L 0 ${height} Z`}
+            fill="url(#live-gradient)"
           />
 
-          {/* Main Data Line */}
+          {/* Neon Glow Outer */}
           <motion.path
+            d={bezierPath}
+            fill="none"
+            stroke="#00F0FF"
+            strokeWidth="10"
+            opacity="0.1"
+            strokeLinecap="round"
+            style={{ filter: "blur(6px)" }}
+          />
+
+          {/* Primary Data Line */}
+          <motion.path
+            d={bezierPath}
+            fill="none"
+            stroke="#00F0FF"
+            strokeWidth="3.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
             initial={{ pathLength: 0 }}
             animate={{ pathLength: 1 }}
-            transition={{ duration: 2, ease: "easeInOut" }}
-            d={getPath(points)}
-            fill="none"
-            stroke="#10B981"
-            strokeWidth="4"
-            strokeLinecap="round"
+            transition={{ duration: 0.5, ease: "easeOut" }}
           />
 
-          {/* Interaction Points */}
-          {points.map((p, i) => {
-            const { x, y } = getPoint(p, i);
+          {/* Current Position Pulse */}
+          {data.length > 0 && (
+             <motion.circle 
+                cx={(data.length - 1) / (data.length - 1) * width} 
+                cy={height - (data[data.length - 1] / maxVal) * height} 
+                r="5" 
+                fill="#00F0FF" 
+                className="shadow-[0_0_15px_#00F0FF]"
+                animate={{ scale: [1, 1.4, 1], opacity: [1, 0.6, 1] }}
+                transition={{ repeat: Infinity, duration: 1.5 }}
+             />
+          )}
+
+          {/* Interaction Nodes */}
+          {data.map((p, i) => {
+            const x = (i / (data.length - 1)) * width;
+            const y = height - (p / maxVal) * height;
+            
+            if (i % 5 !== 0 && i !== data.length-1) return null;
+
             return (
               <g key={i} className="cursor-pointer" onMouseEnter={() => setHoveredPoint(i)} onMouseLeave={() => setHoveredPoint(null)}>
                 <circle 
-                  cx={x} cy={y} r="8" 
-                  fill="white" 
-                  stroke={hoveredPoint === i ? "#10B981" : "#F1F5F9"} 
-                  strokeWidth="2" 
+                  cx={x} cy={y} r="3.5" 
+                  fill={hoveredPoint === i ? "#00F0FF" : "white"} 
+                  opacity={hoveredPoint === i ? 1 : 0.15} 
                 />
-                {hoveredPoint === i && (
-                   <circle cx={x} cy={y} r="12" fill="#10B981" opacity="0.2" />
-                )}
               </g>
             );
           })}
@@ -109,30 +175,50 @@ export default function SavingsGraph() {
         {/* Dynamic Tooltip */}
         {hoveredPoint !== null && (
           <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="absolute bg-slate-900 text-white p-4 rounded-2xl shadow-2xl border border-white/10 z-50"
+            initial={{ opacity: 0, scale: 0.9, y: -20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="absolute bg-slate-900/90 backdrop-blur-xl text-white p-6 rounded-[2rem] shadow-2xl border border-white/10 z-50 pointer-events-none"
             style={{ 
-               left: `${(hoveredPoint / (points.length - 1)) * 100}%`,
-               top: `calc(${height - (points[hoveredPoint] / maxVal) * height}px - 60px)`,
-               transform: "translateX(-50%)"
+               left: `calc(16px + ${(hoveredPoint / (data.length - 1)) * (width / 1000) * 100}%)`,
+               top: `calc(${height - (data[hoveredPoint] / maxVal) * height}px + 40px)`,
+               transform: "translate(-50%, 0)"
             }}
           >
-             <p className="text-[10px] font-mono text-white/40 uppercase mb-1">Peak Load</p>
-             <p className="text-xl font-black">{points[hoveredPoint]}%</p>
+             <div className="flex items-center gap-3 mb-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-accent-cyber animate-pulse shadow-[0_0_5px_#00F0FF]" />
+                <p className="text-[9px] font-mono text-white/40 uppercase tracking-[0.2em] font-bold">Telemetry</p>
+             </div>
+             <p className="text-4xl font-black tracking-tighter">
+                {data[hoveredPoint].toFixed(2)}
+                <span className="text-xs ml-2 text-accent-cyber uppercase font-bold tracking-widest">kW</span>
+             </p>
           </motion.div>
         )}
       </div>
 
-      <div className="flex justify-between items-center mt-20 pt-10 border-t border-slate-100">
-        <div>
-          <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Potential Savings</p>
-          <p className="text-accent-emerald text-4xl font-black tracking-tighter">34.2<span className="text-lg ml-1 font-bold">%</span></p>
-        </div>
-        <button className="px-8 py-3 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all">
-          View Detailed Logs
-        </button>
+      <div className="mt-20 flex flex-col md:flex-row gap-16 items-center justify-between relative z-10">
+         <div className="flex gap-16">
+            <StatsItem label="Current Load" value={`${(data[data.length - 1] || 0).toFixed(2)} kW`} />
+            <StatsItem label="System Peak" value={`${Math.max(...data).toFixed(2)} kW`} />
+            <StatsItem label="Baseline Deviation" value="-12.4%" />
+         </div>
+         <div className="text-right glass-card p-10 rounded-[2.5rem] border border-white/5 bg-white/2">
+            <p className="text-white/20 font-mono text-[10px] uppercase tracking-widest mb-3 font-bold">Status: Synchronized</p>
+            <div className="flex items-center gap-3 text-white font-black text-2xl uppercase tracking-tighter italic">
+               <div className="w-2.5 h-2.5 rounded-full bg-accent-cyber animate-pulse shadow-[0_0_20px_#00F0FF]" />
+               Pulse Grid Optimal
+            </div>
+         </div>
       </div>
+    </div>
+  );
+}
+
+function StatsItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-white/20 text-[10px] font-bold uppercase tracking-widest mb-2 font-black">{label}</p>
+      <p className="text-white text-4xl font-black tracking-tighter uppercase">{value}</p>
     </div>
   );
 }

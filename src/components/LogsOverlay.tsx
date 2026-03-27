@@ -76,11 +76,11 @@ export default function LogsOverlay({ isOpen, onClose, applianceState }: LogsOve
                >
                  <span className="text-white/10 text-[10px] pt-1 whitespace-nowrap">[{log.time}]</span>
                  <div className="flex gap-3 items-center">
-                    {log.type === "load" && <Zap className="w-3.5 h-3.5 text-accent-emerald" />}
+                    {log.type === "load" && <Zap className="w-3.5 h-3.5 text-accent-cyber shadow-[0_0_10px_#00F0FF]" />}
                     {log.type === "system" && <Activity className="w-3.5 h-3.5 text-accent-cyber" />}
-                    {log.type === "success" && <div className="w-1.5 h-1.5 rounded-full bg-accent-emerald" />}
+                    {log.type === "success" && <div className="w-1.5 h-1.5 rounded-full bg-accent-cyber shadow-[0_0_5px_#00F0FF]" />}
                     <span className={`font-bold tracking-tight uppercase ${
-                      log.type === "load" ? "text-accent-emerald" : 
+                      log.type === "load" ? "text-accent-cyber" : 
                       log.type === "system" ? "text-accent-cyber" : 
                       "text-white/60"
                     }`}>
@@ -95,8 +95,8 @@ export default function LogsOverlay({ isOpen, onClose, applianceState }: LogsOve
         <div className="p-10 bg-black/40 border-t border-white/5 flex gap-8">
            <StatusItem icon={<Activity className="w-4 h-4" />} label="Uptime" value="100.0%" />
            <StatusItem icon={<Zap className="w-4 h-4" />} label="Latency" value="2ms" />
-           <div className="ml-auto flex items-center gap-2 text-[10px] text-white/20 font-bold uppercase tracking-widest">
-              <div className="w-2 h-2 rounded-full bg-accent-emerald animate-pulse" />
+           <div className="ml-auto flex items-center gap-2 text-[10px] text-accent-cyber font-bold uppercase tracking-widest">
+              <div className="w-2 h-2 rounded-full bg-accent-cyber animate-pulse shadow-[0_0_8px_#00F0FF]" />
               Live Telemetry
            </div>
         </div>
