@@ -1,25 +1,25 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Info } from "lucide-react";
+import { Info, Calculator } from "lucide-react";
+import { MetricType } from "./CalculationOverlay";
 
 interface TotalizerProps {
   totalLoad: number;
   accumulatedKwh: number;
+  onOpenMetric: (type: MetricType) => void;
 }
 
-export default function Totalizer({ totalLoad, accumulatedKwh }: TotalizerProps) {
-  const carbonFactor = 0.4; // kg CO2 per kWh
-  const costFactor = 0.15; // $ per kWh
+export default function Totalizer({ totalLoad, accumulatedKwh, onOpenMetric }: TotalizerProps) {
+  const carbonFactor = 0.4; 
+  const costFactor = 0.15; 
   
   const currentCost = accumulatedKwh * costFactor;
   const currentCarbon = accumulatedKwh * carbonFactor;
 
-  // Maximum Load Calculation (All appliances ON)
   const MAX_POTENTIAL_LOAD = 11.25;
-  const BASELINE_LOAD = 0.2; // Fridge + Lighting + Air
+  const BASELINE_LOAD = 0.2; 
   
-  // Efficiency = % of "Waste" avoided. 
   const efficiency = Math.max(0, Math.min(100, 
     100 - ((totalLoad - BASELINE_LOAD) / (MAX_POTENTIAL_LOAD - BASELINE_LOAD)) * 100
   ));
@@ -33,7 +33,7 @@ export default function Totalizer({ totalLoad, accumulatedKwh }: TotalizerProps)
           label="Estimated Bill"
           suffix="/mo"
           accent="cyber"
-          info="Based on current live load scaled to 30 days."
+          onClick={() => onOpenMetric("COST")}
         />
         <SummaryCard 
           title="Carbon Footprint"
@@ -41,7 +41,7 @@ export default function Totalizer({ totalLoad, accumulatedKwh }: TotalizerProps)
           label="kg CO2 Output"
           suffix=" kg"
           accent="emerald"
-          info="Real-time accumulated emissions ($0.4/kWh$ cost)."
+          onClick={() => onOpenMetric("CARBON")}
         />
         <SummaryCard 
           title="System Efficiency"
@@ -49,7 +49,7 @@ export default function Totalizer({ totalLoad, accumulatedKwh }: TotalizerProps)
           label="Optimization Score"
           suffix="%"
           accent="emerald"
-          info="Your savings ranking based on current vs max load."
+          onClick={() => onOpenMetric("EFFICIENCY")}
         />
         <SummaryCard 
           title="Maximum Efficiency"
@@ -57,60 +57,66 @@ export default function Totalizer({ totalLoad, accumulatedKwh }: TotalizerProps)
           label={efficiency > 70 ? "Peak optimization active." : "Optimization recommended."}
           suffix="%"
           accent="cyber"
-          info="Current real-time savings rank."
+          onClick={() => onOpenMetric("MAX_EFFICIENCY")}
         />
       </div>
     </div>
   );
 }
 
-function SummaryCard({ title, value, label, suffix, accent, info }: { 
+function SummaryCard({ title, value, label, suffix, accent, onClick }: { 
   title: string; 
   value: string | number; 
   label: string;
   suffix?: string;
   accent: "emerald" | "cyber";
-  info: string;
+  onClick: () => void;
 }) {
   const accentColor = accent === "emerald" ? "#10B981" : "#00E0FF";
-  const borderClass = accent === "emerald" ? "neon-border-emerald" : "neon-border-cyber";
-  const textShadowClass = accent === "emerald" ? "neon-text-emerald" : "neon-text-cyber";
+  const borderClass = accent === "emerald" ? "border-emerald-500/20" : "border-cyan-500/20";
+  const bgClass = accent === "emerald" ? "bg-emerald-500/5 hover:bg-emerald-500/10" : "bg-cyan-500/5 hover:bg-cyan-500/10";
+  const textColor = accent === "emerald" ? "text-emerald-600" : "text-cyan-600";
 
   return (
-    <motion.div 
+    <motion.button 
+      onClick={onClick}
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -5, scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
       viewport={{ once: true }}
-      className={`bg-[#050505] p-10 rounded-[3rem] border border-white/5 relative overflow-hidden group transition-all duration-500 hover:scale-[1.02] ${borderClass} h-full flex flex-col justify-between`}
+      className={`p-10 rounded-[3rem] border ${borderClass} ${bgClass} relative overflow-hidden group transition-all duration-500 text-left w-full h-full flex flex-col justify-between shadow-sm`}
     >
-      <div className="flex justify-between items-start mb-10 w-full">
-        <h4 className="text-white/20 font-mono text-[10px] uppercase tracking-[0.4em]">{title}</h4>
-        <div className="relative group/info">
-          <Info className="w-4 h-4 text-white/10 group-hover/info:text-white/40 transition-colors" />
-          <div className="absolute right-0 top-6 w-48 bg-black/90 backdrop-blur-xl border border-white/10 p-4 rounded-2xl opacity-0 group-hover/info:opacity-100 transition-all pointer-events-none z-50">
-            <p className="text-[9px] text-white/50 leading-relaxed font-mono italic">{info}</p>
-          </div>
+      <div className="flex justify-between items-start mb-10 w-full relative z-10">
+        <h4 className="text-slate-400 font-mono text-[10px] uppercase tracking-[0.4em] font-bold">{title}</h4>
+        <div className="w-10 h-10 rounded-2xl bg-white/80 border border-slate-100 flex items-center justify-center text-slate-400 group-hover:text-slate-900 group-hover:bg-white transition-all">
+          <Calculator className="w-5 h-5" />
         </div>
       </div>
 
       <div className="relative z-10 w-full overflow-hidden">
         <div className="flex items-baseline mb-4 flex-wrap max-w-full">
-          <span className={`text-5xl lg:text-6xl font-black tracking-tighter break-all ${textShadowClass}`}>
+          <span className={`text-5xl lg:text-7xl font-black tracking-tighter ${textColor} break-all`}>
             {value}
           </span>
           {suffix && (
-            <span className="text-xl text-white/20 font-light ml-2">
+            <span className="text-xl text-slate-300 font-bold ml-2">
               {suffix}
             </span>
           )}
         </div>
-        <p className="text-white font-bold tracking-tight text-lg leading-tight opacity-50 break-words">
+        <p className="text-slate-600 font-black tracking-tight text-lg leading-tight uppercase opacity-80 break-words">
           {label}
         </p>
       </div>
 
-      <div className="absolute -bottom-10 -right-10 w-32 h-32 blur-[80px] rounded-full opacity-10 transition-opacity group-hover:opacity-20" 
+      <div className="mt-8 pt-6 border-t border-slate-900/5 flex items-center gap-2 text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em] relative z-10">
+         <Info className="w-3.5 h-3.5" />
+         <span>Explore Calculation Formula</span>
+      </div>
+
+      <div className="absolute -bottom-10 -right-10 w-48 h-48 blur-[100px] rounded-full opacity-20 transition-opacity group-hover:opacity-40" 
            style={{ backgroundColor: accentColor }} />
-    </motion.div>
+    </motion.button>
   );
 }

@@ -8,47 +8,56 @@ interface StartTitleProps {
 
 export default function StartTitle({ scrollProgress }: StartTitleProps) {
   // Main Title: Fades and scales down as user scrolls
-  const titleOpacity = useTransform(scrollProgress, [0, 0.1], [1, 0]);
-  const titleScale = useTransform(scrollProgress, [0, 0.1], [1, 0.9]);
-  const titleY = useTransform(scrollProgress, [0, 0.1], [0, -50]);
+  const titleOpacity = useTransform(scrollProgress, [0, 0.08], [1, 0]);
+  const titleScale = useTransform(scrollProgress, [0, 0.08], [1, 0.8]);
+  const titleY = useTransform(scrollProgress, [0, 0.08], [0, -100]);
 
-  // Capability Summary: Fades in/out during 10-40% scroll
+  // Capability Summary: Fades in/out during 10-40% scroll, aligned to bottom-left
   const summaryOpacity = useTransform(scrollProgress, [0.1, 0.15, 0.35, 0.4], [0, 1, 1, 0]);
-  const summaryY = useTransform(scrollProgress, [0.1, 0.15, 0.35, 0.4], [50, 0, 0, -50]);
+  const summaryX = useTransform(scrollProgress, [0.1, 0.15, 0.35, 0.4], [-50, 0, 0, -50]);
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-[60] flex flex-col items-center justify-center p-12 text-center">
-      {/* Starting Project Name */}
+    <div className="fixed inset-0 pointer-events-none z-[60]">
+      {/* Starting Project Name - Refined for High Visibility */}
       <motion.div 
         style={{ opacity: titleOpacity, scale: titleScale, y: titleY }}
-        className="max-w-4xl"
+        className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center"
       >
-        <h1 className="text-9xl font-black text-white italic tracking-tighter uppercase">
-          Aether<span className="text-accent-emerald neon-text-emerald">-</span>Grid
-        </h1>
-        <p className="text-white/40 font-mono tracking-[0.5em] uppercase text-sm mt-4">
-          Advanced Energy Command
-        </p>
+        <div className="relative">
+          {/* Subtle Backing for Legibility */}
+          <div className="absolute -inset-10 bg-black/40 blur-3xl rounded-full" />
+          
+          <h1 className="text-8xl md:text-9xl font-black text-white tracking-tighter uppercase relative z-10">
+            AETHER<span className="text-accent-emerald drop-shadow-[0_0_20px_#10B981]">-</span>GRID
+          </h1>
+          <p className="text-white font-mono tracking-[0.8em] uppercase text-xs mt-6 relative z-10 opacity-60">
+            Advanced Energy Command
+          </p>
+        </div>
       </motion.div>
 
-      {/* Capability Summary Overlay */}
+      {/* Capability Summary - Aligned to Bottom-Left for Side-Focus */}
       <motion.div 
-        style={{ opacity: summaryOpacity, y: summaryY }}
-        className="absolute bottom-24 bg-black/40 backdrop-blur-2xl border border-white/10 p-12 rounded-[3.5rem] max-w-2xl shadow-2xl"
+        style={{ opacity: summaryOpacity, x: summaryX }}
+        className="absolute bottom-24 left-12 bg-black/60 backdrop-blur-2xl border border-white/10 p-10 rounded-[2.5rem] max-w-md shadow-2xl"
       >
-        <div className="flex gap-4 mb-6">
-          <div className="w-2 h-2 rounded-full bg-accent-emerald glow-emerald animate-pulse" />
-          <p className="text-accent-emerald font-mono text-xs uppercase tracking-widest">System Capabilities</p>
+        <div className="flex items-center gap-4 mb-6">
+          <div className="relative flex">
+             <div className="w-2.5 h-2.5 rounded-full bg-accent-emerald animate-ping absolute opacity-75" />
+             <div className="w-2.5 h-2.5 rounded-full bg-accent-emerald glow-emerald relative" />
+          </div>
+          <p className="text-accent-emerald font-mono text-[10px] uppercase tracking-[0.3em] font-bold">Live Analysis Mode</p>
         </div>
-        <h2 className="text-4xl font-bold text-white mb-6 tracking-tight">
-          Real-Time Analysis, <br/>
-          <span className="text-white/40 italic">Maximum Efficiency.</span>
+        
+        <h2 className="text-3xl font-black text-white mb-6 uppercase tracking-tight leading-none">
+          Deep Tracking. <br/>
+          <span className="text-white/30">Physics Driven.</span>
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
-          <CapItem label="Engine" value="Physics-based Tracking" />
-          <CapItem label="Analytics" value="Live Savings Trends" />
-          <CapItem label="Sustainability" value="CO2 Offset Monitoring" />
-          <CapItem label="Automation" value="Grid Load Simulator" />
+        
+        <div className="space-y-6">
+          <CapItem label="Engine Core" value="Physics-based Load Tracking" />
+          <CapItem label="Transparency" value="Verified Math Explanations" />
+          <CapItem label="Grid Impact" value="Real-time CO2 Offsetting" />
         </div>
       </motion.div>
     </div>
@@ -57,9 +66,9 @@ export default function StartTitle({ scrollProgress }: StartTitleProps) {
 
 function CapItem({ label, value }: { label: string; value: string }) {
   return (
-    <div>
-      <p className="text-white/20 text-[10px] uppercase font-mono tracking-widest">{label}</p>
-      <p className="text-white font-bold text-sm mt-1">{value}</p>
+    <div className="border-l-2 border-white/5 pl-4 py-1">
+      <p className="text-white/20 text-[9px] uppercase font-mono tracking-[0.2em] font-bold">{label}</p>
+      <p className="text-white font-bold text-sm mt-0.5 uppercase">{value}</p>
     </div>
   );
 }
