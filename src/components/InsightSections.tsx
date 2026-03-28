@@ -76,8 +76,8 @@ function InsightBubble({ insight, progress }: { insight: any, progress: any }) {
 
   return (
     <motion.div
-      style={{ opacity, y, maxWidth: "200px" }}
-      className="sticky top-1/2 right-6 mt-[-80px] ml-auto"
+      style={{ opacity, y, maxWidth: "160px" }}
+      className="sticky top-1/2 right-3 md:right-8 mt-[-80px] ml-auto md:max-w-[200px]"
     >
       <div
         className="rounded-xl px-4 py-5 backdrop-blur-2xl"

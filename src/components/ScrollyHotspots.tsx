@@ -26,8 +26,9 @@ export default function ScrollyHotspots({ scrollProgress }: ScrollyHotspotsProps
       <Hotspot 
         opacity={hs1Opacity} 
         scale={hs1Scale} 
-        top="40%" 
-        left="60%" 
+        top="38%" 
+        left="55%" 
+        className="md:top-[40%] md:left-[60%]"
         label="Climate Control" 
         value="2.5kW Peak" 
         icon={<Wind className="w-4 h-4" />}
@@ -38,7 +39,8 @@ export default function ScrollyHotspots({ scrollProgress }: ScrollyHotspotsProps
         opacity={hs2Opacity} 
         scale={hs2Scale} 
         top="35%" 
-        left="50%" 
+        left="45%" 
+        className="md:top-[35%] md:left-[50%]"
         label="Induction Hob" 
         value="1.2kW Active" 
         icon={<Zap className="w-4 h-4" />}
@@ -48,8 +50,9 @@ export default function ScrollyHotspots({ scrollProgress }: ScrollyHotspotsProps
       <Hotspot 
         opacity={hs3Opacity} 
         scale={hs3Scale} 
-        top="50%" 
-        left="30%" 
+        top="48%" 
+        left="35%" 
+        className="md:top-[50%] md:left-[30%]"
         label="Level 2 Charger" 
         value="7.2kW Fast" 
         icon={<Zap className="w-4 h-4" />}
@@ -58,11 +61,11 @@ export default function ScrollyHotspots({ scrollProgress }: ScrollyHotspotsProps
   );
 }
 
-function Hotspot({ opacity, scale, top, left, label, value, icon }: any) {
+function Hotspot({ opacity, scale, top, left, label, value, icon, className }: any) {
   return (
     <motion.div 
       style={{ opacity, scale, top, left }}
-      className="absolute pointer-events-auto group"
+      className={`absolute pointer-events-auto group ${className || ""}`}
     >
       <div className="relative">
          {/* Pulsing Ring */}

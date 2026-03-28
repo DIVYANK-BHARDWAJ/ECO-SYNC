@@ -92,7 +92,7 @@ export default function CalculationOverlay({ type, onClose }: CalculationOverlay
         initial={{ scale: 0.9, y: 40, opacity: 0 }}
         animate={{ scale: 1, y: 0, opacity: 1 }}
         exit={{ scale: 0.9, y: 40, opacity: 0 }}
-        className="relative z-10 w-full max-w-4xl my-auto overflow-hidden rounded-[4rem] shadow-2xl"
+        className="relative z-10 w-full max-w-4xl my-auto overflow-hidden rounded-[2.5rem] md:rounded-[4rem] shadow-2xl"
         style={{
           background: "#0f1119",
           border: `1px solid ${t.border}`,
@@ -105,23 +105,23 @@ export default function CalculationOverlay({ type, onClose }: CalculationOverlay
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-10 right-10 p-4 rounded-full transition-all"
+          className="absolute top-6 right-6 md:top-10 md:right-10 p-3 md:p-4 rounded-full transition-all"
           style={{ background: `${t.bg}`, border: `1px solid ${t.border}`, color: t.accent }}
         >
           <X className="w-6 h-6" />
         </button>
 
-        <div className="p-16 md:p-20">
+        <div className="p-8 md:p-20">
           {/* Header */}
-          <div className="flex flex-col md:flex-row gap-10 items-start mb-16">
+          <div className="flex flex-col md:flex-row gap-6 md:gap-10 items-center md:items-start mb-10 md:mb-16 text-center md:text-left">
             <div
-              className="p-7 rounded-[2rem] flex-shrink-0"
+              className="p-5 md:p-7 rounded-3xl md:rounded-[2rem] flex-shrink-0"
               style={{ background: t.bg, border: `1px solid ${t.border}`, color: t.accent }}
             >
               {data.icon}
             </div>
             <div>
-              <h2 className="text-5xl md:text-6xl font-black text-white tracking-tighter uppercase mb-3">
+              <h2 className="text-3xl md:text-6xl font-black text-white tracking-tighter uppercase mb-3">
                 {data.title}
               </h2>
               <p className="font-mono text-sm uppercase tracking-widest" style={{ color: t.accent, opacity: 0.7 }}>
@@ -131,7 +131,7 @@ export default function CalculationOverlay({ type, onClose }: CalculationOverlay
           </div>
 
           {/* Body */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-14">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-14">
             <div>
               {/* Formula */}
               <div className="mb-10">
@@ -139,7 +139,7 @@ export default function CalculationOverlay({ type, onClose }: CalculationOverlay
                   <Calculator className="w-4 h-4" /> Calculation Method
                 </p>
                 <p
-                  className="text-2xl md:text-3xl font-black p-8 rounded-3xl leading-tight"
+                  className="text-xl md:text-3xl font-black p-6 md:p-8 rounded-3xl leading-tight"
                   style={{ color: t.accent, background: "rgba(255,255,255,0.03)", border: `1px solid ${t.border}` }}
                 >
                   {data.formula}

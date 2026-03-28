@@ -26,7 +26,21 @@ export default function EnergyCanvas({ scrollProgress }: EnergyCanvasProps) {
     const img = imagesRef.current[Math.floor(index)];
     if (!img || !img.complete || img.naturalWidth === 0) return;
 
-    const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
+    // On extreme portrait (mobile), full 'cover' crops sides too much.
+    // We adjust to a more balanced scale that shows more horizontal detail.
+    const canvasRatio = canvas.width / canvas.height;
+    const imgRatio = img.width / img.height;
+    
+    let scale;
+    if (canvasRatio < 0.8) {
+      // Mobile/Portrait: compromise between cover and contain to show more sides
+      scale = (canvas.width / img.width) * 1.1; 
+      // Ensure we still at least cover most of the height or don't look too small
+      scale = Math.max(scale, canvas.height / img.height * 0.8);
+    } else {
+      scale = Math.max(canvas.width / img.width, canvas.height / img.height);
+    }
+
     const x = (canvas.width - img.width * scale) / 2;
     const y = (canvas.height - img.height * scale) / 2;
 
