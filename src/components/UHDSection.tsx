@@ -117,7 +117,7 @@ export default function UHDSection({ applianceState, setApplianceState, totalLoa
              </div>
              <div className="flex items-center gap-4 text-accent-cyber font-black uppercase text-[10px] sm:text-xs tracking-widest mt-6 sm:mt-8 group-hover:gap-6 transition-all">
                 <span>VIEW PLANS</span>
-                <ChevronRight className="w-4 h-4 sm:w-5 h-5" />
+                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
              </div>
           </motion.button>
         </div>

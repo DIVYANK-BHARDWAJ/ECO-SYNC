@@ -16,6 +16,12 @@ import LogsOverlay from "@/components/LogsOverlay";
 import SavingsPlans from "@/components/SavingsPlans";
 import ScrollyHotspots from "@/components/ScrollyHotspots";
 
+const PLAN_CONFIG: Record<string, { reduction: string; multiplier: number }> = {
+  "Eco-Baseline": { reduction: "15%", multiplier: 0.85 },
+  "Aether Pro": { reduction: "40%", multiplier: 0.60 },
+  "Carbon Zero": { reduction: "75%", multiplier: 0.25 },
+};
+
 export default function Home() {
   const [showIntro, setShowIntro] = useState(true);
   const [activeMetric, setActiveMetric] = useState<MetricType>(null);
@@ -95,10 +101,10 @@ export default function Home() {
     if (applianceState.dishwasher) load += 1.2;
     if (applianceState.airPurifier) load += 0.05;
 
-    // Apply plan reductions (e.g., Aether Pro = 40% reduction, so * 0.6 multiplier)
-    if (activePlanId === "Eco-Baseline") load *= 0.85;
-    else if (activePlanId === "Aether Pro") load *= 0.60;
-    else if (activePlanId === "Carbon Zero") load *= 0.25;
+    // Apply plan reductions using centralized config
+    if (activePlanId && PLAN_CONFIG[activePlanId]) {
+      load *= PLAN_CONFIG[activePlanId].multiplier;
+    }
 
     setTotalLoad(load);
     setLoadHistory(prev => [...prev.slice(1), load]);
@@ -208,9 +214,11 @@ export default function Home() {
                    </div>
                    <div className="p-10 rounded-[3rem] bg-slate-800/40 backdrop-blur-xl border border-white/5 shadow-xl">
                       <p className="text-white text-xl font-black uppercase tracking-tight leading-tight mb-6">
-                        {activePlanId 
-                          ? `Active Plan: ${activePlanId} — ${activePlanId === "Eco-Baseline" ? "15%" : activePlanId === "Aether Pro" ? "40%" : "75%"} Reduction` 
-                          : "Saving up to 24% load via Smart-Sync"}
+                        {activePlanId && PLAN_CONFIG[activePlanId]
+                          ? `Active Plan: ${activePlanId} — ${PLAN_CONFIG[activePlanId].reduction} Reduction` 
+                          : activePlanId
+                            ? `Active Plan: ${activePlanId} — Unknown Reduction`
+                            : "Saving up to 24% load via Smart-Sync"}
                       </p>
                    </div>
                  </div>

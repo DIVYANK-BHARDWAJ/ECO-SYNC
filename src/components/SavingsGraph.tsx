@@ -202,7 +202,7 @@ export default function SavingsGraph({ data }: SavingsGraphProps) {
             <StatsItem label="System Peak" value={`${Math.max(...data).toFixed(2)} kW`} />
             <StatsItem label="Baseline Deviation" value="-12.4%" />
          </div>
-         <div className="text-left xl:text-right glass-card p-6 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] border border-white/5 bg-white/2 w-full sm:w-auto">
+         <div className="text-left xl:text-right glass-card p-6 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] border border-white/5 bg-white/[0.02] w-full sm:w-auto">
             <p className="text-white/20 font-mono text-[8px] sm:text-[10px] uppercase tracking-widest mb-2 sm:mb-3 font-bold">Status: Synchronized</p>
             <div className="flex items-center gap-3 text-white font-black text-xl sm:text-2xl uppercase tracking-tighter italic">
                <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-accent-cyber animate-pulse shadow-[0_0_20px_#00F0FF]" />

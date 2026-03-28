@@ -90,7 +90,7 @@ function SummaryCard({ title, value, label, suffix, accent, onClick }: {
       <div className="flex justify-between items-start mb-6 sm:mb-10 w-full relative z-10">
         <h4 className="text-white/40 font-mono text-[8px] sm:text-[10px] uppercase tracking-[0.2em] sm:tracking-[0.4em] font-bold">{title}</h4>
         <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 group-hover:text-amber-400 group-hover:bg-white/10 transition-all">
-          <Calculator className="w-4 h-4 sm:w-5 h-5" />
+          <Calculator className="w-4 h-4 sm:w-5 sm:h-5" />
         </div>
       </div>
 
@@ -111,7 +111,7 @@ function SummaryCard({ title, value, label, suffix, accent, onClick }: {
       </div>
 
       <div className="mt-4 sm:mt-8 pt-4 sm:pt-6 border-t border-white/10 flex items-center gap-2 text-white/60 group-hover:text-white font-bold text-[8px] sm:text-xs uppercase tracking-[0.1em] sm:tracking-[0.2em] relative z-10 transition-colors duration-300">
-         <Info className="w-3 h-3 sm:w-4 h-4" />
+         <Info className="w-3 h-3 sm:w-4 sm:h-4" />
          <span>Explore Calculation Formula</span>
       </div>
 

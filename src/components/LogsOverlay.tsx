@@ -84,6 +84,7 @@ export default function LogsOverlay({ isOpen, onClose, deviceHistory }: LogsOver
             <button
               onClick={onClose}
               className="p-3 rounded-full transition-all"
+              aria-label="Close logs"
               style={{ background: G.bg, border: `1px solid ${G.border}`, color: G.accent }}
             >
               <X className="w-5 h-5" />

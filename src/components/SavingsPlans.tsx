@@ -97,11 +97,12 @@ export default function SavingsPlans({ isOpen, onClose, activePlanId, onSelectPl
               className="flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-2xl sm:rounded-[2rem] font-bold text-[10px] sm:text-sm uppercase tracking-widest transition-all duration-300"
               style={{ background: A.bg, border: `1px solid ${A.border}`, color: A.accent }}
             >
-              <ArrowLeft className="w-4 h-4 sm:w-5 h-5" />
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
               <span>Back</span>
             </motion.button>
             <button
               onClick={onClose}
+              aria-label="Close savings plans"
               className="w-10 h-10 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all"
               style={{ background: A.bg, border: `1px solid ${A.border}`, color: A.accent }}
             >

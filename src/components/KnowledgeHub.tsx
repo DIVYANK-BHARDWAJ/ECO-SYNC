@@ -152,8 +152,17 @@ function MaximizeSavingsSection() {
           categories.map((cat, i) => (
             <motion.div
               key={cat.title}
-              className="p-10 bg-[#0f0a15] border border-violet-900/30 rounded-[3rem] relative overflow-hidden cursor-pointer"
+              className="p-10 bg-[#0f0a15] border border-violet-900/30 rounded-[3rem] relative overflow-hidden cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50"
+              tabIndex={0}
+              role="button"
+              aria-label={`Unlock ${cat.title} strategies`}
               onClick={() => setUnlocked(true)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setUnlocked(true);
+                }
+              }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >

@@ -52,7 +52,6 @@ export default function StartTitle({ scrollProgress }: StartTitleProps) {
             background: "rgba(2,8,6,0.95)",
             border: "1px solid rgba(0,240,255,0.25)",
             borderLeft: "3px solid #00F0FF",
-            maxWidth: "180px",
             boxShadow: "0 4px 24px rgba(0,0,0,0.7)",
           }}
         >

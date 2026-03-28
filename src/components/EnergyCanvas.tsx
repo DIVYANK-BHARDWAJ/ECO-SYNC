@@ -74,18 +74,18 @@ export default function EnergyCanvas({ scrollProgress }: EnergyCanvasProps) {
   useEffect(() => {
     if (!ready) return;
 
-    resizeCanvas();
-    renderFrame(frameIndex.get());
-
-    window.addEventListener("resize", () => {
+    const handleResize = () => {
       resizeCanvas();
       renderFrame(frameIndex.get());
-    });
+    };
 
+    handleResize();
+
+    window.addEventListener("resize", handleResize);
     const unsubscribe = frameIndex.on("change", (v) => renderFrame(v));
 
     return () => {
-      window.removeEventListener("resize", () => {});
+      window.removeEventListener("resize", handleResize);
       unsubscribe();
     };
   }, [ready]);

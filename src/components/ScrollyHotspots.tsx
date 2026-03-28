@@ -78,7 +78,7 @@ function Hotspot({ opacity, scale, top, left, label, value, icon }: any) {
                   <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-white/5 flex items-center justify-center text-accent-emerald scale-75 sm:scale-100">
                      {icon}
                   </div>
-                  <p className="text-white/40 font-mono text-[7px] sm:text-[8px] uppercase tracking-widest">{label}</p>
+                  <p className="text-white/40 font-mono text-[10px] sm:text-[12px] uppercase tracking-widest">{label}</p>
                </div>
                <p className="text-white font-black text-xs sm:text-sm uppercase tracking-tighter">{value}</p>
                

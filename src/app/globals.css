@@ -22,7 +22,12 @@ html {
   width: 100%;
 }
 
-/* Hide custom cursor on mobile/touch devices */
+/* Force cursor none globally to prevent hand sign (overridden by touch media query) */
+* {
+  cursor: none !important;
+}
+
+/* Hide custom cursor on mobile/touch devices and restore native cursor */
 @media (pointer: coarse) {
   body, * {
     cursor: auto !important;
@@ -30,15 +35,6 @@ html {
   .custom-cursor {
     display: none !important;
   }
-}
-
-/* Force cursor none on all interactive elements to prevent hand sign */
-a, button, [role="button"], input, select, textarea {
-  cursor: none !important;
-}
-
-* {
-  cursor: none !important;
 }
 
 @layer utilities {
