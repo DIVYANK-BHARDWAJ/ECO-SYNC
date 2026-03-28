@@ -60,23 +60,23 @@ export default function AetherGridIntro({ onComplete }: AetherGridIntroProps) {
             </div>
           </div>
           
-          <h1 className="text-8xl font-black tracking-tighter text-white mb-2">
-            AETHER<span className="text-accent-emerald neon-text-emerald">-</span>GRID
+          <h1 className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tighter text-white mb-4 uppercase italic neon-text-pulse px-4">
+            Eco<span className="text-accent-emerald neon-text-emerald">-</span>Sync
           </h1>
-          <p className="text-white/40 font-mono tracking-[0.3em] uppercase text-sm">
-            NEXT-GEN ENERGY COMMAND CENTER
+          <p className="text-white/40 font-mono tracking-[0.2em] sm:tracking-[0.3em] uppercase text-[10px] sm:text-sm px-6">
+            Next-Gen Energy Command Center
           </p>
         </motion.div>
 
-        <motion.button
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.5, duration: 0.8 }}
-          onClick={onComplete}
-          className="px-12 py-5 bg-white text-black font-bold rounded-full hover:scale-105 transition-transform active:scale-95 glow-emerald"
-        >
-          START SIMULATOR
-        </motion.button>
+          <motion.button
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.5, duration: 0.8 }}
+            onClick={onComplete}
+            className="px-8 sm:px-12 py-4 sm:py-5 bg-white text-black font-bold rounded-full hover:scale-105 transition-transform active:scale-95 glow-emerald text-xs sm:text-base uppercase tracking-widest"
+          >
+            Start Simulator
+          </motion.button>
       </div>
 
       <motion.div 

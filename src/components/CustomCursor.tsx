@@ -30,7 +30,7 @@ export default function CustomCursor() {
           translateY: "-50%",
           pointerEvents: "none"
         }}
-        className="fixed top-0 left-0 w-8 h-8 rounded-full border border-accent-cyber/50 z-[9999] bg-accent-cyber/10 backdrop-blur-sm shadow-[0_0_20px_rgba(0,240,255,0.3)]"
+        className="fixed top-0 left-0 w-8 h-8 rounded-full border border-accent-cyber/50 z-[9999] bg-accent-cyber/10 backdrop-blur-sm shadow-[0_0_20px_rgba(0,240,255,0.3)] custom-cursor"
       />
       <motion.div 
         style={{ 
@@ -40,7 +40,7 @@ export default function CustomCursor() {
           translateY: "-50%",
           pointerEvents: "none"
         }}
-        className="fixed top-0 left-0 w-1.5 h-1.5 rounded-full bg-white z-[9999]"
+        className="fixed top-0 left-0 w-1.5 h-1.5 rounded-full bg-white z-[9999] custom-cursor"
       />
     </>
   );

@@ -72,18 +72,18 @@ function Hotspot({ opacity, scale, top, left, label, value, icon }: any) {
          </div>
 
          {/* Info Bubble */}
-         <div className="absolute bottom-16 left-1/2 -translate-x-1/2 w-48 opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100 pointer-events-none">
-            <div className="bg-black/80 backdrop-blur-xl border border-white/20 p-5 rounded-3xl shadow-2xl overflow-hidden">
-               <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-accent-emerald">
+         <div className="absolute bottom-16 left-1/2 -translate-x-1/2 w-[70vw] sm:w-48 opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100 pointer-events-none">
+            <div className="bg-black/80 backdrop-blur-xl border border-white/20 p-4 sm:p-5 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden">
+               <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2">
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-white/5 flex items-center justify-center text-accent-emerald scale-75 sm:scale-100">
                      {icon}
                   </div>
-                  <p className="text-white/40 font-mono text-[8px] uppercase tracking-widest">{label}</p>
+                  <p className="text-white/40 font-mono text-[7px] sm:text-[8px] uppercase tracking-widest">{label}</p>
                </div>
-               <p className="text-white font-black text-sm uppercase tracking-tighter">{value}</p>
+               <p className="text-white font-black text-xs sm:text-sm uppercase tracking-tighter">{value}</p>
                
                {/* Decorative Gradient Line */}
-               <div className="h-0.5 w-full bg-gradient-to-r from-accent-emerald/50 to-transparent mt-4" />
+               <div className="h-0.5 w-full bg-gradient-to-r from-accent-emerald/50 to-transparent mt-3 sm:mt-4" />
             </div>
          </div>
       </div>

@@ -11,90 +11,94 @@ interface EnergyCanvasProps {
 
 export default function EnergyCanvas({ scrollProgress }: EnergyCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [images, setImages] = useState<HTMLImageElement[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const imagesRef = useRef<HTMLImageElement[]>([]);
+  const [ready, setReady] = useState(false);
 
   // Map scroll progress (0-1) to frame index (0-127)
   const frameIndex = useTransform(scrollProgress, [0, 1], [0, FRAME_COUNT - 1], { clamp: true });
   const opacity = useTransform(scrollProgress, [0.9, 1], [1, 0]);
 
+  const renderFrame = (index: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const context = canvas.getContext("2d");
+    if (!context) return;
+    const img = imagesRef.current[Math.floor(index)];
+    if (!img || !img.complete || img.naturalWidth === 0) return;
+
+    const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
+    const x = (canvas.width - img.width * scale) / 2;
+    const y = (canvas.height - img.height * scale) / 2;
+
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(img, x, y, img.width * scale, img.height * scale);
+  };
+
+  const resizeCanvas = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    canvas.width = window.innerWidth * window.devicePixelRatio;
+    canvas.height = window.innerHeight * window.devicePixelRatio;
+  };
+
   useEffect(() => {
-    // Preload images
-    const loadImages = async () => {
-      const loadedImages: HTMLImageElement[] = [];
-      const promises = [];
+    // Pre-allocate all slots immediately
+    const imgs: HTMLImageElement[] = new Array(FRAME_COUNT);
 
-      for (let i = 0; i < FRAME_COUNT; i++) {
-        const img = new Image();
-        img.src = `/sequence/frame_${i.toString().padStart(3, "0")}_delay-0.062s.png`;
-        promises.push(new Promise((resolve) => {
-          img.onload = resolve;
-          img.onerror = resolve; // Continue even if one fails
-        }));
-        loadedImages.push(img);
-      }
+    const loadFrame = (i: number) => {
+      const img = new Image();
+      img.src = `/sequence/frame_${i.toString().padStart(3, "0")}_delay-0.062s.png`;
+      imgs[i] = img;
 
-      await Promise.all(promises);
-      setImages(loadedImages);
-      setIsLoading(false);
+      img.onload = () => {
+        imagesRef.current = imgs;
+
+        // Draw frame 0 the moment it loads — eliminates the black screen
+        if (i === 0) {
+          resizeCanvas();
+          renderFrame(0);
+          setReady(true);
+        }
+      };
+      img.onerror = () => {
+        // still set so later renders don't stall
+        imagesRef.current = imgs;
+      };
     };
 
-    loadImages();
+    // Load frame 0 first, then the rest in order
+    loadFrame(0);
+    for (let i = 1; i < FRAME_COUNT; i++) loadFrame(i);
   }, []);
 
   useEffect(() => {
-    if (images.length === 0 || !canvasRef.current) return;
+    if (!ready) return;
 
-    const context = canvasRef.current.getContext("2d");
-    if (!context) return;
+    resizeCanvas();
+    renderFrame(frameIndex.get());
 
-    const render = (index: number) => {
-      const img = images[Math.floor(index)];
-      if (!img || !img.complete) return;
+    window.addEventListener("resize", () => {
+      resizeCanvas();
+      renderFrame(frameIndex.get());
+    });
 
-      const canvas = canvasRef.current!;
-      context.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // Maintain aspect ratio while filling canvas
-      const scale = Math.max(
-        canvas.width / img.width,
-        canvas.height / img.height
-      );
-      const x = (canvas.width - img.width * scale) / 2;
-      const y = (canvas.height - img.height * scale) / 2;
-      
-      context.drawImage(img, x, y, img.width * scale, img.height * scale);
-    };
-
-    // Keep it sharp
-    const handleResize = () => {
-      if (canvasRef.current) {
-        canvasRef.current.width = window.innerWidth * window.devicePixelRatio;
-        canvasRef.current.height = window.innerHeight * window.devicePixelRatio;
-        render(frameIndex.get());
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-    handleResize();
-
-    const unsubscribe = frameIndex.on("change", (v) => render(v));
+    const unsubscribe = frameIndex.on("change", (v) => renderFrame(v));
 
     return () => {
-      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("resize", () => {});
       unsubscribe();
     };
-  }, [images]);
+  }, [ready]);
 
   return (
-    <motion.div 
-      style={{ opacity }}
+    <motion.div
       className="fixed inset-0 z-0 h-screen w-full pointer-events-none overflow-hidden"
+      style={{ 
+        opacity, 
+        background: "radial-gradient(ellipse at center, #0a1628 0%, #050d0a 60%, #000 100%)" 
+      } as any}
     >
-      <canvas
-        ref={canvasRef}
-        className="h-full w-full object-cover"
-      />
+      <canvas ref={canvasRef} className="h-full w-full object-cover" style={{ background: "transparent" }} />
     </motion.div>
   );
 }

@@ -28,29 +28,37 @@ export default function StartTitle({ scrollProgress }: StartTitleProps) {
         style={{ opacity: titleOpacity, scale: titleScale, y: titleY }}
         className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm"
       >
-        <div className="flex items-center gap-4 mb-4">
-           <div className="h-[1px] w-12 bg-accent-cyber" />
-           <p className="text-accent-cyber font-mono text-[10px] uppercase tracking-[0.8em] font-black">Initializing Model</p>
-           <div className="h-[1px] w-12 bg-accent-cyber" />
+        <div className="flex items-center gap-2 sm:gap-4 mb-2 sm:mb-4">
+           <div className="h-[1px] w-8 sm:w-12 bg-accent-cyber" />
+           <p className="text-accent-cyber font-mono text-[8px] sm:text-[10px] uppercase tracking-[0.4em] sm:tracking-[0.8em] font-black">Initializing Model</p>
+           <div className="h-[1px] w-8 sm:w-12 bg-accent-cyber" />
         </div>
-        <h1 className="text-[12rem] font-black text-white tracking-tighter uppercase leading-[0.8] text-center italic">
+        <h1 className="text-6xl sm:text-9xl md:text-[12rem] font-black text-white tracking-tighter uppercase leading-[0.8] text-center italic">
           Eco<span className="text-accent-cyber">-</span>Sync
         </h1>
-        <div className="mt-8 px-8 py-3 bg-white/5 border border-white/10 rounded-full">
-           <p className="text-white/40 font-mono text-[10px] uppercase tracking-widest font-bold">Smart Home Energy Simulator v4.0</p>
+        <div className="mt-4 sm:mt-8 px-4 sm:px-8 py-2 sm:py-3 bg-white/5 border border-white/10 rounded-full">
+         <p className="text-white/40 font-mono text-[8px] sm:text-[10px] uppercase tracking-widest font-bold">Smart Home Energy Dashboard</p>
         </div>
       </motion.div>
 
       {/* Industrial Summary Panel (Bottom Left) */}
       <motion.div 
         style={{ opacity: summaryOpacity, x: summaryX }}
-        className="absolute bottom-24 left-12 max-w-sm"
+        className="absolute bottom-12 sm:bottom-24 left-6 sm:left-12 max-w-[200px] sm:max-w-sm"
       >
-        <div className="bg-slate-900/80 backdrop-blur-xl p-10 rounded-[3rem] border border-white/10 shadow-2xl">
-           <p className="text-accent-cyber font-mono text-[10px] uppercase tracking-[0.4em] mb-4 font-black">Digital Twin Status</p>
-           <h3 className="text-3xl font-black text-white uppercase tracking-tighter mb-4 leading-tight">Physics-Based <span className="text-accent-cyber">Telemetry</span></h3>
-           <p className="text-white/40 text-[11px] leading-relaxed uppercase font-bold tracking-tight">
-             Simulating real-time thermal dynamics and electrical consumption patterns for precise grid impact forecasting.
+        <div
+          className="backdrop-blur-2xl px-3 sm:px-4 py-2 sm:py-3 rounded-xl sm:rounded-2xl"
+          style={{
+            background: "rgba(2,8,6,0.95)",
+            border: "1px solid rgba(0,240,255,0.25)",
+            borderLeft: "3px solid #00F0FF",
+            maxWidth: "180px",
+            boxShadow: "0 4px 24px rgba(0,0,0,0.7)",
+          }}
+        >
+           <p className="text-accent-cyber font-mono text-[8px] sm:text-[9px] uppercase tracking-[0.2em] sm:tracking-[0.3em] mb-1 font-black">Assistant</p>
+           <p className="text-white text-[10px] sm:text-xs leading-relaxed font-medium">
+             Toggle appliances and see your bill change live.
            </p>
         </div>
       </motion.div>

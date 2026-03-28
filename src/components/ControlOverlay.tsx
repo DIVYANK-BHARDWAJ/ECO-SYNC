@@ -93,10 +93,10 @@ export default function ControlOverlay({ applianceState, setApplianceState, tota
                     {app.icon}
                   </div>
                   <div className="text-left">
-                    <p className={`text-sm font-bold transition-colors ${applianceState[app.id as keyof ApplianceState] ? "text-white" : "text-white/40"}`}>
+                    <p className={`text-sm font-bold transition-colors ${applianceState[app.id as keyof ApplianceState] ? "text-white" : "text-white/70"}`}>
                       {app.label}
                     </p>
-                    <p className="text-[10px] font-mono text-white/20 tracking-wider transition-colors group-hover/btn:text-white/40">{app.power}</p>
+                    <p className="text-xs font-mono text-white/50 tracking-wider transition-colors group-hover/btn:text-white/70">{app.power}</p>
                   </div>
                 </div>
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center border transition-all ${

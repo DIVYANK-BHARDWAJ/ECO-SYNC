@@ -1,118 +1,217 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Terminal, Activity, Zap, AlertTriangle } from "lucide-react";
-import { useEffect, useState } from "react";
+import { X, Terminal, Activity, Zap, Power, WifiOff } from "lucide-react";
+
+type DeviceLog = { id: number; label: string; action: "ON" | "OFF" | "BOOT"; time: string };
 
 interface LogsOverlayProps {
   isOpen: boolean;
   onClose: () => void;
-  applianceState: any;
+  deviceHistory: DeviceLog[];
 }
 
-export default function LogsOverlay({ isOpen, onClose, applianceState }: LogsOverlayProps) {
-  const [logs, setLogs] = useState<{ id: number; msg: string; type: string; time: string }[]>([]);
+// Emerald green terminal theme
+const G = {
+  accent: "#10b981",
+  glow: "rgba(16,185,129,0.12)",
+  bg: "rgba(16,185,129,0.08)",
+  border: "rgba(16,185,129,0.25)",
+};
 
-  useEffect(() => {
-    if (isOpen) {
-      const initialLogs = [
-        { id: Date.now(), msg: "SYSTEM INITIALIZED: AETHER CORE V3.5", type: "system", time: new Date().toLocaleTimeString() },
-        { id: Date.now() + 1, msg: "GRID CONNECTION STABLE", type: "success", time: new Date().toLocaleTimeString() },
-      ];
-      setLogs(initialLogs);
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
-    const activeAppliance = Object.entries(applianceState).find(([_, val]) => val)?.[0];
-    if (activeAppliance) {
-      const newLog = {
-        id: Date.now(),
-        msg: `LOAD DETECTED: ${activeAppliance.toUpperCase()} COMPONENT ACTIVE`,
-        type: "load",
-        time: new Date().toLocaleTimeString()
-      };
-      setLogs(prev => [newLog, ...prev.slice(0, 15)]);
-    }
-  }, [applianceState]);
-
+export default function LogsOverlay({ isOpen, onClose, deviceHistory }: LogsOverlayProps) {
   if (!isOpen) return null;
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-black/80 backdrop-blur-xl"
+      className="fixed inset-0 z-[110] overflow-y-auto flex items-start justify-center p-4 md:p-8 backdrop-blur-xl"
+      style={{ background: "rgba(0,8,4,0.88)" }}
     >
-      <motion.div 
-        initial={{ scale: 0.9, x: 100 }}
-        animate={{ scale: 1, x: 0 }}
-        className="bg-slate-900 w-full max-w-2xl rounded-[3.5rem] shadow-2xl overflow-hidden border border-white/10 flex flex-col h-[70vh]"
+      {/* Emerald glow */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: `radial-gradient(ellipse 600px 500px at 50% 50%, ${G.glow}, transparent 70%)` }}
+      />
+
+      <motion.div
+        initial={{ scale: 0.9, y: 40, opacity: 0 }}
+        animate={{ scale: 1, y: 0, opacity: 1 }}
+        exit={{ scale: 0.9, y: 40, opacity: 0 }}
+        className="w-full max-w-2xl my-auto rounded-3xl sm:rounded-[3.5rem] shadow-2xl overflow-hidden flex flex-col min-h-[400px] max-h-[85vh] relative z-10"
+        style={{
+          background: "#080f0c",
+          border: `1px solid ${G.border}`,
+          boxShadow: `0 40px 80px -20px ${G.glow}`,
+        }}
       >
-        <div className="p-10 border-b border-white/5 flex justify-between items-center bg-black/20">
-           <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-accent-cyber/20 rounded-2xl flex items-center justify-center text-accent-cyber border border-accent-cyber/30">
-                <Terminal className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-2xl font-black text-white uppercase tracking-tighter">System Console</h3>
-                <p className="text-white/30 font-mono text-[9px] uppercase tracking-[0.2em] font-bold">Real-time Event Stream</p>
-              </div>
-           </div>
-           <button onClick={onClose} className="p-4 rounded-full bg-white/5 text-white/40 hover:bg-white/10 hover:text-white transition-all">
-             <X className="w-5 h-5" />
-           </button>
+        {/* Green top strip */}
+        <div className="h-1.5 w-full flex-shrink-0" style={{ background: "linear-gradient(90deg, #059669, #10b981)" }} />
+
+        {/* Header */}
+        <div
+          className="p-6 sm:p-8 border-b flex justify-between items-center flex-shrink-0"
+          style={{ borderColor: G.border, background: "rgba(16,185,129,0.04)" }}
+        >
+          <div className="flex items-center gap-4">
+            <div
+              className="w-10 h-10 rounded-2xl flex items-center justify-center"
+              style={{ background: G.bg, border: `1px solid ${G.border}`, color: G.accent }}
+            >
+              <Terminal className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-xl font-black text-white uppercase tracking-tighter">Device Activity Log</h3>
+              <p className="font-mono text-[9px] uppercase tracking-[0.2em] font-bold" style={{ color: G.accent, opacity: 0.6 }}>
+                Full history · Real device time
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            {/* Live badge */}
+            <div
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest"
+              style={{ background: G.bg, border: `1px solid ${G.border}`, color: G.accent }}
+            >
+              <div
+                className="w-1.5 h-1.5 rounded-full animate-pulse"
+                style={{ background: G.accent, boxShadow: `0 0 6px ${G.accent}` }}
+              />
+              Live
+            </div>
+            <button
+              onClick={onClose}
+              className="p-3 rounded-full transition-all"
+              style={{ background: G.bg, border: `1px solid ${G.border}`, color: G.accent }}
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-10 font-mono text-sm space-y-6 custom-scrollbar">
-           <AnimatePresence mode="popLayout">
-             {logs.map((log) => (
-               <motion.div 
-                 key={log.id}
-                 initial={{ opacity: 0, x: -20 }}
-                 animate={{ opacity: 1, x: 0 }}
-                 className="flex gap-6 items-start group"
-               >
-                 <span className="text-white/10 text-[10px] pt-1 whitespace-nowrap">[{log.time}]</span>
-                 <div className="flex gap-3 items-center">
-                    {log.type === "load" && <Zap className="w-3.5 h-3.5 text-accent-cyber shadow-[0_0_10px_#00F0FF]" />}
-                    {log.type === "system" && <Activity className="w-3.5 h-3.5 text-accent-cyber" />}
-                    {log.type === "success" && <div className="w-1.5 h-1.5 rounded-full bg-accent-cyber shadow-[0_0_5px_#00F0FF]" />}
-                    <span className={`font-bold tracking-tight uppercase ${
-                      log.type === "load" ? "text-accent-cyber" : 
-                      log.type === "system" ? "text-accent-cyber" : 
-                      "text-white/60"
-                    }`}>
-                      {log.msg}
-                    </span>
-                 </div>
-               </motion.div>
-             ))}
-           </AnimatePresence>
+        {/* Count bar */}
+        <div
+          className="px-8 py-3 flex items-center justify-between flex-shrink-0"
+          style={{ borderBottom: `1px solid ${G.border}`, background: "rgba(0,0,0,0.2)" }}
+        >
+          <span className="font-mono text-[10px] uppercase tracking-widest" style={{ color: G.accent, opacity: 0.5 }}>
+            {deviceHistory.length} event{deviceHistory.length !== 1 ? "s" : ""} recorded
+          </span>
+          <span className="font-mono text-[10px] uppercase tracking-widest text-white/20">
+            Most recent first
+          </span>
         </div>
 
-        <div className="p-10 bg-black/40 border-t border-white/5 flex gap-8">
-           <StatusItem icon={<Activity className="w-4 h-4" />} label="Uptime" value="100.0%" />
-           <StatusItem icon={<Zap className="w-4 h-4" />} label="Latency" value="2ms" />
-           <div className="ml-auto flex items-center gap-2 text-[10px] text-accent-cyber font-bold uppercase tracking-widest">
-              <div className="w-2 h-2 rounded-full bg-accent-cyber animate-pulse shadow-[0_0_8px_#00F0FF]" />
-              Live Telemetry
-           </div>
+        {/* Log entries — scrollable */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-2 custom-scrollbar">
+          <AnimatePresence mode="popLayout">
+            {deviceHistory.map((log, i) => (
+              <motion.div
+                key={log.id}
+                initial={{ opacity: 0, x: -16 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i < 6 ? i * 0.04 : 0 }}
+                className="flex items-center gap-4 p-4 rounded-2xl group"
+                style={{
+                  background:
+                    log.action === "ON"
+                      ? "rgba(16,185,129,0.06)"
+                      : log.action === "BOOT"
+                      ? "rgba(255,255,255,0.03)"
+                      : "rgba(255,60,60,0.05)",
+                  border:
+                    log.action === "ON"
+                      ? "1px solid rgba(16,185,129,0.15)"
+                      : log.action === "BOOT"
+                      ? "1px solid rgba(255,255,255,0.06)"
+                      : "1px solid rgba(255,60,60,0.15)",
+                }}
+              >
+                {/* Icon */}
+                <div
+                  className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{
+                    background:
+                      log.action === "ON"
+                        ? "rgba(16,185,129,0.15)"
+                        : log.action === "BOOT"
+                        ? "rgba(255,255,255,0.05)"
+                        : "rgba(255,60,60,0.12)",
+                    color:
+                      log.action === "ON"
+                        ? G.accent
+                        : log.action === "BOOT"
+                        ? "rgba(255,255,255,0.3)"
+                        : "#f87171",
+                  }}
+                >
+                  <div className="scale-75 sm:scale-100 flex items-center justify-center">
+                    {log.action === "ON"  && <Power className="w-4 h-4" />}
+                    {log.action === "OFF" && <WifiOff className="w-4 h-4" />}
+                    {log.action === "BOOT" && <Activity className="w-4 h-4" />}
+                  </div>
+                </div>
+
+                {/* Text */}
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-sm text-white truncate">{log.label}</p>
+                  <p
+                    className="font-mono text-[10px] uppercase tracking-widest"
+                    style={{
+                      color:
+                        log.action === "ON"
+                          ? G.accent
+                          : log.action === "BOOT"
+                          ? "rgba(255,255,255,0.25)"
+                          : "#f87171",
+                    }}
+                  >
+                    {log.action === "BOOT" ? "System started" : `Turned ${log.action}`}
+                  </p>
+                </div>
+
+                {/* Time badge */}
+                <div
+                  className="flex-shrink-0 font-mono text-[10px] px-3 py-1.5 rounded-full"
+                  style={{
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    color: "rgba(255,255,255,0.4)",
+                  }}
+                >
+                  {log.time}
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+
+          {deviceHistory.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-16 gap-4">
+              <Zap className="w-8 h-8 opacity-20" style={{ color: G.accent }} />
+              <p className="text-white/20 font-mono text-xs uppercase tracking-widest">No activity yet — toggle an appliance</p>
+            </div>
+          )}
+        </div>
+
+        {/* Footer status */}
+        <div
+          className="p-6 flex items-center justify-between flex-shrink-0"
+          style={{ borderTop: `1px solid ${G.border}`, background: "rgba(16,185,129,0.03)" }}
+        >
+          <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest" style={{ color: G.accent }}>
+            <div
+              className="w-2 h-2 rounded-full animate-pulse"
+              style={{ background: G.accent, boxShadow: `0 0 8px ${G.accent}` }}
+            />
+            Tracking live
+          </div>
+          <span className="font-mono text-[10px] text-white/20 uppercase tracking-widest">
+            Toggle appliances to log events
+          </span>
         </div>
       </motion.div>
     </motion.div>
-  );
-}
-
-function StatusItem({ icon, label, value }: { icon: any; label: string; value: string }) {
-  return (
-    <div className="flex items-center gap-3">
-       <div className="text-white/20">{icon}</div>
-       <div>
-         <p className="text-white/10 text-[8px] uppercase tracking-widest font-bold">{label}</p>
-         <p className="text-white font-mono text-xs font-bold uppercase tracking-tighter">{value}</p>
-       </div>
-    </div>
   );
 }

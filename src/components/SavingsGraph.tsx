@@ -39,14 +39,14 @@ export default function SavingsGraph({ data }: SavingsGraphProps) {
   }, [data, maxVal]);
 
   return (
-    <div className="bg-slate-900/40 backdrop-blur-3xl p-16 rounded-[4rem] border border-white/5 shadow-2xl relative w-full overflow-hidden">
+    <div className="bg-slate-900/40 backdrop-blur-3xl p-6 sm:p-10 md:p-16 rounded-3xl sm:rounded-[4rem] border border-white/5 shadow-2xl relative w-full overflow-hidden">
       {/* Background Radar Mesh */}
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: "radial-gradient(#00F0FF 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
       
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-16 gap-8 relative z-10">
         <div>
-          <h4 className="text-white font-black text-4xl uppercase tracking-tighter italic">Live Usage <span className="text-accent-cyber">Radar</span></h4>
-          <p className="text-white/40 font-mono text-[10px] uppercase tracking-[0.4em] font-bold">Real-time Digital Signature | Adjusted for Grid Load</p>
+          <h4 className="text-2xl sm:text-4xl font-black text-white uppercase tracking-tighter italic">Live Usage <span className="text-accent-cyber">Radar</span></h4>
+          <p className="text-white/40 font-mono text-[8px] sm:text-[10px] uppercase tracking-[0.2em] sm:tracking-[0.4em] font-bold">Real-time Digital Signature | Adjusted for Grid Load</p>
         </div>
         <div className="flex gap-4">
            <div className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-white flex items-center gap-3">
@@ -56,7 +56,7 @@ export default function SavingsGraph({ data }: SavingsGraphProps) {
         </div>
       </div>
 
-      <div className="relative h-[450px] w-full mt-12 bg-black/20 rounded-[3rem] border border-white/5 p-16 overflow-visible pr-24">
+      <div className="relative h-[300px] sm:h-[450px] w-full mt-8 sm:mt-12 bg-black/20 rounded-3xl sm:rounded-[3rem] border border-white/5 p-6 sm:p-16 overflow-visible pr-12 sm:pr-24">
         {/* Y-AXIS LABELS */}
         <div className="absolute left-6 inset-y-16 flex flex-col justify-between text-[8px] font-mono text-white/40 font-bold uppercase tracking-widest">
            <span>{(maxVal).toFixed(1)} kW</span>
@@ -196,16 +196,16 @@ export default function SavingsGraph({ data }: SavingsGraphProps) {
         )}
       </div>
 
-      <div className="mt-20 flex flex-col md:flex-row gap-16 items-center justify-between relative z-10">
-         <div className="flex gap-16">
+      <div className="mt-12 sm:mt-20 flex flex-col xl:flex-row gap-8 sm:gap-16 items-start xl:items-center justify-between relative z-10 w-full">
+         <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-16 w-full sm:w-auto">
             <StatsItem label="Current Load" value={`${(data[data.length - 1] || 0).toFixed(2)} kW`} />
             <StatsItem label="System Peak" value={`${Math.max(...data).toFixed(2)} kW`} />
             <StatsItem label="Baseline Deviation" value="-12.4%" />
          </div>
-         <div className="text-right glass-card p-10 rounded-[2.5rem] border border-white/5 bg-white/2">
-            <p className="text-white/20 font-mono text-[10px] uppercase tracking-widest mb-3 font-bold">Status: Synchronized</p>
-            <div className="flex items-center gap-3 text-white font-black text-2xl uppercase tracking-tighter italic">
-               <div className="w-2.5 h-2.5 rounded-full bg-accent-cyber animate-pulse shadow-[0_0_20px_#00F0FF]" />
+         <div className="text-left xl:text-right glass-card p-6 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] border border-white/5 bg-white/2 w-full sm:w-auto">
+            <p className="text-white/20 font-mono text-[8px] sm:text-[10px] uppercase tracking-widest mb-2 sm:mb-3 font-bold">Status: Synchronized</p>
+            <div className="flex items-center gap-3 text-white font-black text-xl sm:text-2xl uppercase tracking-tighter italic">
+               <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-accent-cyber animate-pulse shadow-[0_0_20px_#00F0FF]" />
                Pulse Grid Optimal
             </div>
          </div>
@@ -217,8 +217,8 @@ export default function SavingsGraph({ data }: SavingsGraphProps) {
 function StatsItem({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-white/20 text-[10px] font-bold uppercase tracking-widest mb-2 font-black">{label}</p>
-      <p className="text-white text-4xl font-black tracking-tighter uppercase">{value}</p>
+      <p className="text-white/20 text-[8px] sm:text-[10px] font-bold uppercase tracking-widest mb-1 sm:mb-2 font-black whitespace-nowrap">{label}</p>
+      <p className="text-white text-2xl sm:text-4xl font-black tracking-tighter uppercase tabular-nums">{value}</p>
     </div>
   );
 }
