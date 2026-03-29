@@ -22,6 +22,7 @@ export default function CustomCursor() {
 
   return (
     <>
+      {/* Outer Scanning Ring (Rotating Sonar) */}
       <motion.div 
         style={{ 
           x: cursorX, 
@@ -30,8 +31,34 @@ export default function CustomCursor() {
           translateY: "-50%",
           pointerEvents: "none"
         }}
-        className="fixed top-0 left-0 w-8 h-8 rounded-full border border-accent-cyber/50 z-[9999] bg-accent-cyber/10 backdrop-blur-sm shadow-[0_0_20px_rgba(0,240,255,0.3)] custom-cursor"
+        className="fixed top-0 left-0 w-10 h-10 rounded-full border border-accent-emerald/10 z-[9999] custom-cursor flex items-center justify-center"
+      >
+        <motion.div 
+           animate={{ rotate: 360 }}
+           transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+           className="absolute inset-0 border-t-2 border-r border-accent-emerald/40 rounded-full"
+        />
+        {/* Pulsing Sonar Effect */}
+        <motion.div 
+           animate={{ scale: [1, 1.5], opacity: [0.3, 0] }}
+           transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+           className="absolute inset-0 border border-accent-emerald/30 rounded-full"
+        />
+      </motion.div>
+
+      {/* Mechanical Crosshair - Horizontal */}
+      <motion.div 
+        style={{ 
+          x: cursorX, 
+          y: cursorY, 
+          translateX: "-50%", 
+          translateY: "-50%",
+          pointerEvents: "none"
+        }}
+        className="fixed top-0 left-0 w-5 h-[1.5px] bg-accent-emerald/60 z-[9999] custom-cursor"
       />
+
+      {/* Mechanical Crosshair - Vertical */}
       <motion.div 
         style={{ 
           x: cursorX, 
@@ -40,7 +67,19 @@ export default function CustomCursor() {
           translateY: "-50%",
           pointerEvents: "none"
         }}
-        className="fixed top-0 left-0 w-1.5 h-1.5 rounded-full bg-white z-[9999] custom-cursor"
+        className="fixed top-0 left-0 w-[1.5px] h-5 bg-accent-emerald/60 z-[9999] custom-cursor"
+      />
+
+      {/* Central Precision Targeting Dot */}
+      <motion.div 
+        style={{ 
+          x: cursorX, 
+          y: cursorY, 
+          translateX: "-50%", 
+          translateY: "-50%",
+          pointerEvents: "none"
+        }}
+        className="fixed top-0 left-0 w-1 h-1 rounded-full bg-white z-[10000] custom-cursor shadow-[0_0_8px_rgba(255,255,255,0.8)]"
       />
     </>
   );

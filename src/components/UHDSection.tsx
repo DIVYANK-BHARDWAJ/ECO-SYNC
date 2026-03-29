@@ -9,9 +9,10 @@ interface UHDSectionProps {
   setApplianceState: (state: any) => void;
   totalLoad: number;
   onOpenPlans: () => void;
+  onScrollToRadar: () => void;
 }
 
-export default function UHDSection({ applianceState, setApplianceState, totalLoad, onOpenPlans }: UHDSectionProps) {
+export default function UHDSection({ applianceState, setApplianceState, totalLoad, onOpenPlans, onScrollToRadar }: UHDSectionProps) {
   const toggleAppliance = (appliance: keyof ApplianceState) => {
     setApplianceState((prev: any) => ({ ...prev, [appliance]: !prev[appliance] }));
   };
@@ -100,6 +101,25 @@ export default function UHDSection({ applianceState, setApplianceState, totalLoa
               </div>
             </motion.button>
           ))}
+          {/* Live Grid Radar Navigation Tile */}
+          <motion.button 
+            onClick={onScrollToRadar}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="p-8 sm:p-10 rounded-3xl sm:rounded-[3.5rem] border border-accent-emerald/20 bg-accent-emerald/5 backdrop-blur-md flex flex-col justify-between group shadow-lg text-left min-h-[220px] sm:min-h-0"
+          >
+             <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl sm:rounded-3xl bg-accent-emerald text-slate-900 flex items-center justify-center mb-6 sm:mb-8 border border-white/10">
+                <Activity className="w-6 h-6 sm:w-8 sm:h-8" />
+             </div>
+             <div>
+               <p className="text-accent-emerald font-mono text-[8px] sm:text-[10px] uppercase tracking-[0.1em] sm:tracking-[0.2em] mb-2 sm:mb-4 font-black">Live Pulse Stream</p>
+               <h3 className="text-white font-black text-2xl sm:text-3xl leading-tight uppercase tracking-tighter">Live <br/> Grid Radar.</h3>
+             </div>
+             <div className="flex items-center gap-4 text-accent-emerald font-black uppercase text-[10px] sm:text-xs tracking-widest mt-6 sm:mt-8 group-hover:gap-6 transition-all">
+                <span>VIEW TELEMETRY</span>
+                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+             </div>
+          </motion.button>
 
           {/* Efficiency Roadmap Tile */}
           <motion.button 

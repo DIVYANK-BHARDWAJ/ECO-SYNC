@@ -15,8 +15,8 @@ export default function SavingsGraph({ data }: SavingsGraphProps) {
   const width = 1000;
   const height = 400;
 
-  // Bezier Smoothing Logic (Catmull-Rom to Cubic Bezier)
-  const bezierPath = useMemo(() => {
+  // Linear Path Logic (Straight lines between points - Jagged Stock Chart Style)
+  const linearPath = useMemo(() => {
     if (data.length < 2) return "";
     
     return data.reduce((acc, d, i, arr) => {
@@ -25,57 +25,48 @@ export default function SavingsGraph({ data }: SavingsGraphProps) {
 
       if (i === 0) return `M ${x} ${y}`;
 
-      const prevX = ((i - 1) / (arr.length - 1)) * width;
-      const prevY = height - (arr[i - 1] / maxVal) * height;
-
-      // Control points for smoothing
-      const cp1x = prevX + (x - prevX) / 2;
-      const cp1y = prevY;
-      const cp2x = prevX + (x - prevX) / 2;
-      const cp2y = y;
-
-      return `${acc} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${x} ${y}`;
+      return `${acc} L ${x} ${y}`;
     }, "");
   }, [data, maxVal]);
 
   return (
     <div className="bg-slate-900/40 backdrop-blur-3xl p-6 sm:p-10 md:p-16 rounded-3xl sm:rounded-[4rem] border border-white/5 shadow-2xl relative w-full overflow-hidden">
       {/* Background Radar Mesh */}
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: "radial-gradient(#00F0FF 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: "radial-gradient(#10B981 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
       
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-16 gap-8 relative z-10">
         <div>
-          <h4 className="text-2xl sm:text-4xl font-black text-white uppercase tracking-tighter italic">Live Usage <span className="text-accent-cyber">Radar</span></h4>
+          <h4 className="text-2xl sm:text-4xl font-black text-white uppercase tracking-tighter italic">Live Usage <span className="text-accent-emerald">Radar</span></h4>
           <p className="text-white/40 font-mono text-[8px] sm:text-[10px] uppercase tracking-[0.2em] sm:tracking-[0.4em] font-bold">Real-time Digital Signature | Adjusted for Grid Load</p>
         </div>
         <div className="flex gap-4">
            <div className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-white flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-accent-cyber animate-ping shadow-[0_0_10px_#00F0FF]" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-accent-cyber">Live Stream</span>
+              <div className="w-2 h-2 rounded-full bg-accent-emerald animate-ping shadow-[0_0_10px_#10B981]" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-accent-emerald">Live Stream</span>
            </div>
         </div>
       </div>
 
-      <div className="relative h-[300px] sm:h-[450px] w-full mt-8 sm:mt-12 bg-black/20 rounded-3xl sm:rounded-[3rem] border border-white/5 p-6 sm:p-16 overflow-visible pr-12 sm:pr-24">
+      <div className="relative h-[300px] sm:h-[450px] w-full mt-12 sm:mt-16 bg-black/40 rounded-[2rem] sm:rounded-[4rem] border border-white/10 pl-20 sm:pl-32 pr-12 sm:pr-32 py-16 sm:py-24 overflow-visible">
         {/* Y-AXIS LABELS */}
-        <div className="absolute left-6 inset-y-16 flex flex-col justify-between text-[8px] font-mono text-white/40 font-bold uppercase tracking-widest">
-           <span>{(maxVal).toFixed(1)} kW</span>
+        <div className="absolute left-4 sm:left-12 inset-y-24 flex flex-col justify-between text-[12px] sm:text-[14px] font-mono text-slate-400 font-black uppercase tracking-widest text-right w-12">
+           <span>{(maxVal).toFixed(1)}</span>
            <span>{(maxVal * 0.75).toFixed(1)}</span>
            <span>{(maxVal * 0.5).toFixed(1)}</span>
            <span>{(maxVal * 0.25).toFixed(1)}</span>
-           <span>0.0 kW</span>
+           <span>0.0</span>
         </div>
 
         {/* X-AXIS LABELS */}
-        <div className="absolute bottom-6 left-16 right-24 flex justify-between text-[8px] font-mono text-white/40 font-bold uppercase tracking-widest">
+        <div className="absolute -bottom-10 left-16 right-24 flex justify-between text-[12px] sm:text-[14px] font-mono text-slate-400 font-black uppercase tracking-widest py-4">
            <span>-30s</span>
            <span>-20s</span>
            <span>-10s</span>
-           <span>NOW</span>
+           <span className="text-accent-emerald">NOW</span>
         </div>
 
         {/* Labels Overlay */}
-        <div className="absolute -left-20 top-1/2 -translate-y-1/2 -rotate-90 text-[10px] font-black text-white/10 uppercase tracking-[0.4em] whitespace-nowrap">
+        <div className="absolute -left-16 sm:-left-12 top-1/2 -translate-y-1/2 -rotate-90 text-[12px] font-black text-slate-500 uppercase tracking-[0.4em] whitespace-nowrap">
           Grid Load (kW)
         </div>
 
@@ -87,8 +78,9 @@ export default function SavingsGraph({ data }: SavingsGraphProps) {
               x1="0" y1={height * p} 
               x2={width} y2={height * p} 
               stroke="white" 
-              strokeWidth="0.5" 
-              opacity="0.05"
+              strokeWidth="1" 
+              opacity="0.1"
+              strokeDasharray="4 4"
             />
           ))}
           {[0, 0.25, 0.5, 0.75, 1].map((p, i) => (
@@ -97,30 +89,31 @@ export default function SavingsGraph({ data }: SavingsGraphProps) {
               x1={width * p} y1="0" 
               x2={width * p} y2={height} 
               stroke="white" 
-              strokeWidth="0.5" 
-              opacity="0.05"
+              strokeWidth="1" 
+              opacity="0.1"
+              strokeDasharray="4 4"
             />
           ))}
 
           {/* Area Gradient */}
           <defs>
             <linearGradient id="live-gradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#00F0FF" stopOpacity="0.15" />
-              <stop offset="100%" stopColor="#00F0FF" stopOpacity="0" />
+              <stop offset="0%" stopColor="#10B981" stopOpacity="0.15" />
+              <stop offset="100%" stopColor="#10B981" stopOpacity="0" />
             </linearGradient>
           </defs>
 
           {/* Fill Area */}
           <path
-            d={`${bezierPath} L ${width} ${height} L 0 ${height} Z`}
+            d={`${linearPath} L ${width} ${height} L 0 ${height} Z`}
             fill="url(#live-gradient)"
           />
 
           {/* Neon Glow Outer */}
           <motion.path
-            d={bezierPath}
+            d={linearPath}
             fill="none"
-            stroke="#00F0FF"
+            stroke="#10B981"
             strokeWidth="10"
             opacity="0.1"
             strokeLinecap="round"
@@ -129,9 +122,9 @@ export default function SavingsGraph({ data }: SavingsGraphProps) {
 
           {/* Primary Data Line */}
           <motion.path
-            d={bezierPath}
+            d={linearPath}
             fill="none"
-            stroke="#00F0FF"
+            stroke="#10B981"
             strokeWidth="3.5"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -146,8 +139,8 @@ export default function SavingsGraph({ data }: SavingsGraphProps) {
                 cx={(data.length - 1) / (data.length - 1) * width} 
                 cy={height - (data[data.length - 1] / maxVal) * height} 
                 r="5" 
-                fill="#00F0FF" 
-                className="shadow-[0_0_15px_#00F0FF]"
+                fill="#10B981" 
+                className="shadow-[0_0_15px_#10B981]"
                 animate={{ scale: [1, 1.4, 1], opacity: [1, 0.6, 1] }}
                 transition={{ repeat: Infinity, duration: 1.5 }}
              />
@@ -164,7 +157,7 @@ export default function SavingsGraph({ data }: SavingsGraphProps) {
               <g key={i} className="cursor-pointer" onMouseEnter={() => setHoveredPoint(i)} onMouseLeave={() => setHoveredPoint(null)}>
                 <circle 
                   cx={x} cy={y} r="3.5" 
-                  fill={hoveredPoint === i ? "#00F0FF" : "white"} 
+                  fill={hoveredPoint === i ? "#10B981" : "white"} 
                   opacity={hoveredPoint === i ? 1 : 0.15} 
                 />
               </g>
@@ -185,12 +178,12 @@ export default function SavingsGraph({ data }: SavingsGraphProps) {
             }}
           >
              <div className="flex items-center gap-3 mb-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-accent-cyber animate-pulse shadow-[0_0_5px_#00F0FF]" />
+                <div className="w-1.5 h-1.5 rounded-full bg-accent-emerald animate-pulse shadow-[0_0_5px_#10B981]" />
                 <p className="text-[9px] font-mono text-white/40 uppercase tracking-[0.2em] font-bold">Telemetry</p>
              </div>
              <p className="text-4xl font-black tracking-tighter">
                 {data[hoveredPoint].toFixed(2)}
-                <span className="text-xs ml-2 text-accent-cyber uppercase font-bold tracking-widest">kW</span>
+                <span className="text-xs ml-2 text-accent-emerald uppercase font-bold tracking-widest">kW</span>
              </p>
           </motion.div>
         )}
@@ -205,7 +198,7 @@ export default function SavingsGraph({ data }: SavingsGraphProps) {
          <div className="text-left xl:text-right glass-card p-6 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] border border-white/5 bg-white/[0.02] w-full sm:w-auto">
             <p className="text-white/20 font-mono text-[8px] sm:text-[10px] uppercase tracking-widest mb-2 sm:mb-3 font-bold">Status: Synchronized</p>
             <div className="flex items-center gap-3 text-white font-black text-xl sm:text-2xl uppercase tracking-tighter italic">
-               <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-accent-cyber animate-pulse shadow-[0_0_20px_#00F0FF]" />
+               <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-accent-emerald animate-pulse shadow-[0_0_20px_#10B981]" />
                Pulse Grid Optimal
             </div>
          </div>

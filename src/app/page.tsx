@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useScroll, AnimatePresence, motion, useTransform, useInView } from "framer-motion";
+import { useScroll, AnimatePresence, motion, useTransform, useInView, animate } from "framer-motion";
 import EnergyCanvas from "@/components/EnergyCanvas";
 import UHDSection from "@/components/UHDSection";
 import InsightSections from "@/components/InsightSections";
@@ -30,6 +30,21 @@ export default function Home() {
   const handleIntroComplete = () => {
     window.scrollTo({ top: 0, behavior: "instant" });
     setShowIntro(false);
+
+    // Automatically scroll to command center after a short delay
+    // We use a custom fast animation for a cinematic feel
+    setTimeout(() => {
+      const target = document.getElementById("command-center");
+      if (target) {
+        const targetPosition = target.getBoundingClientRect().top + window.scrollY;
+        
+        animate(0, targetPosition, {
+          duration: 6,
+          ease: [0.65, 0, 0.35, 1], // Original fast, snappy ease
+          onUpdate: (latest) => window.scrollTo(0, latest)
+        });
+      }
+    }, 1000);
   };
   const [showLogs, setShowLogs] = useState(false);
   const [showPlans, setShowPlans] = useState(false);
@@ -162,24 +177,27 @@ export default function Home() {
           </div>
 
           {/* Neon Aqua Command Center (Industrial Cyber Theme) */}
-          <div className="relative z-30 bg-slate-900 border-t border-white/5">
+          <div id="command-center" className="relative z-30 bg-slate-900 border-t border-white/5">
             <UHDSection 
               applianceState={applianceState} 
               setApplianceState={handleApplianceToggle} 
               totalLoad={totalLoad}
               onOpenPlans={() => setShowPlans(true)}
+              onScrollToRadar={() => {
+                document.getElementById("grid-radar")?.scrollIntoView({ behavior: "smooth", block: "center" });
+              }}
             />
 
             {/* Dedicated Real-Time Radar Section */}
-            <section className="bg-slate-950 py-32 border-t border-white/5 px-12 relative overflow-hidden">
-               <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-accent-cyber/10 blur-[120px] -translate-y-1/2 translate-x-1/2" />
+            <section id="grid-radar" className="bg-slate-950 py-32 border-t border-white/5 px-12 relative overflow-hidden">
+               <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-accent-emerald/10 blur-[120px] -translate-y-1/2 translate-x-1/2" />
                <div className="max-w-7xl mx-auto relative z-10">
                   <div className="mb-16">
                      <div className="flex items-center gap-4 mb-4">
-                        <div className="w-2 h-2 rounded-full bg-accent-cyber animate-pulse shadow-[0_0_10px_#00F0FF]" />
+                        <div className="w-2 h-2 rounded-full bg-accent-emerald animate-pulse shadow-[0_0_10px_#10B981]" />
                         <p className="text-white/40 font-mono text-[10px] uppercase tracking-[0.4em] font-black">Live Pulse Stream</p>
                      </div>
-                     <h2 className="text-7xl font-black text-white tracking-tighter uppercase mb-4 italic">Grid <span className="text-accent-cyber">Radar</span></h2>
+                     <h2 className="text-7xl font-black text-white tracking-tighter uppercase mb-4 italic">Grid <span className="text-accent-emerald">Radar</span></h2>
                   </div>
                   <SavingsGraph data={loadHistory} />
                </div>
