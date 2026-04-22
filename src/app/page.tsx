@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useScroll, AnimatePresence, motion, useTransform, useInView, animate } from "framer-motion";
+import { useScroll, AnimatePresence, motion, useTransform, useInView, animate, useSpring } from "framer-motion";
 import EnergyCanvas from "@/components/EnergyCanvas";
 import UHDSection from "@/components/UHDSection";
 import InsightSections from "@/components/InsightSections";
@@ -23,34 +23,28 @@ const PLAN_CONFIG: Record<string, { reduction: string; multiplier: number }> = {
 };
 
 export default function Home() {
-  const [showIntro, setShowIntro] = useState(true);
+  const [showIntro, setShowIntro] = useState(false);
   const [activeMetric, setActiveMetric] = useState<MetricType>(null);
 
   // Scroll to top and show main content when intro finishes
   const handleIntroComplete = () => {
-    window.scrollTo({ top: 0, behavior: "instant" });
     setShowIntro(false);
-
-    // Automatically scroll to command center after a short delay
-    // We use a custom fast animation for a cinematic feel
-    setTimeout(() => {
-      const target = document.getElementById("command-center");
-      if (target) {
-        const targetPosition = target.getBoundingClientRect().top + window.scrollY;
-        
-        animate(0, targetPosition, {
-          duration: 6,
-          ease: [0.65, 0, 0.35, 1], // Original fast, snappy ease
-          onUpdate: (latest) => window.scrollTo(0, latest)
-        });
-      }
-    }, 1000);
   };
   const [showLogs, setShowLogs] = useState(false);
   const [showPlans, setShowPlans] = useState(false);
   const [activePlanId, setActivePlanId] = useState<string | null>(null);
   
-  const [applianceState, setApplianceState] = useState({
+  interface ApplianceState {
+    hvac: boolean;
+    ev: boolean;
+    lighting: boolean;
+    tv: boolean;
+    fridge: boolean;
+    dishwasher: boolean;
+    airPurifier: boolean;
+  }
+
+  const [applianceState, setApplianceState] = useState<ApplianceState>({
     hvac: false,
     ev: false,
     lighting: true,
@@ -84,28 +78,31 @@ export default function Home() {
 
   // Intercept every toggle to log it with real device time
   const handleApplianceToggle = useCallback((updater: any) => {
-    setApplianceState(prev => {
+    setApplianceState((prev: ApplianceState) => {
       const next = typeof updater === "function" ? updater(prev) : updater;
-      const changedKey = Object.keys(next).find(k => (next as any)[k] !== (prev as any)[k]);
+      const changedKey = Object.keys(next).find(k => (next as any)[k] !== (prev as any)[k]) as keyof ApplianceState | undefined;
       if (changedKey) {
         const action = (next as any)[changedKey] ? "ON" : "OFF";
         const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
         const entry: DeviceLog = { id: Date.now(), label: applianceLabels[changedKey] ?? changedKey, action, time };
-        setDeviceHistory(h => [entry, ...h]);
+        setDeviceHistory((h: DeviceLog[]) => [entry, ...h]);
       }
       return next;
     });
-  }, []);
+  }, [applianceLabels]);
 
   const [totalLoad, setTotalLoad] = useState(0.2);
   const [accumulatedKwh, setAccumulatedKwh] = useState(0);
   const [loadHistory, setLoadHistory] = useState<number[]>(new Array(30).fill(0.2));
 
   const scrollTarget = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
+  const { scrollYProgress: rawScrollProgress } = useScroll({
     target: scrollTarget,
     offset: ["start start", "end end"]
   });
+
+  // Use raw scroll progress directly for a manual, frame-locked experience
+  const scrollYProgress = rawScrollProgress;
 
   useEffect(() => {
     let load = 0.2; // Baseline
@@ -122,14 +119,14 @@ export default function Home() {
     }
 
     setTotalLoad(load);
-    setLoadHistory(prev => [...prev.slice(1), load]);
+    setLoadHistory((prev: number[]) => [...prev.slice(1), load]);
   }, [applianceState, activePlanId]);
 
   useEffect(() => {
     const interval = setInterval(() => {
       const addedKwh = totalLoad / 3600;
-      setAccumulatedKwh((prev) => prev + addedKwh);
-      setLoadHistory(prev => [...prev.slice(1), totalLoad]);
+      setAccumulatedKwh((prev: number) => prev + addedKwh);
+      setLoadHistory((prev: number[]) => [...prev.slice(1), totalLoad]);
     }, 1000);
     return () => clearInterval(interval);
   }, [totalLoad]);
@@ -156,7 +153,7 @@ export default function Home() {
             isOpen={showPlans} 
             onClose={() => setShowPlans(false)} 
             activePlanId={activePlanId}
-            onSelectPlan={(planId) => setActivePlanId(prev => prev === planId ? null : planId)}
+            onSelectPlan={(planId) => setActivePlanId((prev: string | null) => prev === planId ? null : planId)}
           />
         )}
       </AnimatePresence>
@@ -164,7 +161,7 @@ export default function Home() {
       {!showIntro && (
         <div>
           {/* Cinematic Scroller Canvas Area */}
-          <div ref={scrollTarget} className="h-[600vh] relative">
+          <div ref={scrollTarget} className="h-[1000vh] relative">
             <EnergyCanvas scrollProgress={scrollYProgress} />
             
             {/* Start Title & Summary */}

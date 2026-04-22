@@ -8,9 +8,9 @@ interface StartTitleProps {
 
 export default function StartTitle({ scrollProgress }: StartTitleProps) {
   // Title animations: Fades out early (0-10% scroll)
-  const titleOpacity = useTransform(scrollProgress, [0, 0.05], [1, 0]);
-  const titleScale = useTransform(scrollProgress, [0, 0.05], [1, 0.8]);
-  const titleY = useTransform(scrollProgress, [0, 0.05], [0, -50]);
+  const titleOpacity = useTransform(scrollProgress, [0, 0.1], [1, 0]);
+  const titleScale = useTransform(scrollProgress, [0, 0.1], [1, 0.8]);
+  const titleY = useTransform(scrollProgress, [0, 0.1], [0, -50]);
 
   // Capability Summary: Fades in/out during 10-40% scroll, aligned to bottom-left
   const summaryOpacity = useTransform(scrollProgress, [0.1, 0.15, 0.35, 0.4], [0, 1, 1, 0]);
