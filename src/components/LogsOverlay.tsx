@@ -1,9 +1,9 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Terminal, Activity, Zap, Power, WifiOff } from "lucide-react";
+import { X, Terminal, Activity, Zap, Power, WifiOff, Plus } from "lucide-react";
 
-type DeviceLog = { id: number; label: string; action: "ON" | "OFF" | "BOOT"; time: string };
+type DeviceLog = { id: number; label: string; action: "ON" | "OFF" | "BOOT" | "REGISTER" | "REMOVED"; time: string };
 
 interface LogsOverlayProps {
   isOpen: boolean;
@@ -117,13 +117,13 @@ export default function LogsOverlay({ isOpen, onClose, deviceHistory }: LogsOver
                 className="flex items-center gap-4 p-4 rounded-2xl group"
                 style={{
                   background:
-                    log.action === "ON"
+                    log.action === "ON" || log.action === "REGISTER"
                       ? "rgba(16,185,129,0.06)"
                       : log.action === "BOOT"
                       ? "rgba(255,255,255,0.03)"
                       : "rgba(255,60,60,0.05)",
                   border:
-                    log.action === "ON"
+                    log.action === "ON" || log.action === "REGISTER"
                       ? "1px solid rgba(16,185,129,0.15)"
                       : log.action === "BOOT"
                       ? "1px solid rgba(255,255,255,0.06)"
@@ -135,13 +135,13 @@ export default function LogsOverlay({ isOpen, onClose, deviceHistory }: LogsOver
                   className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{
                     background:
-                      log.action === "ON"
+                      log.action === "ON" || log.action === "REGISTER"
                         ? "rgba(16,185,129,0.15)"
                         : log.action === "BOOT"
                         ? "rgba(255,255,255,0.05)"
                         : "rgba(255,60,60,0.12)",
                     color:
-                      log.action === "ON"
+                      log.action === "ON" || log.action === "REGISTER"
                         ? G.accent
                         : log.action === "BOOT"
                         ? "rgba(255,255,255,0.3)"
@@ -152,6 +152,8 @@ export default function LogsOverlay({ isOpen, onClose, deviceHistory }: LogsOver
                     {log.action === "ON"  && <Power className="w-4 h-4" />}
                     {log.action === "OFF" && <WifiOff className="w-4 h-4" />}
                     {log.action === "BOOT" && <Activity className="w-4 h-4" />}
+                    {log.action === "REGISTER" && <Plus className="w-4 h-4" />}
+                    {log.action === "REMOVED" && <X className="w-4 h-4" />}
                   </div>
                 </div>
 
@@ -162,14 +164,17 @@ export default function LogsOverlay({ isOpen, onClose, deviceHistory }: LogsOver
                     className="font-mono text-[10px] uppercase tracking-widest"
                     style={{
                       color:
-                        log.action === "ON"
+                        log.action === "ON" || log.action === "REGISTER"
                           ? G.accent
                           : log.action === "BOOT"
                           ? "rgba(255,255,255,0.25)"
                           : "#f87171",
                     }}
                   >
-                    {log.action === "BOOT" ? "System started" : `Turned ${log.action}`}
+                    {log.action === "BOOT" ? "System started" : 
+                     log.action === "REGISTER" ? "Newly registered" :
+                     log.action === "REMOVED" ? "Interface deleted" :
+                     `Turned ${log.action}`}
                   </p>
                 </div>
 

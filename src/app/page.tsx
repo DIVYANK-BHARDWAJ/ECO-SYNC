@@ -15,6 +15,9 @@ import CalculationOverlay, { MetricType } from "@/components/CalculationOverlay"
 import LogsOverlay from "@/components/LogsOverlay";
 import SavingsPlans from "@/components/SavingsPlans";
 import ScrollyHotspots from "@/components/ScrollyHotspots";
+import AddDeviceModal from "@/components/AddDeviceModal";
+import { Device } from "@/types/device";
+import { X } from "lucide-react";
 
 const PLAN_CONFIG: Record<string, { reduction: string; multiplier: number }> = {
   "Eco-Baseline": { reduction: "15%", multiplier: 0.85 },
@@ -22,9 +25,22 @@ const PLAN_CONFIG: Record<string, { reduction: string; multiplier: number }> = {
   "Carbon Zero": { reduction: "75%", multiplier: 0.25 },
 };
 
+const INITIAL_DEVICES: Device[] = [
+  { id: "hvac-1", label: "1.5 Ton AC", power: 1.8, isOn: false, iconName: "Wind", desc: "Master Suite Cooling" },
+  { id: "ev-1", label: "EV Wallbox", power: 7.2, isOn: false, iconName: "Zap", desc: "Tesla Fast Charger" },
+  { id: "fridge-1", label: "Family Fridge", power: 0.15, isOn: true, iconName: "Snowflake", desc: "Main Refrigerator" },
+  { id: "tv-1", label: "OLED 8K TV", power: 0.18, isOn: false, iconName: "Tv", desc: "Living Room Cinema" },
+  { id: "lights-1", label: "Main Lighting", power: 0.08, isOn: true, iconName: "Lightbulb", desc: "Full House Mesh" },
+  { id: "dish-1", label: "Dishwasher", power: 1.5, isOn: false, iconName: "Waves", desc: "Kitchen Hygiene" },
+  { id: "purifier-1", label: "Air Purifier", power: 0.07, isOn: true, iconName: "Search", desc: "HEPA Filtering" },
+  { id: "router-1", label: "Mesh Router", power: 0.02, isOn: true, iconName: "Wifi", desc: "Gigabit Network" },
+];
+
 export default function Home() {
   const [showIntro, setShowIntro] = useState(false);
   const [activeMetric, setActiveMetric] = useState<MetricType>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [notifications, setNotifications] = useState<{ id: string; message: string; type: "info" | "success" | "warning" }[]>([]);
 
   // Scroll to top and show main content when intro finishes
   const handleIntroComplete = () => {
@@ -34,62 +50,76 @@ export default function Home() {
   const [showPlans, setShowPlans] = useState(false);
   const [activePlanId, setActivePlanId] = useState<string | null>(null);
   
-  interface ApplianceState {
-    hvac: boolean;
-    ev: boolean;
-    lighting: boolean;
-    tv: boolean;
-    fridge: boolean;
-    dishwasher: boolean;
-    airPurifier: boolean;
-  }
+  const [devices, setDevices] = useState<Device[]>(INITIAL_DEVICES);
 
-  const [applianceState, setApplianceState] = useState<ApplianceState>({
-    hvac: false,
-    ev: false,
-    lighting: true,
-    tv: false,
-    fridge: true,
-    dishwasher: false,
-    airPurifier: true
-  });
+  // Load from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("eco-sync-devices");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setDevices(parsed);
+        }
+      } catch (e) {
+        console.error("Failed to load devices", e);
+        setDevices(INITIAL_DEVICES);
+      }
+    } else {
+      setDevices(INITIAL_DEVICES);
+    }
+  }, []);
 
-  // Friendly display names for each appliance key
-  const applianceLabels: Record<string, string> = {
-    hvac:        "Air Conditioner (1.5 Ton)",
-    ev:          "EV Wallbox Charger",
-    lighting:    "Smart Lighting",
-    tv:          "Smart OLED TV",
-    fridge:      "Inverter Fridge",
-    dishwasher:  "Dishwasher",
-    airPurifier: "Air Purifier",
-  };
+  // Save to localStorage on change
+  useEffect(() => {
+    localStorage.setItem("eco-sync-devices", JSON.stringify(devices));
+  }, [devices]);
 
-  type DeviceLog = { id: number; label: string; action: "ON" | "OFF" | "BOOT"; time: string };
+  type DeviceLog = { id: number; label: string; action: "ON" | "OFF" | "BOOT" | "REGISTER" | "REMOVED"; time: string };
 
-  // Pre-populate history with the three appliances that start ON
   const bootTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   const [deviceHistory, setDeviceHistory] = useState<DeviceLog[]>([
-    { id: 3, label: "Air Purifier",   action: "ON",   time: bootTime },
-    { id: 2, label: "Inverter Fridge", action: "ON",  time: bootTime },
-    { id: 1, label: "Smart Lighting",  action: "ON",  time: bootTime },
     { id: 0, label: "Eco-Sync System", action: "BOOT", time: bootTime },
   ]);
 
-  // Intercept every toggle to log it with real device time
-  const handleApplianceToggle = useCallback((updater: any) => {
-    setApplianceState((prev: ApplianceState) => {
-      const next = typeof updater === "function" ? updater(prev) : updater;
-      const changedKey = Object.keys(next).find(k => (next as any)[k] !== (prev as any)[k]) as keyof ApplianceState | undefined;
-      if (changedKey) {
-        const action = (next as any)[changedKey] ? "ON" : "OFF";
+  const handleDeviceToggle = useCallback((id: string) => {
+    setDevices((prev) => prev.map(d => {
+      if (d.id === id) {
+        const willBeOn = !d.isOn;
+        const action = willBeOn ? "ON" : "OFF";
         const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-        const entry: DeviceLog = { id: Date.now(), label: applianceLabels[changedKey] ?? changedKey, action, time };
-        setDeviceHistory((h: DeviceLog[]) => [entry, ...h]);
+        setDeviceHistory(h => [{ id: Date.now(), label: d.label, action, time }, ...h]);
+        
+        let timerEndTimestamp = undefined;
+        if (willBeOn && d.autoOffMinutes) {
+          timerEndTimestamp = Date.now() + d.autoOffMinutes * 60000;
+        }
+
+        return { ...d, isOn: willBeOn, timerEndTimestamp };
       }
-      return next;
-    });
-  }, [applianceLabels]);
+      return d;
+    }));
+  }, []);
+
+  const handleAddDevice = (device: Device) => {
+    setDevices(prev => [...prev, device]);
+    const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    setDeviceHistory(h => [{ id: Date.now(), label: device.label, action: "REGISTER", time }, ...h]);
+  };
+
+  const handleDeleteDevice = (id: string) => {
+    const deviceToDelete = devices.find(d => d.id === id);
+    setDevices(prev => prev.filter(d => d.id !== id));
+    const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    setDeviceHistory(h => [{ id: Date.now(), label: deviceToDelete?.label || "Unknown Device", action: "REMOVED", time }, ...h]);
+  };
+
+  const handleReset = () => {
+    localStorage.removeItem("eco-sync-devices");
+    setDevices(INITIAL_DEVICES);
+    const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    setDeviceHistory(h => [{ id: Date.now(), label: "System", action: "BOOT", time }, ...h]);
+  };
 
   const [totalLoad, setTotalLoad] = useState(0.2);
   const [accumulatedKwh, setAccumulatedKwh] = useState(0);
@@ -101,17 +131,13 @@ export default function Home() {
     offset: ["start start", "end end"]
   });
 
-  // Use raw scroll progress directly for a manual, frame-locked experience
   const scrollYProgress = rawScrollProgress;
 
   useEffect(() => {
     let load = 0.2; // Baseline
-    if (applianceState.hvac) load += 2.5;
-    if (applianceState.ev) load += 7.2;
-    if (applianceState.lighting) load += 0.05;
-    if (applianceState.tv) load += 0.15;
-    if (applianceState.dishwasher) load += 1.2;
-    if (applianceState.airPurifier) load += 0.05;
+    devices.forEach(device => {
+      if (device.isOn) load += device.power;
+    });
 
     // Apply plan reductions using centralized config
     if (activePlanId && PLAN_CONFIG[activePlanId]) {
@@ -120,16 +146,55 @@ export default function Home() {
 
     setTotalLoad(load);
     setLoadHistory((prev: number[]) => [...prev.slice(1), load]);
-  }, [applianceState, activePlanId]);
+  }, [devices, activePlanId]);
 
   useEffect(() => {
     const interval = setInterval(() => {
+      const now = Date.now();
+      let timerExpired = false;
+
+      setDevices((prev) => {
+        const updated = prev.map(d => {
+          if (d.isOn && d.timerEndTimestamp && now >= d.timerEndTimestamp) {
+            timerExpired = true;
+            const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+            
+            // Log it
+            setDeviceHistory(h => [{ id: Date.now(), label: d.label, action: "OFF", time: `${time} (AUTO)` }, ...h]);
+            
+            // Notify
+            const notifId = Date.now().toString();
+            setNotifications(n => [
+              { id: notifId, message: `${d.label} turned off automatically.`, type: "info" },
+              ...n
+            ]);
+            
+            // Auto-dismiss after 5s
+            setTimeout(() => {
+              removeNotification(notifId);
+            }, 5000);
+
+            return { ...d, isOn: false, timerEndTimestamp: undefined };
+          }
+          return d;
+        });
+
+        if (timerExpired) {
+          return updated;
+        }
+        return prev;
+      });
+
       const addedKwh = totalLoad / 3600;
       setAccumulatedKwh((prev: number) => prev + addedKwh);
       setLoadHistory((prev: number[]) => [...prev.slice(1), totalLoad]);
     }, 1000);
     return () => clearInterval(interval);
   }, [totalLoad]);
+
+  const removeNotification = (id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  };
 
   return (
     <main className="relative bg-black min-h-screen cursor-none selection:bg-accent-cyber selection:text-black">
@@ -142,6 +207,13 @@ export default function Home() {
       </AnimatePresence>
 
       <AnimatePresence>
+        {showAddModal && (
+          <AddDeviceModal 
+            isOpen={showAddModal} 
+            onClose={() => setShowAddModal(false)} 
+            onAdd={handleAddDevice} 
+          />
+        )}
         {activeMetric && (
           <CalculationOverlay type={activeMetric} onClose={() => setActiveMetric(null)} />
         )}
@@ -157,6 +229,32 @@ export default function Home() {
           />
         )}
       </AnimatePresence>
+
+      {/* Real-time Notifications Overlay */}
+      <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[200] flex flex-col gap-4 w-full max-w-md px-6">
+        <AnimatePresence>
+          {notifications.map((notif) => (
+            <motion.div
+              key={notif.id}
+              initial={{ opacity: 0, y: -20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9, y: -20 }}
+              className="bg-slate-900/80 backdrop-blur-2xl border border-accent-cyber/30 p-5 rounded-2xl shadow-2xl flex items-center justify-between group"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-2 h-2 rounded-full bg-accent-cyber animate-pulse shadow-[0_0_10px_#00F0FF]" />
+                <p className="text-white font-black uppercase text-[10px] tracking-widest">{notif.message}</p>
+              </div>
+              <button 
+                onClick={() => removeNotification(notif.id)}
+                className="p-1 rounded-lg hover:bg-white/5 text-white/20 hover:text-white transition-all"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
 
       {!showIntro && (
         <div>
@@ -176,13 +274,16 @@ export default function Home() {
           {/* Neon Aqua Command Center (Industrial Cyber Theme) */}
           <div id="command-center" className="relative z-30 bg-slate-900 border-t border-white/5">
             <UHDSection 
-              applianceState={applianceState} 
-              setApplianceState={handleApplianceToggle} 
+              devices={devices} 
+              onToggleDevice={handleDeviceToggle} 
+              onAddDevice={() => setShowAddModal(true)}
+              onDeleteDevice={handleDeleteDevice}
               totalLoad={totalLoad}
               onOpenPlans={() => setShowPlans(true)}
               onScrollToRadar={() => {
                 document.getElementById("grid-radar")?.scrollIntoView({ behavior: "smooth", block: "center" });
               }}
+              onReset={handleReset}
             />
 
             {/* Dedicated Real-Time Radar Section */}
@@ -211,6 +312,7 @@ export default function Home() {
                    <Totalizer 
                     totalLoad={totalLoad} 
                     accumulatedKwh={accumulatedKwh}
+                    devices={devices}
                     onOpenMetric={(type) => setActiveMetric(type)}
                    />
                  </div>

@@ -3,25 +3,27 @@
 import { motion } from "framer-motion";
 import { Info, Calculator } from "lucide-react";
 import { MetricType } from "./CalculationOverlay";
+import { Device } from "@/types/device";
 
 interface TotalizerProps {
   totalLoad: number;
   accumulatedKwh: number;
+  devices: Device[];
   onOpenMetric: (type: MetricType) => void;
 }
 
-export default function Totalizer({ totalLoad, accumulatedKwh, onOpenMetric }: TotalizerProps) {
+export default function Totalizer({ totalLoad, accumulatedKwh, devices, onOpenMetric }: TotalizerProps) {
   const carbonFactor = 0.82; // India Standard (0.82kg/unit)
   const costFactor = 8; // ₹8 per unit (Standard Indian Rate)
   
   const currentCost = accumulatedKwh * costFactor;
   const currentCarbon = accumulatedKwh * carbonFactor;
 
-  const MAX_POTENTIAL_LOAD = 11.25;
   const BASELINE_LOAD = 0.2; 
+  const maxPotentialLoad = devices.reduce((sum, d) => sum + d.power, 0) + BASELINE_LOAD;
   
   const efficiency = Math.max(0, Math.min(100, 
-    100 - ((totalLoad - BASELINE_LOAD) / (MAX_POTENTIAL_LOAD - BASELINE_LOAD)) * 100
+    100 - ((totalLoad - BASELINE_LOAD) / (maxPotentialLoad - BASELINE_LOAD || 1)) * 100
   ));
 
   return (

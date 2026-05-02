@@ -1,0 +1,470 @@
+import { useState, useMemo, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  X, Zap, Wind, Snowflake, Tv, Lightbulb, Waves, Plus, Cpu, 
+  WashingMachine, Wifi, Flame, Coffee, Fan, Laptop, Speaker, 
+  ArrowLeft, Search, Microwave, Utensils, Monitor, Gamepad, 
+  Shield, Camera, Lock, Bell, Sun, Battery, Droplets, Printer, 
+  Smartphone, Thermometer, Music, ChefHat, Scan, Video, 
+  Dumbbell, HeartPulse, Plug, Power, Radio, Tablets, Stethoscope,
+  Sprout, CloudRain, HardDrive, Tablet, Volume2, Cloud, DoorOpen, LightbulbOff, Activity,
+  Headphones, Mic, Trophy, Key, Anchor, Car, Bike, Plane, Map, Compass, Umbrella, Tool, 
+  Hammer, Wrench, Scissors, Paintbrush, Music2, Mic2, Headset, FlaskConical, Beer, Wine,
+  TreePine, Mountain, Waves as WaterWaves, Fish, Bird, Dog, Cat, Bug, ChevronRight
+} from "lucide-react";
+import { Device } from "@/types/device";
+
+interface AddDeviceModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onAdd: (device: Device) => void;
+}
+
+const CATEGORIES = [
+  "All", "Kitchen", "Living Room", "Climate", "Laundry", "Security & Tech", "Utility", "Health", "Outdoor", "Hobby"
+] as const;
+
+type Category = typeof CATEGORIES[number];
+
+const APPLIANCE_PRESETS = [
+  // Kitchen (20)
+  { label: "Refrigerator", iconName: "Snowflake", icon: Snowflake, defaultPower: 0.2, desc: "Food Preservation", category: "Kitchen" },
+  { label: "Microwave", iconName: "Microwave", icon: Microwave, defaultPower: 1.2, desc: "Quick Cooking", category: "Kitchen" },
+  { label: "Dishwasher", iconName: "Waves", icon: Waves, defaultPower: 1.2, desc: "Kitchen Hygiene", category: "Kitchen" },
+  { label: "Coffee Machine", iconName: "Coffee", icon: Coffee, defaultPower: 1.0, desc: "Kitchen Appliance", category: "Kitchen" },
+  { label: "Electric Oven", iconName: "ChefHat", icon: ChefHat, defaultPower: 2.5, desc: "Baking & Roasting", category: "Kitchen" },
+  { label: "Electric Kettle", iconName: "Utensils", icon: Utensils, defaultPower: 2.0, desc: "Water Boiling", category: "Kitchen" },
+  { label: "Induction Cooktop", iconName: "Flame", icon: Flame, defaultPower: 1.8, desc: "Precision Cooking", category: "Kitchen" },
+  { label: "Air Fryer", iconName: "Zap", icon: Zap, defaultPower: 1.5, desc: "Healthy Cooking", category: "Kitchen" },
+  { label: "Blender", iconName: "Cpu", icon: Cpu, defaultPower: 0.5, desc: "Smoothie Station", category: "Kitchen" },
+  { label: "Rice Cooker", iconName: "ChefHat", icon: ChefHat, defaultPower: 0.7, desc: "Grain Preparation", category: "Kitchen" },
+  { label: "Toaster", iconName: "Flame", icon: Flame, defaultPower: 0.8, desc: "Breakfast Prep", category: "Kitchen" },
+  { label: "Ice Maker", iconName: "Snowflake", icon: Snowflake, defaultPower: 0.15, desc: "Ice Production", category: "Kitchen" },
+  { label: "Wine Cooler", iconName: "Wine", icon: Wine, defaultPower: 0.1, desc: "Beverage Storage", category: "Kitchen" },
+  { label: "Trash Compactor", iconName: "Zap", icon: Zap, defaultPower: 0.5, desc: "Waste Management", category: "Kitchen" },
+  { label: "Beer Dispenser", iconName: "Beer", icon: Beer, defaultPower: 0.1, desc: "Draft System", category: "Kitchen" },
+  { label: "Food Processor", iconName: "Cpu", icon: Cpu, defaultPower: 0.4, desc: "Prep Tool", category: "Kitchen" },
+  { label: "Slow Cooker", iconName: "ChefHat", icon: ChefHat, defaultPower: 0.2, desc: "Low-Temp Cooking", category: "Kitchen" },
+  { label: "Juicer", iconName: "Zap", icon: Zap, defaultPower: 0.3, desc: "Fresh Extracts", category: "Kitchen" },
+  { label: "Electric Whisk", iconName: "Zap", icon: Zap, defaultPower: 0.1, desc: "Mixing Tool", category: "Kitchen" },
+  { label: "Smart Scale Kit", iconName: "Utensils", icon: Utensils, defaultPower: 0.01, desc: "Portion Control", category: "Kitchen" },
+
+  // Living Room / Entertainment (15)
+  { label: "Smart TV", iconName: "Tv", icon: Tv, defaultPower: 0.15, desc: "Entertainment", category: "Living Room" },
+  { label: "Gaming Console", iconName: "Gamepad", icon: Gamepad, defaultPower: 0.3, desc: "High Perf Gaming", category: "Living Room" },
+  { label: "Smart Speaker", iconName: "Speaker", icon: Speaker, defaultPower: 0.01, desc: "Audio System", category: "Living Room" },
+  { label: "Music System", iconName: "Music", icon: Music, defaultPower: 0.1, desc: "High Fidelity Audio", category: "Living Room" },
+  { label: "Home Theater", iconName: "Video", icon: Video, defaultPower: 0.4, desc: "Cinematic Experience", category: "Living Room" },
+  { label: "Projector", iconName: "Video", icon: Video, defaultPower: 0.25, desc: "Large Screen Viewing", category: "Living Room" },
+  { label: "Vinyl Player", iconName: "Radio", icon: Radio, defaultPower: 0.05, desc: "Analog Sound", category: "Living Room" },
+  { label: "Smart Lighting", iconName: "Lightbulb", icon: Lightbulb, defaultPower: 0.05, desc: "Ambient Light", category: "Living Room" },
+  { label: "Accent Lights", iconName: "LightbulbOff", icon: LightbulbOff, defaultPower: 0.02, desc: "Mood Lighting", category: "Living Room" },
+  { label: "Soundbar", iconName: "Volume2", icon: Volume2, defaultPower: 0.06, desc: "TV Audio Enhance", category: "Living Room" },
+  { label: "Headphones Hub", iconName: "Headphones", icon: Headphones, defaultPower: 0.01, desc: "Personal Audio", category: "Living Room" },
+  { label: "VR Headset", iconName: "Headset", icon: Headset, defaultPower: 0.05, desc: "Virtual Reality", category: "Living Room" },
+  { label: "Smart Remote", iconName: "Wifi", icon: Wifi, defaultPower: 0.001, desc: "Unified Control", category: "Living Room" },
+  { label: "Electric Fireplace", iconName: "Flame", icon: Flame, defaultPower: 1.5, desc: "Mood & Heat", category: "Living Room" },
+  { label: "Digital Photo Frame", iconName: "Monitor", icon: Monitor, defaultPower: 0.02, desc: "Memory Display", category: "Living Room" },
+
+  // Climate (12)
+  { label: "Air Conditioner", iconName: "Wind", icon: Wind, defaultPower: 1.5, desc: "Climate Control", category: "Climate" },
+  { label: "Ceiling Fan", iconName: "Fan", icon: Fan, defaultPower: 0.07, desc: "Ventilation", category: "Climate" },
+  { label: "Water Heater", iconName: "Flame", icon: Flame, defaultPower: 2.0, desc: "Hot Water", category: "Climate" },
+  { label: "Space Heater", iconName: "Thermometer", icon: Thermometer, defaultPower: 1.5, desc: "Winter Heating", category: "Climate" },
+  { label: "Humidifier", iconName: "Droplets", icon: Droplets, defaultPower: 0.05, desc: "Moisture Balance", category: "Climate" },
+  { label: "Dehumidifier", iconName: "Wind", icon: Wind, defaultPower: 0.25, desc: "Dry Air Control", category: "Climate" },
+  { label: "Air Purifier", iconName: "Wind", icon: Wind, defaultPower: 0.06, desc: "Air Filtration", category: "Climate" },
+  { label: "Smart Thermostat", iconName: "Thermometer", icon: Thermometer, defaultPower: 0.005, desc: "Climate Management", category: "Climate" },
+  { label: "Radiator Node", iconName: "Flame", icon: Flame, defaultPower: 1.0, desc: "Zoned Heating", category: "Climate" },
+  { label: "Mist Fan", iconName: "Cloud", icon: Cloud, defaultPower: 0.08, desc: "Outdoor Cooling", category: "Climate" },
+  { label: "Floor Heater", iconName: "Zap", icon: Zap, defaultPower: 0.5, desc: "Tile Warmth", category: "Climate" },
+  { label: "HVAC Unit", iconName: "Wind", icon: Wind, defaultPower: 3.5, desc: "Main Climate Hub", category: "Climate" },
+
+  // Laundry (8)
+  { label: "Washing Machine", iconName: "WashingMachine", icon: WashingMachine, defaultPower: 0.5, desc: "Laundry", category: "Laundry" },
+  { label: "Clothes Dryer", iconName: "Wind", icon: Wind, defaultPower: 3.0, desc: "Tumble Drying", category: "Laundry" },
+  { label: "Electric Iron", iconName: "Flame", icon: Flame, defaultPower: 1.2, desc: "Garment Care", category: "Laundry" },
+  { label: "Steam Station", iconName: "Cloud", icon: Cloud, defaultPower: 2.2, desc: "Pro Ironing", category: "Laundry" },
+  { label: "Fabric Steamer", iconName: "Cloud", icon: Cloud, defaultPower: 1.0, desc: "Quick Refresh", category: "Laundry" },
+  { label: "Drying Cabinet", iconName: "Wind", icon: Wind, defaultPower: 1.5, desc: "Delicate Care", category: "Laundry" },
+  { label: "Smart Hamper", iconName: "Wifi", icon: Wifi, defaultPower: 0.001, desc: "Laundry Tracking", category: "Laundry" },
+  { label: "Ironing Press", iconName: "Flame", icon: Flame, defaultPower: 2.5, desc: "Heavy Duty Care", category: "Laundry" },
+
+  // Security & Tech (15)
+  { label: "Wi-Fi Router", iconName: "Wifi", icon: Wifi, defaultPower: 0.02, desc: "Connectivity", category: "Security & Tech" },
+  { label: "Laptop", iconName: "Laptop", icon: Laptop, defaultPower: 0.06, desc: "Workstation", category: "Security & Tech" },
+  { label: "Desktop PC", iconName: "Monitor", icon: Monitor, defaultPower: 0.25, desc: "High Power Workstation", category: "Security & Tech" },
+  { label: "Printer", iconName: "Printer", icon: Printer, defaultPower: 0.1, desc: "Document Output", category: "Security & Tech" },
+  { label: "Security Camera", iconName: "Camera", icon: Camera, defaultPower: 0.01, desc: "Surveillance", category: "Security & Tech" },
+  { label: "Smart Lock", iconName: "Lock", icon: Lock, defaultPower: 0.005, desc: "Entry Control", category: "Security & Tech" },
+  { label: "Scanner", iconName: "Scan", icon: Scan, defaultPower: 0.05, desc: "Digitization", category: "Security & Tech" },
+  { label: "External Storage", iconName: "HardDrive", icon: HardDrive, defaultPower: 0.01, desc: "Data Backup", category: "Security & Tech" },
+  { label: "Smart Doorbell", iconName: "Bell", icon: Bell, defaultPower: 0.005, desc: "Entry Monitor", category: "Security & Tech" },
+  { label: "Garage Opener", iconName: "DoorOpen", icon: DoorOpen, defaultPower: 0.3, desc: "Access Control", category: "Security & Tech" },
+  { label: "Smart Tablet", iconName: "Tablet", icon: Tablet, defaultPower: 0.01, desc: "Touch Interface", category: "Security & Tech" },
+  { label: "Smart Mobile", iconName: "Smartphone", icon: Smartphone, defaultPower: 0.005, desc: "Mobile Comms", category: "Security & Tech" },
+  { label: "Key Tracker", iconName: "Key", icon: Key, defaultPower: 0.001, desc: "Asset Location", category: "Security & Tech" },
+  { label: "Server Rack", iconName: "HardDrive", icon: HardDrive, defaultPower: 1.2, desc: "Home Datacenter", category: "Security & Tech" },
+  { label: "NAS System", iconName: "HardDrive", icon: HardDrive, defaultPower: 0.04, desc: "Network Storage", category: "Security & Tech" },
+
+  // Health & Wellness (15)
+  { label: "Treadmill", iconName: "Zap", icon: Zap, defaultPower: 1.5, desc: "Fitness Training", category: "Health" },
+  { label: "Massage Chair", iconName: "Power", icon: Power, defaultPower: 0.2, desc: "Relaxation", category: "Health" },
+  { label: "Electric Toothbrush", iconName: "Plug", icon: Plug, defaultPower: 0.005, desc: "Dental Care", category: "Health" },
+  { label: "CPAP Machine", iconName: "Activity", icon: Activity, defaultPower: 0.06, desc: "Sleep Support", category: "Health" },
+  { label: "Air Purifier Pro", iconName: "Wind", icon: Wind, defaultPower: 0.08, desc: "Medical Grade Air", category: "Health" },
+  { label: "Body Scale", iconName: "Wifi", icon: Wifi, defaultPower: 0.001, desc: "Weight Metrics", category: "Health" },
+  { label: "Exercise Bike", iconName: "Zap", icon: Zap, defaultPower: 0.1, desc: "Cardio Station", category: "Health" },
+  { label: "Smart Mirror", iconName: "Monitor", icon: Monitor, defaultPower: 0.05, desc: "Fitness Feedback", category: "Health" },
+  { label: "Pill Dispenser", iconName: "Tablets", icon: Tablets, defaultPower: 0.01, desc: "Medication Management", category: "Health" },
+  { label: "Digital Stethoscope", iconName: "Stethoscope", icon: Stethoscope, defaultPower: 0.005, desc: "Cardiac Monitor", category: "Health" },
+  { label: "Smart Gym", iconName: "Dumbbell", icon: Dumbbell, defaultPower: 0.2, desc: "Strength Training", category: "Health" },
+  { label: "Heart Monitor", iconName: "HeartPulse", icon: HeartPulse, defaultPower: 0.002, desc: "Vital Tracking", category: "Health" },
+  { label: "Infrared Sauna", iconName: "Flame", icon: Flame, defaultPower: 2.0, desc: "Detox Session", category: "Health" },
+  { label: "UV Sanitizer", iconName: "Sun", icon: Sun, defaultPower: 0.02, desc: "Germ Protection", category: "Health" },
+  { label: "Smart Bed Node", iconName: "Activity", icon: Activity, defaultPower: 0.01, desc: "Sleep Tracking", category: "Health" },
+
+  // Outdoor / Utility (15)
+  { label: "Electric Vehicle", iconName: "Zap", icon: Zap, defaultPower: 7.0, desc: "Fast Charging", category: "Utility" },
+  { label: "Solar Panel", iconName: "Sun", icon: Sun, defaultPower: 0.0, desc: "Energy Generation", category: "Utility" },
+  { label: "Battery Bank", iconName: "Battery", icon: Battery, defaultPower: 0.0, desc: "Energy Storage", category: "Utility" },
+  { label: "Pool Pump", iconName: "Droplets", icon: Droplets, defaultPower: 1.5, desc: "Water Circulation", category: "Outdoor" },
+  { label: "Smart Irrigation", iconName: "CloudRain", icon: CloudRain, defaultPower: 0.05, desc: "Garden Watering", category: "Outdoor" },
+  { label: "Electric Mower", iconName: "Sprout", icon: Sprout, defaultPower: 1.2, desc: "Lawn Care", category: "Outdoor" },
+  { label: "Outdoor Lighting", iconName: "Sun", icon: Sun, defaultPower: 0.1, desc: "Landscape Light", category: "Outdoor" },
+  { label: "Pool Heater", iconName: "Flame", icon: Flame, defaultPower: 5.0, desc: "Water Temp Control", category: "Outdoor" },
+  { label: "Security Floodlight", iconName: "Lightbulb", icon: Lightbulb, defaultPower: 0.05, desc: "Perimeter Safety", category: "Outdoor" },
+  { label: "Electric Grill", iconName: "Flame", icon: Flame, defaultPower: 2.2, desc: "Outdoor Cooking", category: "Outdoor" },
+  { label: "Pond Filter", iconName: "Waves", icon: Waves, defaultPower: 0.04, desc: "Aquatic Life Support", category: "Outdoor" },
+  { label: "Electric Boat Motor", iconName: "Anchor", icon: Anchor, defaultPower: 3.0, desc: "Marine Propulsion", category: "Outdoor" },
+  { label: "E-Bike Charger", iconName: "Bike", icon: Bike, defaultPower: 0.2, desc: "Micromobility", category: "Outdoor" },
+  { label: "Electric Car Jack", iconName: "Car", icon: Car, defaultPower: 0.5, desc: "Roadside Utility", category: "Outdoor" },
+  { label: "Smart Sprinkler", iconName: "CloudRain", icon: CloudRain, defaultPower: 0.01, desc: "Precision Watering", category: "Outdoor" },
+
+  // Hobby & Misc (10)
+  { label: "3D Printer", iconName: "Printer", icon: Printer, defaultPower: 0.3, desc: "Additive Manufacturing", category: "Hobby" },
+  { label: "Electric Guitar Amp", iconName: "Volume2", icon: Volume2, defaultPower: 0.1, desc: "Music Studio", category: "Hobby" },
+  { label: "Photography Light", iconName: "Sun", icon: Sun, defaultPower: 0.15, desc: "Studio Lighting", category: "Hobby" },
+  { label: "Smart Aquarium", iconName: "Droplets", icon: Droplets, defaultPower: 0.05, desc: "Pet Care Tech", category: "Hobby" },
+  { label: "Telescope Motor", iconName: "Cpu", icon: Cpu, defaultPower: 0.02, desc: "Stargazing System", category: "Hobby" },
+  { label: "Soldering Station", iconName: "Flame", icon: Flame, defaultPower: 0.06, desc: "Electronics Lab", category: "Hobby" },
+  { label: "Power Drill Charger", iconName: "Battery", icon: Battery, defaultPower: 0.08, desc: "Tool Maintenance", category: "Hobby" },
+  { label: "Sewing Machine", iconName: "Zap", icon: Zap, defaultPower: 0.1, desc: "Textile Work", category: "Hobby" },
+  { label: "Smart Easel", iconName: "Paintbrush", icon: Paintbrush, defaultPower: 0.02, desc: "Digital Art Studio", category: "Hobby" },
+  { label: "Lab Centrifuge", iconName: "FlaskConical", icon: FlaskConical, defaultPower: 0.4, desc: "Home Science Lab", category: "Hobby" },
+
+  { label: "Custom Device", iconName: "Plus", icon: Plus, defaultPower: 0.1, desc: "User Defined Interface", category: "All" },
+];
+
+export default function AddDeviceModal({ isOpen, onClose, onAdd }: AddDeviceModalProps) {
+  const [selectedPreset, setSelectedPreset] = useState<typeof APPLIANCE_PRESETS[0] | null>(null);
+  const [power, setPower] = useState("");
+  const [customName, setCustomName] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState<Category>("All");
+  const [autoOffMinutes, setAutoOffMinutes] = useState<string>("");
+  const [step, setStep] = useState(1);
+  const configRef = useRef<HTMLDivElement>(null);
+  const powerRef = useRef<HTMLDivElement>(null);
+
+  const scrollDown = () => {
+    configRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setStep(2);
+  };
+
+  const scrollToPower = () => {
+    powerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
+
+  const filteredPresets = useMemo(() => {
+    return APPLIANCE_PRESETS.filter(preset => {
+      const matchesSearch = preset.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          preset.desc.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = activeCategory === "All" || preset.category === activeCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [searchQuery, activeCategory]);
+
+  const handleSelectPreset = (preset: typeof APPLIANCE_PRESETS[0]) => {
+    setSelectedPreset(preset);
+    setPower(preset.defaultPower.toString());
+    setCustomName(preset.label);
+    setStep(2);
+    
+    // Smooth scroll to config section
+    setTimeout(() => {
+      configRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedPreset || !power) return;
+
+    const newDevice: Device = {
+      id: Date.now().toString(),
+      label: customName || selectedPreset.label,
+      power: parseFloat(power),
+      iconName: selectedPreset.iconName,
+      desc: selectedPreset.desc,
+      autoOffMinutes: autoOffMinutes ? parseInt(autoOffMinutes) : undefined,
+      timerEndTimestamp: undefined,
+      isOn: false,
+    };
+
+    onAdd(newDevice);
+    resetForm();
+    onClose();
+  };
+
+  const resetForm = () => {
+    setStep(1);
+    setSelectedPreset(null);
+    setPower("");
+    setCustomName("");
+    setSearchQuery("");
+    setActiveCategory("All");
+    setAutoOffMinutes("");
+  };
+
+  const handleBack = () => {
+    setStep(1);
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+          />
+          
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            className="relative w-full max-w-5xl bg-slate-900 border border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+          >
+            {/* Background Glow */}
+            <div className="absolute top-0 right-0 w-96 h-96 bg-accent-cyber/10 blur-[120px] -mr-48 -mt-48 pointer-events-none" />
+            
+            <div className="relative z-10 flex flex-col h-full">
+              {/* Header */}
+              <div className="p-8 sm:p-10 border-b border-white/5 flex justify-between items-center bg-slate-900/50 backdrop-blur-xl">
+                <div className="flex items-center gap-4">
+                  {step === 2 && (
+                    <button 
+                      onClick={handleBack}
+                      className="p-2 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-white transition-all"
+                    >
+                      <ArrowLeft className="w-5 h-5" />
+                    </button>
+                  )}
+                  <div>
+                    <h2 className="text-white font-black text-2xl sm:text-3xl tracking-tighter uppercase italic leading-none">
+                      {step === 1 ? "Select" : "Configure"} <span className="text-accent-cyber">Appliance</span>
+                    </h2>
+                    <p className="text-white/30 text-[10px] font-mono uppercase tracking-[0.2em] mt-2 font-bold">
+                      {step === 1 ? `Step 01: Browse Catalog (${filteredPresets.length})` : "Step 02: Hardware Parameters"}
+                    </p>
+                  </div>
+                </div>
+                <button 
+                  onClick={onClose}
+                  className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+               <div className="flex-1 relative overflow-hidden flex flex-col">
+                 <AnimatePresence mode="wait">
+                   {step === 1 ? (
+                     <motion.div
+                       key="catalog"
+                       initial={{ opacity: 0, x: -20 }}
+                       animate={{ opacity: 1, x: 0 }}
+                       exit={{ opacity: 0, x: -20 }}
+                       className="flex-1 overflow-y-auto custom-scrollbar p-8 sm:p-10"
+                     >
+                      {/* Search & Categories */}
+                      <div className="flex flex-col gap-6 mb-10">
+                        <div className="relative group">
+                          <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20 group-focus-within:text-accent-cyber transition-all" />
+                          <input 
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="SEARCH APPLIANCES..."
+                            className="w-full bg-white/5 border border-white/10 rounded-2xl pl-16 pr-6 py-5 text-white placeholder:text-white/10 focus:outline-none focus:border-accent-cyber/50 transition-all font-mono text-sm tracking-widest font-black uppercase"
+                          />
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                          {CATEGORIES.map(cat => (
+                            <button
+                              key={cat}
+                              onClick={() => setActiveCategory(cat)}
+                              className={`px-4 py-2 rounded-xl text-[9px] font-mono uppercase tracking-widest font-black transition-all border ${
+                                activeCategory === cat 
+                                  ? "bg-accent-cyber text-slate-900 border-accent-cyber shadow-[0_0_20px_rgba(0,240,255,0.2)]" 
+                                  : "bg-white/5 text-white/40 border-white/5 hover:border-white/10 hover:text-white"
+                              }`}
+                            >
+                              {cat}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Grid */}
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-10">
+                        {filteredPresets.map((preset) => (
+                          <motion.button
+                            key={preset.label}
+                            whileHover={{ y: -4, backgroundColor: "rgba(255,255,255,0.05)", borderColor: "rgba(0,240,255,0.2)" }}
+                            whileTap={{ scale: 0.97 }}
+                            onClick={() => handleSelectPreset(preset)}
+                            className={`flex flex-col items-center p-6 rounded-3xl border transition-all text-center group ${
+                              selectedPreset?.label === preset.label 
+                                ? "bg-accent-cyber/10 border-accent-cyber shadow-[0_0_20px_rgba(0,240,255,0.1)]" 
+                                : "bg-white/2 border-white/5"
+                            }`}
+                          >
+                            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-4 transition-all shadow-inner ${
+                              selectedPreset?.label === preset.label 
+                                ? "bg-accent-cyber text-slate-900" 
+                                : "bg-slate-800 group-hover:bg-accent-cyber group-hover:text-slate-900"
+                            }`}>
+                              <preset.icon className="w-8 h-8" />
+                            </div>
+                            <h4 className="text-white font-black text-[10px] uppercase tracking-wider mb-1 leading-tight">{preset.label}</h4>
+                            <p className="text-white/30 text-[8px] uppercase font-bold tracking-tight">{preset.desc}</p>
+                          </motion.button>
+                        ))}
+                      </div>
+
+                      {/* Scroll Down Indicator */}
+                      {selectedPreset && (
+                        <motion.div 
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="flex justify-center mb-10"
+                        >
+                          <button 
+                            onClick={scrollDown}
+                            className="flex flex-col items-center gap-2 group"
+                          >
+                            <span className="text-white/30 text-[9px] font-mono uppercase tracking-[0.3em] group-hover:text-accent-cyber transition-colors">Configure This Device</span>
+                            <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:border-accent-cyber/50 group-hover:bg-accent-cyber/10 transition-all">
+                              <ChevronRight className="w-5 h-5 text-accent-cyber rotate-90" />
+                            </div>
+                          </button>
+                        </motion.div>
+                      )}
+                     </motion.div>
+                   ) : (
+                     <motion.div
+                       key="config"
+                       initial={{ opacity: 0, x: 20 }}
+                       animate={{ opacity: 1, x: 0 }}
+                       exit={{ opacity: 0, x: 20 }}
+                       className="flex-1 overflow-y-auto custom-scrollbar p-8 sm:p-10"
+                     >
+                       <div ref={configRef} className="max-w-2xl mx-auto">
+                      <div className="flex flex-col items-center text-center mb-10">
+                        <p className="text-accent-cyber font-mono text-[10px] uppercase tracking-[0.4em] mb-4 font-black">Node Configuration</p>
+                        <div className="w-24 h-24 rounded-[2rem] bg-accent-cyber text-slate-900 flex items-center justify-center mb-6 shadow-[0_0_40px_rgba(0,240,255,0.3)]">
+                          {selectedPreset ? <selectedPreset.icon className="w-12 h-12" /> : <Plus className="w-12 h-12 text-slate-900/20" />}
+                        </div>
+                        <h3 className="text-white text-2xl font-black uppercase tracking-tight italic">
+                          {selectedPreset ? selectedPreset.label : "Select a Device"}
+                        </h3>
+                        <p className="text-white/40 font-mono text-[10px] uppercase tracking-widest mt-2 font-bold">
+                          {selectedPreset ? selectedPreset.desc : "Choose from the catalog above to begin"}
+                        </p>
+                        {selectedPreset && (
+                          <motion.button
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            onClick={scrollToPower}
+                            className="mt-6 flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all group"
+                          >
+                            <span className="text-[9px] font-mono uppercase tracking-widest text-white/40 group-hover:text-accent-cyber transition-colors">Scroll to Power</span>
+                            <ChevronRight className="w-3 h-3 text-accent-cyber rotate-90" />
+                          </motion.button>
+                        )}
+                      </div>
+
+                      <form onSubmit={handleSubmit} className="space-y-10 pb-20">
+                        <div className="grid grid-cols-1 gap-8">
+                          <div>
+                            <label className="block text-white/40 text-[10px] font-mono uppercase tracking-widest mb-3 font-bold">Custom Label (Optional)</label>
+                            <input 
+                              type="text" 
+                              value={customName}
+                              onChange={(e) => setCustomName(e.target.value)}
+                              placeholder="e.g. Living Room TV"
+                              className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white placeholder:text-white/10 focus:outline-none focus:border-accent-cyber/50 transition-all font-bold"
+                            />
+                          </div>
+
+                          <div ref={powerRef}>
+                            <label className="block text-white/40 text-[10px] font-mono uppercase tracking-widest mb-3 font-bold">Power Consumption (kW)</label>
+                            <div className="relative">
+                              <input 
+                                type="number" 
+                                step="0.01"
+                                value={power}
+                                onChange={(e) => setPower(e.target.value)}
+                                placeholder="0.00"
+                                className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-10 text-6xl font-black text-white focus:outline-none focus:border-accent-cyber/50 transition-all text-center tabular-nums"
+                                required
+                              />
+                              <div className="absolute right-8 top-1/2 -translate-y-1/2 text-white/20 font-black text-2xl uppercase tracking-tighter italic">kW</div>
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-white/40 text-[10px] font-mono uppercase tracking-widest mb-3 font-bold">Auto-Off Timer (Minutes)</label>
+                            <div className="relative">
+                              <input 
+                                type="number" 
+                                value={autoOffMinutes}
+                                onChange={(e) => setAutoOffMinutes(e.target.value)}
+                                placeholder="0 (Off)"
+                                className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-6 text-3xl font-black text-white focus:outline-none focus:border-accent-cyber/50 transition-all text-center tabular-nums"
+                              />
+                              <div className="absolute right-6 top-1/2 -translate-y-1/2 text-white/20 font-black text-sm uppercase tracking-tighter italic">Min</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={!selectedPreset}
+                          className="group relative w-full py-6 bg-accent-cyber disabled:bg-slate-800 disabled:text-white/10 rounded-2xl overflow-hidden shadow-[0_20px_40px_rgba(0,240,255,0.2)] transition-all active:scale-[0.98]"
+                        >
+                          <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+                          <span className="relative z-10 text-slate-900 font-black uppercase tracking-[0.2em] text-sm flex items-center justify-center gap-3">
+                            <Plus className="w-5 h-5" />
+                            Activate Smart Node
+                          </span>
+                        </button>
+                      </form>
+                       </div>
+                     </motion.div>
+                   )}
+                 </AnimatePresence>
+               </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+}
