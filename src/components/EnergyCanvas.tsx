@@ -102,7 +102,7 @@ export default function EnergyCanvas({ scrollProgress }: EnergyCanvasProps) {
       window.removeEventListener("resize", handleResize);
       unsubscribe();
     };
-  }, [ready]);
+  }, [ready, frameIndex]);
 
   return (
     <motion.div

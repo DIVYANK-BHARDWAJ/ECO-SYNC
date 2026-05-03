@@ -1,4 +1,7 @@
-import { useState, useMemo, useRef } from "react";
+"use client";
+
+import { useState, useMemo, useRef, useEffect } from "react";
+import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   X, Zap, Wind, Snowflake, Tv, Lightbulb, Waves, Plus, Cpu, 
@@ -8,9 +11,10 @@ import {
   Smartphone, Thermometer, Music, ChefHat, Scan, Video, 
   Dumbbell, HeartPulse, Plug, Power, Radio, Tablets, Stethoscope,
   Sprout, CloudRain, HardDrive, Tablet, Volume2, Cloud, DoorOpen, LightbulbOff, Activity,
-  Headphones, Mic, Trophy, Key, Anchor, Car, Bike, Plane, Map, Compass, Umbrella, Tool, 
+  Headphones, Mic, Trophy, Key, Anchor, Car, Bike, Plane, Map, Compass, Umbrella, 
   Hammer, Wrench, Scissors, Paintbrush, Music2, Mic2, Headset, FlaskConical, Beer, Wine,
-  TreePine, Mountain, Waves as WaterWaves, Fish, Bird, Dog, Cat, Bug, ChevronRight
+  TreePine, Mountain, Waves as WaterWaves, Fish, Bird, Dog, Cat, Bug, ChevronRight,
+  Info, Tag
 } from "lucide-react";
 import { Device } from "@/types/device";
 
@@ -162,18 +166,44 @@ export default function AddDeviceModal({ isOpen, onClose, onAdd }: AddDeviceModa
   const [customName, setCustomName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<Category>("All");
-  const [autoOffMinutes, setAutoOffMinutes] = useState<string>("");
   const [step, setStep] = useState(1);
+  const [activeSection, setActiveSection] = useState<'info' | 'label' | 'power'>('info');
   const configRef = useRef<HTMLDivElement>(null);
+  const labelRef = useRef<HTMLDivElement>(null);
   const powerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (step !== 2) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const section = entry.target.getAttribute('data-section');
+            if (section) setActiveSection(section as 'info' | 'label' | 'power');
+          }
+        });
+      },
+      { 
+        threshold: 0.3,
+        rootMargin: "-10% 0px -60% 0px" 
+      }
+    );
+
+    [configRef, labelRef, powerRef].forEach(ref => {
+      if (ref.current) observer.observe(ref.current);
+    });
+
+    return () => observer.disconnect();
+  }, [step]);
 
   const scrollDown = () => {
     configRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     setStep(2);
   };
 
-  const scrollToPower = () => {
-    powerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  const scrollToSection = (ref: React.RefObject<HTMLDivElement | null>) => {
+    ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const filteredPresets = useMemo(() => {
@@ -207,7 +237,7 @@ export default function AddDeviceModal({ isOpen, onClose, onAdd }: AddDeviceModa
       power: parseFloat(power),
       iconName: selectedPreset.iconName,
       desc: selectedPreset.desc,
-      autoOffMinutes: autoOffMinutes ? parseInt(autoOffMinutes) : undefined,
+      autoOffMinutes: undefined,
       timerEndTimestamp: undefined,
       isOn: false,
     };
@@ -224,7 +254,6 @@ export default function AddDeviceModal({ isOpen, onClose, onAdd }: AddDeviceModa
     setCustomName("");
     setSearchQuery("");
     setActiveCategory("All");
-    setAutoOffMinutes("");
   };
 
   const handleBack = () => {
@@ -348,24 +377,7 @@ export default function AddDeviceModal({ isOpen, onClose, onAdd }: AddDeviceModa
                         ))}
                       </div>
 
-                      {/* Scroll Down Indicator */}
-                      {selectedPreset && (
-                        <motion.div 
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="flex justify-center mb-10"
-                        >
-                          <button 
-                            onClick={scrollDown}
-                            className="flex flex-col items-center gap-2 group"
-                          >
-                            <span className="text-white/30 text-[9px] font-mono uppercase tracking-[0.3em] group-hover:text-accent-cyber transition-colors">Configure This Device</span>
-                            <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:border-accent-cyber/50 group-hover:bg-accent-cyber/10 transition-all">
-                              <ChevronRight className="w-5 h-5 text-accent-cyber rotate-90" />
-                            </div>
-                          </button>
-                        </motion.div>
-                      )}
+                      {/* Removed Redundant Scroll Down Indicator */}
                      </motion.div>
                    ) : (
                      <motion.div
@@ -373,98 +385,183 @@ export default function AddDeviceModal({ isOpen, onClose, onAdd }: AddDeviceModa
                        initial={{ opacity: 0, x: 20 }}
                        animate={{ opacity: 1, x: 0 }}
                        exit={{ opacity: 0, x: 20 }}
-                       className="flex-1 overflow-y-auto custom-scrollbar p-8 sm:p-10"
+                       className="flex-1 flex overflow-hidden h-full"
                      >
-                       <div ref={configRef} className="max-w-2xl mx-auto">
-                      <div className="flex flex-col items-center text-center mb-10">
-                        <p className="text-accent-cyber font-mono text-[10px] uppercase tracking-[0.4em] mb-4 font-black">Node Configuration</p>
-                        <div className="w-24 h-24 rounded-[2rem] bg-accent-cyber text-slate-900 flex items-center justify-center mb-6 shadow-[0_0_40px_rgba(0,240,255,0.3)]">
-                          {selectedPreset ? <selectedPreset.icon className="w-12 h-12" /> : <Plus className="w-12 h-12 text-slate-900/20" />}
-                        </div>
-                        <h3 className="text-white text-2xl font-black uppercase tracking-tight italic">
-                          {selectedPreset ? selectedPreset.label : "Select a Device"}
-                        </h3>
-                        <p className="text-white/40 font-mono text-[10px] uppercase tracking-widest mt-2 font-bold">
-                          {selectedPreset ? selectedPreset.desc : "Choose from the catalog above to begin"}
-                        </p>
-                        {selectedPreset && (
-                          <motion.button
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            onClick={scrollToPower}
-                            className="mt-6 flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all group"
-                          >
-                            <span className="text-[9px] font-mono uppercase tracking-widest text-white/40 group-hover:text-accent-cyber transition-colors">Scroll to Power</span>
-                            <ChevronRight className="w-3 h-3 text-accent-cyber rotate-90" />
-                          </motion.button>
-                        )}
-                      </div>
+                          <div className="hidden sm:flex w-24 border-r border-white/5 flex-col items-center py-10 relative bg-slate-900/50 backdrop-blur-xl shrink-0">
+                           {/* NAV Header */}
+                           <div className="absolute top-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 opacity-20 group">
+                             <div className="w-1 h-1 bg-white rounded-full" />
+                             <span className="text-[7px] font-mono font-black uppercase tracking-[0.4em] [writing-mode:vertical-lr] rotate-180">NAVIGATION</span>
+                           </div>
 
-                      <form onSubmit={handleSubmit} className="space-y-10 pb-20">
-                        <div className="grid grid-cols-1 gap-8">
-                          <div>
-                            <label className="block text-white/40 text-[10px] font-mono uppercase tracking-widest mb-3 font-bold">Custom Label (Optional)</label>
-                            <input 
-                              type="text" 
-                              value={customName}
-                              onChange={(e) => setCustomName(e.target.value)}
-                              placeholder="e.g. Living Room TV"
-                              className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white placeholder:text-white/10 focus:outline-none focus:border-accent-cyber/50 transition-all font-bold"
-                            />
-                          </div>
+                           {/* Background Track with Ticks */}
+                           <div className="absolute left-1/2 -translate-x-1/2 top-24 bottom-24 w-[1px] bg-white/5">
+                             {[...Array(20)].map((_, i) => (
+                               <div 
+                                 key={i} 
+                                 className="absolute left-1/2 -translate-x-1/2 w-1 h-[1px] bg-white/10"
+                                 style={{ top: `${(i / 19) * 100}%` }}
+                               />
+                             ))}
+                           </div>
+                           
+                           {/* Active Progress Line */}
+                           <motion.div 
+                             className="absolute left-1/2 -translate-x-1/2 w-[2px] bg-accent-cyber shadow-[0_0_15px_rgba(0,240,255,0.3)] z-10"
+                             initial={false}
+                             animate={{ 
+                               top: "96px",
+                               height: activeSection === 'info' ? '48px' : activeSection === 'label' ? '144px' : '240px'
+                             }}
+                             transition={{ type: "spring", stiffness: 300, damping: 35 }}
+                           />
 
-                          <div ref={powerRef}>
-                            <label className="block text-white/40 text-[10px] font-mono uppercase tracking-widest mb-3 font-bold">Power Consumption (kW)</label>
-                            <div className="relative">
-                              <input 
-                                type="number" 
-                                step="0.01"
-                                value={power}
-                                onChange={(e) => setPower(e.target.value)}
-                                placeholder="0.00"
-                                className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-10 text-6xl font-black text-white focus:outline-none focus:border-accent-cyber/50 transition-all text-center tabular-nums"
-                                required
-                              />
-                              <div className="absolute right-8 top-1/2 -translate-y-1/2 text-white/20 font-black text-2xl uppercase tracking-tighter italic">kW</div>
+                           {/* Glow Indicator */}
+                           <motion.div 
+                             className="absolute left-1/2 -translate-x-1/2 w-2 h-2 bg-accent-cyber rounded-full shadow-[0_0_20px_#00F0FF] z-20"
+                             initial={false}
+                             animate={{ 
+                               top: activeSection === 'info' ? '120px' : activeSection === 'label' ? '216px' : '312px'
+                             }}
+                             transition={{ type: "spring", stiffness: 300, damping: 35 }}
+                           />
+
+                           <div className="flex flex-col gap-12 mt-16 relative z-30">
+                             <button 
+                               type="button"
+                               onClick={() => scrollToSection(configRef)}
+                               className="group flex flex-col items-center gap-3 transition-all hover:scale-110"
+                             >
+                               <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all shadow-lg ${
+                                 activeSection === 'info' 
+                                   ? "bg-accent-cyber text-slate-900 shadow-accent-cyber/30 border-accent-cyber" 
+                                   : "bg-white/5 border border-white/10 text-white/20 group-hover:border-accent-cyber/50 group-hover:bg-accent-cyber/10"
+                               }`}>
+                                 <Info className="w-5 h-5" />
+                               </div>
+                               <span className={`text-[8px] font-mono uppercase tracking-[0.2em] transition-colors font-bold ${
+                                 activeSection === 'info' ? "text-accent-cyber" : "text-white/20 group-hover:text-white"
+                               }`}>Info</span>
+                             </button>
+
+                             <button 
+                               type="button"
+                               onClick={() => scrollToSection(labelRef)}
+                               className="group flex flex-col items-center gap-3 transition-all hover:scale-110"
+                             >
+                               <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all shadow-lg ${
+                                 activeSection === 'label' 
+                                   ? "bg-accent-cyber text-slate-900 shadow-accent-cyber/30 border-accent-cyber" 
+                                   : "bg-white/5 border border-white/10 text-white/20 group-hover:border-accent-cyber/50 group-hover:bg-accent-cyber/10"
+                               }`}>
+                                 <Tag className="w-5 h-5" />
+                               </div>
+                               <span className={`text-[8px] font-mono uppercase tracking-[0.2em] transition-colors font-bold ${
+                                 activeSection === 'label' ? "text-accent-cyber" : "text-white/20 group-hover:text-white"
+                               }`}>Label</span>
+                             </button>
+
+                             <button 
+                               type="button"
+                               onClick={() => scrollToSection(powerRef)}
+                               className="group flex flex-col items-center gap-3 transition-all hover:scale-110"
+                             >
+                               <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all shadow-lg ${
+                                 activeSection === 'power' 
+                                   ? "bg-accent-cyber text-slate-900 shadow-accent-cyber/30 border-accent-cyber" 
+                                   : "bg-white/5 border border-white/10 text-white/20 group-hover:border-accent-cyber/50 group-hover:bg-accent-cyber/10"
+                               }`}>
+                                 <Zap className="w-5 h-5" />
+                               </div>
+                               <span className={`text-[8px] font-mono uppercase tracking-[0.2em] transition-colors font-bold ${
+                                 activeSection === 'power' ? "text-accent-cyber" : "text-white/20 group-hover:text-white"
+                               }`}>Power</span>
+                             </button>
+                           </div>
+                         </div>
+
+                       {/* Configuration Content Area */}
+                       <div className="flex-1 overflow-y-auto custom-scrollbar p-8 sm:p-12">
+                         <div className="max-w-2xl mx-auto">
+                            <div ref={configRef} data-section="info" className="flex flex-col items-center text-center mb-16 scroll-mt-20">
+                              <p className="text-accent-cyber font-mono text-[10px] uppercase tracking-[0.4em] mb-6 font-black">Node Intelligence v1.0</p>
+                              <div className="w-32 h-32 rounded-[2.5rem] bg-accent-cyber text-slate-900 flex items-center justify-center mb-8 shadow-[0_0_50px_rgba(0,240,255,0.3)] border-4 border-white/20">
+                                {selectedPreset ? <selectedPreset.icon className="w-16 h-16" /> : <Plus className="w-16 h-16 text-slate-900/20" />}
+                              </div>
+                              <h3 className="text-white text-4xl font-black uppercase tracking-tighter italic leading-none mb-4">
+                                {selectedPreset ? selectedPreset.label : "Select a Device"}
+                              </h3>
+                              <div className="px-4 py-1 rounded-full bg-white/5 border border-white/10">
+                                <p className="text-white/40 font-mono text-[9px] uppercase tracking-widest font-bold">
+                                  {selectedPreset ? selectedPreset.desc : "Choose from the catalog above to begin"}
+                                </p>
+                              </div>
+                            </div>
+
+                            <form onSubmit={handleSubmit} className="space-y-16 pb-20">
+                              <div className="grid grid-cols-1 gap-12">
+                                <div ref={labelRef} data-section="label" className="scroll-mt-20">
+                                  <div className="flex items-center gap-3 mb-6">
+                                    <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
+                                      <Tag className="w-4 h-4 text-accent-cyber" />
+                                    </div>
+                                    <label className="text-white font-black text-xs uppercase tracking-widest italic">Identity Tag</label>
+                                  </div>
+                                  <input 
+                                    type="text" 
+                                    value={customName}
+                                    onChange={(e) => setCustomName(e.target.value)}
+                                    placeholder="ENTER CUSTOM LABEL..."
+                                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-6 text-white placeholder:text-white/10 focus:outline-none focus:border-accent-cyber/50 focus:bg-white/10 transition-all font-bold tracking-wide text-lg"
+                                  />
+                                </div>
+
+                                <div ref={powerRef} data-section="power" className="scroll-mt-20">
+                                  <div className="flex items-center gap-3 mb-6">
+                                    <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
+                                      <Zap className="w-4 h-4 text-accent-cyber" />
+                                    </div>
+                                    <label className="text-white font-black text-xs uppercase tracking-widest italic">Consumption Matrix</label>
+                                  </div>
+                                  <div className="relative group">
+                                    <input 
+                                      type="number" 
+                                      step="0.01"
+                                      value={power}
+                                      onChange={(e) => setPower(e.target.value)}
+                                      placeholder="0.00"
+                                      className="w-full bg-white/5 border border-white/10 rounded-[2rem] px-8 py-12 text-7xl font-black text-white focus:outline-none focus:border-accent-cyber/50 focus:bg-white/10 transition-all text-center tabular-nums shadow-inner group-hover:border-white/20"
+                                      required
+                                    />
+                                    <div className="absolute right-10 top-1/2 -translate-y-1/2 text-white/10 font-black text-3xl uppercase tracking-tighter italic group-focus-within:text-accent-cyber/30 transition-colors">kW</div>
+                                  </div>
+                                  <p className="mt-4 text-center text-[10px] font-mono text-white/20 uppercase tracking-[0.2em]">Estimated nominal load for this appliance class</p>
+                                </div>
+                              </div>
+
+                              <button
+                                type="submit"
+                                disabled={!selectedPreset}
+                                className="group relative w-full py-8 bg-accent-cyber disabled:bg-slate-800 disabled:text-white/10 rounded-[2rem] overflow-hidden shadow-[0_20px_50px_rgba(0,240,255,0.3)] transition-all active:scale-[0.98] hover:shadow-accent-cyber/50 hover:-translate-y-1"
+                              >
+                                <div className="absolute inset-0 bg-white/30 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+                                <span className="relative z-10 text-slate-900 font-black uppercase tracking-[0.3em] text-sm flex items-center justify-center gap-4">
+                                  <Cpu className="w-6 h-6 animate-pulse" />
+                                  Initialize Smart Node
+                                </span>
+                              </button>
+                            </form>
+
                             </div>
                           </div>
-
-                          <div>
-                            <label className="block text-white/40 text-[10px] font-mono uppercase tracking-widest mb-3 font-bold">Auto-Off Timer (Minutes)</label>
-                            <div className="relative">
-                              <input 
-                                type="number" 
-                                value={autoOffMinutes}
-                                onChange={(e) => setAutoOffMinutes(e.target.value)}
-                                placeholder="0 (Off)"
-                                className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-6 text-3xl font-black text-white focus:outline-none focus:border-accent-cyber/50 transition-all text-center tabular-nums"
-                              />
-                              <div className="absolute right-6 top-1/2 -translate-y-1/2 text-white/20 font-black text-sm uppercase tracking-tighter italic">Min</div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <button
-                          type="submit"
-                          disabled={!selectedPreset}
-                          className="group relative w-full py-6 bg-accent-cyber disabled:bg-slate-800 disabled:text-white/10 rounded-2xl overflow-hidden shadow-[0_20px_40px_rgba(0,240,255,0.2)] transition-all active:scale-[0.98]"
-                        >
-                          <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
-                          <span className="relative z-10 text-slate-900 font-black uppercase tracking-[0.2em] text-sm flex items-center justify-center gap-3">
-                            <Plus className="w-5 h-5" />
-                            Activate Smart Node
-                          </span>
-                        </button>
-                      </form>
-                       </div>
-                     </motion.div>
-                   )}
-                 </AnimatePresence>
-               </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+              </motion.div>
             </div>
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
-  );
-}
+          )}
+        </AnimatePresence>
+      );
+    }

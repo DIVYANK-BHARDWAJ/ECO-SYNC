@@ -166,7 +166,7 @@ export default function CalculationOverlay({ type, onClose }: CalculationOverlay
                   <Info className="w-4 h-4" /> Relatable Example
                 </p>
                 <p className="text-white font-semibold leading-relaxed italic opacity-80">
-                  "{data.example}"
+                  &quot;{data.example}&quot;
                 </p>
               </div>
 

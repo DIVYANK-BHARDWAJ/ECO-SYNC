@@ -1,6 +1,6 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
 
 :root {
   --foreground-rgb: 255, 255, 255;
@@ -100,6 +100,7 @@ input::-webkit-inner-spin-button {
 
 input[type=number] {
   -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 /* Custom Scrollbar */
