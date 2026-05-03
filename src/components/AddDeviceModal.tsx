@@ -237,8 +237,6 @@ export default function AddDeviceModal({ isOpen, onClose, onAdd }: AddDeviceModa
       power: parseFloat(power),
       iconName: selectedPreset.iconName,
       desc: selectedPreset.desc,
-      autoOffMinutes: undefined,
-      timerEndTimestamp: undefined,
       isOn: false,
     };
 
@@ -426,20 +424,20 @@ export default function AddDeviceModal({ isOpen, onClose, onAdd }: AddDeviceModa
                              transition={{ type: "spring", stiffness: 300, damping: 35 }}
                            />
 
-                           <div className="flex flex-col gap-12 mt-16 relative z-30">
+                           <div className="flex flex-col gap-16 mt-16 relative z-30">
                              <button 
                                type="button"
                                onClick={() => scrollToSection(configRef)}
-                               className="group flex flex-col items-center gap-3 transition-all hover:scale-110"
+                               className="group flex flex-col items-center gap-4 transition-all hover:scale-110"
                              >
-                               <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all shadow-lg ${
+                               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-lg border-2 ${
                                  activeSection === 'info' 
                                    ? "bg-accent-cyber text-slate-900 shadow-accent-cyber/30 border-accent-cyber" 
-                                   : "bg-white/5 border border-white/10 text-white/20 group-hover:border-accent-cyber/50 group-hover:bg-accent-cyber/10"
+                                   : "bg-white/5 border-white/10 text-white/20 group-hover:border-accent-cyber/50 group-hover:bg-accent-cyber/10"
                                }`}>
-                                 <Info className="w-5 h-5" />
+                                 <Info className="w-6 h-6" />
                                </div>
-                               <span className={`text-[8px] font-mono uppercase tracking-[0.2em] transition-colors font-bold ${
+                               <span className={`text-[9px] font-mono uppercase tracking-[0.2em] transition-colors font-black ${
                                  activeSection === 'info' ? "text-accent-cyber" : "text-white/20 group-hover:text-white"
                                }`}>Info</span>
                              </button>
@@ -447,16 +445,16 @@ export default function AddDeviceModal({ isOpen, onClose, onAdd }: AddDeviceModa
                              <button 
                                type="button"
                                onClick={() => scrollToSection(labelRef)}
-                               className="group flex flex-col items-center gap-3 transition-all hover:scale-110"
+                               className="group flex flex-col items-center gap-4 transition-all hover:scale-110"
                              >
-                               <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all shadow-lg ${
+                               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-lg border-2 ${
                                  activeSection === 'label' 
                                    ? "bg-accent-cyber text-slate-900 shadow-accent-cyber/30 border-accent-cyber" 
-                                   : "bg-white/5 border border-white/10 text-white/20 group-hover:border-accent-cyber/50 group-hover:bg-accent-cyber/10"
+                                   : "bg-white/5 border-white/10 text-white/20 group-hover:border-accent-cyber/50 group-hover:bg-accent-cyber/10"
                                }`}>
-                                 <Tag className="w-5 h-5" />
+                                 <Tag className="w-6 h-6" />
                                </div>
-                               <span className={`text-[8px] font-mono uppercase tracking-[0.2em] transition-colors font-bold ${
+                               <span className={`text-[9px] font-mono uppercase tracking-[0.2em] transition-colors font-black ${
                                  activeSection === 'label' ? "text-accent-cyber" : "text-white/20 group-hover:text-white"
                                }`}>Label</span>
                              </button>
@@ -464,16 +462,16 @@ export default function AddDeviceModal({ isOpen, onClose, onAdd }: AddDeviceModa
                              <button 
                                type="button"
                                onClick={() => scrollToSection(powerRef)}
-                               className="group flex flex-col items-center gap-3 transition-all hover:scale-110"
+                               className="group flex flex-col items-center gap-4 transition-all hover:scale-110"
                              >
-                               <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all shadow-lg ${
+                               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-lg border-2 ${
                                  activeSection === 'power' 
                                    ? "bg-accent-cyber text-slate-900 shadow-accent-cyber/30 border-accent-cyber" 
-                                   : "bg-white/5 border border-white/10 text-white/20 group-hover:border-accent-cyber/50 group-hover:bg-accent-cyber/10"
+                                   : "bg-white/5 border-white/10 text-white/20 group-hover:border-accent-cyber/50 group-hover:bg-accent-cyber/10"
                                }`}>
-                                 <Zap className="w-5 h-5" />
+                                 <Zap className="w-6 h-6" />
                                </div>
-                               <span className={`text-[8px] font-mono uppercase tracking-[0.2em] transition-colors font-bold ${
+                               <span className={`text-[9px] font-mono uppercase tracking-[0.2em] transition-colors font-black ${
                                  activeSection === 'power' ? "text-accent-cyber" : "text-white/20 group-hover:text-white"
                                }`}>Power</span>
                              </button>

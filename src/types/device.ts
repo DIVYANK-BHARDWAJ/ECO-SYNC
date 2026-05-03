@@ -5,6 +5,4 @@ export interface Device {
   isOn: boolean;
   iconName: string; // We'll map this to Lucide icons
   desc: string;
-  autoOffMinutes?: number;
-  timerEndTimestamp?: number;
 }

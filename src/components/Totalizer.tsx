@@ -10,9 +10,10 @@ interface TotalizerProps {
   accumulatedKwh: number;
   devices: Device[];
   onOpenMetric: (type: MetricType) => void;
+  activePlanId: string | null;
 }
 
-export default function Totalizer({ totalLoad, accumulatedKwh, devices, onOpenMetric }: TotalizerProps) {
+export default function Totalizer({ totalLoad, accumulatedKwh, devices, onOpenMetric, activePlanId }: TotalizerProps) {
   const carbonFactor = 0.82; // India Standard (0.82kg/unit)
   const costFactor = 8; // ₹8 per unit (Standard Indian Rate)
   
@@ -20,10 +21,19 @@ export default function Totalizer({ totalLoad, accumulatedKwh, devices, onOpenMe
   const currentCarbon = accumulatedKwh * carbonFactor;
 
   const BASELINE_LOAD = 0.2; 
-  const maxPotentialLoad = devices.reduce((sum, d) => sum + d.power, 0) + BASELINE_LOAD;
+  const totalPowerCapacity = devices.reduce((sum, d) => sum + d.power, 0);
+  const maxPotentialLoad = totalPowerCapacity + BASELINE_LOAD;
   
-  const efficiency = Math.max(0, Math.min(100, 
-    100 - ((totalLoad - BASELINE_LOAD) / (maxPotentialLoad - BASELINE_LOAD || 1)) * 100
+  // Calculate a smarter optimization score:
+  // 1. Base score of 85 (nominal efficiency)
+  // 2. Penalty based on load intensity (max 50% penalty)
+  // 3. Bonus for active savings plans (up to 40% bonus)
+  const loadIntensity = (totalLoad - BASELINE_LOAD) / (totalPowerCapacity || 1);
+  const usagePenalty = loadIntensity * 50;
+  const planBonus = activePlanId === "Carbon Zero" ? 40 : activePlanId === "Aether Pro" ? 25 : activePlanId === "Eco-Baseline" ? 15 : 0;
+  
+  const efficiency = Math.max(5, Math.min(100, 
+    85 - usagePenalty + planBonus
   ));
 
   return (

@@ -46,18 +46,18 @@ const content: Record<NonNullable<MetricType>, {
     title: "System Efficiency",
     subtitle: "How well you manage your load",
     icon: <Zap className="w-12 h-12" />,
-    formula: "100 − (Current Load % of Max)",
-    explanation: "This score shows if you are using too many heavy appliances at once. A high score means you are balancing your load well to avoid grid trips.",
-    example: "Running the AC, Geyser, and EV Charger together drops efficiency.",
-    tips: ["Stagger heavy appliance use", "Use timers for water heaters", "Monitor live usage signature"]
+    formula: "Grid Usage Penalty + Savings Plan Bonus",
+    explanation: "This score rewards smart energy habits. We penalize heavy simultaneous loads that strain the grid, but give significant bonuses if you've committed to a Savings Plan.",
+    example: "A 'Carbon Zero' plan provides a +40% score boost, offsetting high usage impact.",
+    tips: ["Stagger heavy appliance use", "Active plans provide the biggest score boost", "Usage below 50% capacity is ideal"]
   },
   MAX_EFFICIENCY: {
     title: "Optimization Potential",
     subtitle: "Max savings possible",
     icon: <TrendingDown className="w-12 h-12" />,
-    formula: "Current Score vs. Ideal Pattern",
-    explanation: "We compare your current usage to an 'Eco-Sync' pattern. This reveals how much more money you could save by making small changes.",
-    example: "Optimizing AC usage can save up to ₹1,200 per month.",
+    formula: "Current Score vs. AI Recommended Benchmarks",
+    explanation: "We analyze your usage signature against highly efficient 'Eco-Sync' benchmarks. A score below 70% suggests significant room for saving via automated plans.",
+    example: "Switching to 'Aether Pro' can jump your score from 40% to 65% instantly.",
     tips: ["Follow the AI recommendations", "Enable Auto-Sync mode", "Identify 'Vampire' appliances"]
   }
 };

@@ -8,7 +8,7 @@ import {
   Music, Thermometer, Monitor, Printer, Camera, Lock, Bell, Sun, Battery, 
   Droplets, Smartphone, Scan, Video, Dumbbell, HeartPulse, Plug, Power, 
   Radio, Tablets, Stethoscope, Sprout, CloudRain, HardDrive, Tablet, 
-  Volume2, Cloud, DoorOpen, LightbulbOff, Timer
+  Volume2, Cloud, DoorOpen, LightbulbOff
 } from "lucide-react";
 import { Device } from "@/types/device";
 
@@ -62,7 +62,6 @@ const ICON_MAP: Record<string, any> = {
   Cloud: <Cloud className="w-10 h-10" />,
   DoorOpen: <DoorOpen className="w-10 h-10" />,
   LightbulbOff: <LightbulbOff className="w-10 h-10" />,
-  Timer: <Timer className="w-10 h-10" />,
 };
 
 interface UHDSectionProps {
@@ -151,18 +150,7 @@ export default function UHDSection({ devices, onToggleDevice, onAddDevice, onDel
                   </h4>
                   <p className="text-white/50 text-[10px] sm:text-sm font-bold mb-6 sm:mb-10 uppercase tracking-tighter">{device.desc}</p>
                   
-                  {device.isOn && device.timerEndTimestamp && (
-                    <div className="flex items-center gap-2 mb-4 px-3 py-1.5 rounded-lg bg-accent-cyber/10 border border-accent-cyber/20 w-fit">
-                      <Timer className="w-3 h-3 text-accent-cyber" />
-                      <span className="text-accent-cyber font-mono text-[10px] font-black uppercase">
-                        Auto-off: {(() => {
-                          const remaining = Math.max(0, device.timerEndTimestamp! - Date.now());
-                          if (remaining < 60000) return `${Math.ceil(remaining / 1000)}s`;
-                          return `${Math.ceil(remaining / 60000)}m`;
-                        })()}
-                      </span>
-                    </div>
-                  )}
+
 
                   <div className="flex items-center justify-between w-full pt-4 sm:pt-6 border-t border-white/5">
                      <p className={`text-[8px] sm:text-xs font-mono tracking-widest uppercase font-black ${

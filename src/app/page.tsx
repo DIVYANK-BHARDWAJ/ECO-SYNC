@@ -12,12 +12,12 @@ import SavingsGraph from "@/components/SavingsGraph";
 import { KnowledgeHub } from "@/components/KnowledgeHub";
 import StartTitle from "@/components/StartTitle";
 import CalculationOverlay, { MetricType } from "@/components/CalculationOverlay";
-import LogsOverlay from "@/components/LogsOverlay";
+import LogsOverlay, { DeviceLog } from "@/components/LogsOverlay";
 import SavingsPlans from "@/components/SavingsPlans";
 import ScrollyHotspots from "@/components/ScrollyHotspots";
 import AddDeviceModal from "@/components/AddDeviceModal";
 import { Device } from "@/types/device";
-import { X } from "lucide-react";
+import { X, Terminal } from "lucide-react";
 
 const PLAN_CONFIG: Record<string, { reduction: string; multiplier: number }> = {
   "Eco-Baseline": { reduction: "15%", multiplier: 0.85 },
@@ -75,7 +75,6 @@ export default function Home() {
     localStorage.setItem("eco-sync-devices", JSON.stringify(devices));
   }, [devices]);
 
-  type DeviceLog = { id: number; label: string; action: "ON" | "OFF" | "BOOT" | "REGISTER" | "REMOVED"; time: string };
 
   const bootTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   const [deviceHistory, setDeviceHistory] = useState<DeviceLog[]>([
@@ -88,14 +87,16 @@ export default function Home() {
         const willBeOn = !d.isOn;
         const action = willBeOn ? "ON" : "OFF";
         const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-        setDeviceHistory(h => [{ id: Date.now(), label: d.label, action, time }, ...h]);
+        setDeviceHistory(h => [{ 
+          id: Date.now(), 
+          label: d.label, 
+          action, 
+          time,
+          details: willBeOn ? `Drawing ${d.power}kW from grid` : "Power supply severed",
+          iconName: d.iconName
+        }, ...h]);
         
-        let timerEndTimestamp = undefined;
-        if (willBeOn && d.autoOffMinutes) {
-          timerEndTimestamp = Date.now() + d.autoOffMinutes * 60000;
-        }
-
-        return { ...d, isOn: willBeOn, timerEndTimestamp };
+        return { ...d, isOn: willBeOn };
       }
       return d;
     }));
@@ -104,14 +105,32 @@ export default function Home() {
   const handleAddDevice = (device: Device) => {
     setDevices(prev => [...prev, device]);
     const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-    setDeviceHistory(h => [{ id: Date.now(), label: device.label, action: "REGISTER", time }, ...h]);
+    setDeviceHistory(h => [{ 
+      id: Date.now(), 
+      label: device.label, 
+      action: "REGISTER", 
+      time,
+      details: `${device.power}kW rating • ${device.desc || 'No description'}`,
+      iconName: device.iconName
+    }, ...h]);
   };
 
   const handleDeleteDevice = (id: string) => {
     const deviceToDelete = devices.find(d => d.id === id);
     setDevices(prev => prev.filter(d => d.id !== id));
     const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-    setDeviceHistory(h => [{ id: Date.now(), label: deviceToDelete?.label || "Unknown Device", action: "REMOVED", time }, ...h]);
+    setDeviceHistory(h => [{ 
+      id: Date.now(), 
+      label: deviceToDelete?.label || "Unknown Device", 
+      action: "REMOVED", 
+      time,
+      details: "Hardware decommissioned from grid",
+      iconName: deviceToDelete?.iconName
+    }, ...h]);
+  };
+
+  const handleClearLogs = () => {
+    setDeviceHistory([{ id: Date.now(), label: "System", action: "BOOT", time: new Date().toLocaleTimeString() }]);
   };
 
   const handleReset = () => {
@@ -150,43 +169,9 @@ export default function Home() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      const now = Date.now();
-      let timerExpired = false;
-
-      setDevices((prev) => {
-        const updated = prev.map(d => {
-          if (d.isOn && d.timerEndTimestamp && now >= d.timerEndTimestamp) {
-            timerExpired = true;
-            const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-            
-            // Log it
-            setDeviceHistory(h => [{ id: Date.now(), label: d.label, action: "OFF", time: `${time} (AUTO)` }, ...h]);
-            
-            // Notify
-            const notifId = Date.now().toString();
-            setNotifications(n => [
-              { id: notifId, message: `${d.label} turned off automatically.`, type: "info" },
-              ...n
-            ]);
-            
-            // Auto-dismiss after 5s
-            setTimeout(() => {
-              removeNotification(notifId);
-            }, 5000);
-
-            return { ...d, isOn: false, timerEndTimestamp: undefined };
-          }
-          return d;
-        });
-
-        if (timerExpired) {
-          return updated;
-        }
-        return prev;
-      });
-
       const addedKwh = totalLoad / 3600;
       setAccumulatedKwh((prev: number) => prev + addedKwh);
+      // Move graph forward every second for real-time scrolling
       setLoadHistory((prev: number[]) => [...prev.slice(1), totalLoad]);
     }, 1000);
     return () => clearInterval(interval);
@@ -218,7 +203,12 @@ export default function Home() {
           <CalculationOverlay type={activeMetric} onClose={() => setActiveMetric(null)} />
         )}
         {showLogs && (
-          <LogsOverlay isOpen={showLogs} onClose={() => setShowLogs(false)} deviceHistory={deviceHistory} />
+          <LogsOverlay 
+            isOpen={showLogs} 
+            onClose={() => setShowLogs(false)} 
+            deviceHistory={deviceHistory} 
+            onClearLogs={handleClearLogs}
+          />
         )}
         {showPlans && (
           <SavingsPlans 
@@ -314,6 +304,7 @@ export default function Home() {
                     accumulatedKwh={accumulatedKwh}
                     devices={devices}
                     onOpenMetric={(type) => setActiveMetric(type)}
+                    activePlanId={activePlanId}
                    />
                  </div>
                  <div className="flex flex-col gap-12 sticky top-32">
@@ -321,10 +312,24 @@ export default function Home() {
                       <div className="relative z-10">
                         <p className="text-accent-cyber font-mono text-[10px] uppercase tracking-widest mb-4">System Console</p>
                         <p className="text-2xl font-black uppercase tracking-tight mb-6 leading-tight">Integrity: <span className="text-accent-cyber">Nominal</span></p>
+                        
+                        {/* mini log preview */}
+                        <div className="space-y-3 mb-8">
+                          {deviceHistory.slice(0, 3).map((log) => (
+                            <div key={log.id} className="flex items-center gap-3 opacity-60 hover:opacity-100 transition-opacity">
+                              <div className={`w-1 h-1 rounded-full ${log.action === 'ON' || log.action === 'REGISTER' ? 'bg-accent-emerald' : 'bg-accent-cyber'}`} />
+                              <p className="font-mono text-[9px] uppercase tracking-tighter truncate flex-1">
+                                <span className="text-white/40">{log.time}</span> • {log.label} • <span className={log.action === 'ON' ? 'text-accent-emerald' : ''}>{log.action}</span>
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+
                         <button 
                           onClick={() => setShowLogs(true)}
-                          className="w-full py-5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all mb-4"
+                          className="w-full py-5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all mb-4 flex items-center justify-center gap-3 group/btn"
                         >
+                          <Terminal className="w-4 h-4 text-accent-cyber group-hover/btn:scale-110 transition-transform" />
                           Launch System Logs
                         </button>
                       </div>
