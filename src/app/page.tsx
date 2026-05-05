@@ -16,8 +16,10 @@ import LogsOverlay, { DeviceLog } from "@/components/LogsOverlay";
 import SavingsPlans from "@/components/SavingsPlans";
 import ScrollyHotspots from "@/components/ScrollyHotspots";
 import AddDeviceModal from "@/components/AddDeviceModal";
-import { Device } from "@/types/device";
+import { Device, SolarBatteryState } from "@/types/device";
 import { X, Terminal } from "lucide-react";
+import SolarPanelManager from "@/components/SolarPanelManager";
+import BudgetManager from "@/components/BudgetManager";
 
 const PLAN_CONFIG: Record<string, { reduction: string; multiplier: number }> = {
   "Eco-Baseline": { reduction: "15%", multiplier: 0.85 },
@@ -49,7 +51,22 @@ export default function Home() {
   const [showLogs, setShowLogs] = useState(false);
   const [showPlans, setShowPlans] = useState(false);
   const [activePlanId, setActivePlanId] = useState<string | null>(null);
+  const [activeRoutine, setActiveRoutine] = useState<string | null>(null);
   
+  const [solarState, setSolarState] = useState<SolarBatteryState>({
+    solarGeneration: 0,
+    batteryCapacity: 13.5,
+    batteryLevel: 13.5,
+    batteryChargeRate: 5.0,
+    gridDependency: 0,
+  });
+
+  const [solarHistory, setSolarHistory] = useState<number[]>(new Array(30).fill(0));
+  const solarGenRef = useRef(solarState.solarGeneration);
+  useEffect(() => {
+    solarGenRef.current = solarState.solarGeneration;
+  }, [solarState.solarGeneration]);
+
   const [devices, setDevices] = useState<Device[]>(INITIAL_DEVICES);
 
   // Load from localStorage on mount
@@ -74,6 +91,24 @@ export default function Home() {
   useEffect(() => {
     localStorage.setItem("eco-sync-devices", JSON.stringify(devices));
   }, [devices]);
+
+  // Load solar from localStorage on mount
+  useEffect(() => {
+    const savedSolar = localStorage.getItem("eco-sync-solar");
+    if (savedSolar) {
+      try {
+        const parsed = JSON.parse(savedSolar);
+        setSolarState(parsed);
+      } catch (e) {
+        console.error("Failed to load solar state", e);
+      }
+    }
+  }, []);
+
+  // Save solar to localStorage on change
+  useEffect(() => {
+    localStorage.setItem("eco-sync-solar", JSON.stringify(solarState));
+  }, [solarState]);
 
 
   const bootTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
@@ -135,10 +170,85 @@ export default function Home() {
 
   const handleReset = () => {
     localStorage.removeItem("eco-sync-devices");
+    localStorage.removeItem("eco-sync-solar");
     setDevices(INITIAL_DEVICES);
+    setSolarState({
+      solarGeneration: 0,
+      batteryCapacity: 13.5,
+      batteryLevel: 13.5,
+      batteryChargeRate: 5.0,
+      gridDependency: 0,
+    });
     const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
     setDeviceHistory(h => [{ id: Date.now(), label: "System", action: "BOOT", time }, ...h]);
+    setActiveRoutine(null);
   };
+
+  const handleExecuteRoutine = useCallback((routineId: string) => {
+    setActiveRoutine(routineId);
+    
+    setDevices(prev => {
+      const newDevices = [...prev];
+      let notificationMsg = "";
+      
+      const updateDevice = (idPrefix: string, isOn: boolean) => {
+        const idx = newDevices.findIndex(d => d.id.toLowerCase().includes(idPrefix) || d.label.toLowerCase().includes(idPrefix));
+        if (idx !== -1) newDevices[idx] = { ...newDevices[idx], isOn };
+      };
+
+      if (routineId === "leave_home") {
+         newDevices.forEach((d, i) => {
+            if (!d.id.includes("fridge") && !d.id.includes("router")) {
+               newDevices[i] = { ...d, isOn: false };
+            }
+         });
+         notificationMsg = "Leaving Home: Non-essential systems deactivated.";
+      } else if (routineId === "night_mode") {
+         updateDevice("tv", false);
+         updateDevice("lights", false);
+         updateDevice("hvac", true);
+         updateDevice("purifier", true);
+         notificationMsg = "Night Mode: Sleep environment optimized.";
+      } else if (routineId === "movie_time") {
+         updateDevice("tv", true);
+         updateDevice("lights", false);
+         notificationMsg = "Movie Time: Cinematic environment activated.";
+      } else if (routineId === "eco_max") {
+         newDevices.forEach((d, i) => {
+            if (!d.id.includes("fridge") && !d.id.includes("router")) {
+               newDevices[i] = { ...d, isOn: false };
+            }
+         });
+         notificationMsg = "Eco Max: Maximum energy conservation active.";
+      } else if (routineId === "morning_prep") {
+         updateDevice("lights", true);
+         updateDevice("coffee", true);
+         updateDevice("hvac", true);
+         notificationMsg = "Morning Routine: Systems warming up.";
+      } else if (routineId === "all_off") {
+         newDevices.forEach((d, i) => newDevices[i] = { ...d, isOn: false });
+         notificationMsg = "All Systems Off: Complete grid disconnect.";
+      }
+      
+      const nId = Date.now().toString();
+      setNotifications(prevN => [{ id: nId, message: notificationMsg, type: "info" }, ...prevN]);
+      setTimeout(() => {
+        setNotifications(prevN => prevN.filter(n => n.id !== nId));
+      }, 4000);
+      
+      const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      setDeviceHistory(h => [{ 
+        id: Date.now(), 
+        label: "Routine Manager", 
+        action: "EXEC", 
+        time,
+        details: notificationMsg,
+        iconName: "Zap"
+      }, ...h]);
+
+      return newDevices;
+    });
+  }, []);
 
   const [totalLoad, setTotalLoad] = useState(0.2);
   const [accumulatedKwh, setAccumulatedKwh] = useState(0);
@@ -171,8 +281,41 @@ export default function Home() {
     const interval = setInterval(() => {
       const addedKwh = totalLoad / 3600;
       setAccumulatedKwh((prev: number) => prev + addedKwh);
+      
+      setSolarState(prev => {
+        let dependency = totalLoad - prev.solarGeneration;
+        let newLevel = prev.batteryLevel;
+        
+        const chargeEfficiency = 0.95;
+        const dischargeEfficiency = 0.95;
+        
+        if (dependency < 0) {
+           // charge battery
+           const availableChargeKw = Math.min(-dependency, prev.batteryChargeRate);
+           const chargeKwh = availableChargeKw / 3600;
+           newLevel = Math.min(prev.batteryCapacity, prev.batteryLevel + (chargeKwh * chargeEfficiency));
+           dependency = 0; 
+        } else if (dependency > 0 && prev.batteryLevel > 0) {
+           // discharge battery
+           const requiredFromBatteryKw = dependency / dischargeEfficiency;
+           const actualDrawKw = Math.min(requiredFromBatteryKw, prev.batteryChargeRate);
+           const actualDrawKwh = actualDrawKw / 3600;
+           
+           const finalDrawKwh = Math.min(actualDrawKwh, prev.batteryLevel);
+           const energyProvidedKw = (finalDrawKwh * 3600) * dischargeEfficiency;
+           
+           newLevel = prev.batteryLevel - finalDrawKwh;
+           dependency = totalLoad - prev.solarGeneration - energyProvidedKw;
+        }
+        
+        return { ...prev, batteryLevel: newLevel, gridDependency: Math.max(0, dependency) };
+      });
+
       // Move graph forward every second for real-time scrolling
-      setLoadHistory((prev: number[]) => [...prev.slice(1), totalLoad]);
+      setLoadHistory((prev: number[]) => {
+         return [...prev.slice(1), totalLoad];
+      });
+      setSolarHistory((prev: number[]) => [...prev.slice(1), solarGenRef.current]);
     }, 1000);
     return () => clearInterval(interval);
   }, [totalLoad]);
@@ -274,6 +417,8 @@ export default function Home() {
                 document.getElementById("grid-radar")?.scrollIntoView({ behavior: "smooth", block: "center" });
               }}
               onReset={handleReset}
+              activeRoutine={activeRoutine}
+              onExecuteRoutine={handleExecuteRoutine}
             />
 
             {/* Dedicated Real-Time Radar Section */}
@@ -287,7 +432,7 @@ export default function Home() {
                      </div>
                      <h2 className="text-7xl font-black text-white tracking-tighter uppercase mb-4 italic">Grid <span className="text-accent-emerald">Radar</span></h2>
                   </div>
-                  <SavingsGraph data={loadHistory} />
+                  <SavingsGraph data={loadHistory} solarData={solarHistory} />
                </div>
             </section>
 
@@ -305,9 +450,16 @@ export default function Home() {
                     devices={devices}
                     onOpenMetric={(type) => setActiveMetric(type)}
                     activePlanId={activePlanId}
+                    solarState={solarState}
                    />
                  </div>
                  <div className="flex flex-col gap-12 sticky top-32">
+                   <SolarPanelManager 
+                     solarState={solarState}
+                     onUpdateSolarState={(updates) => setSolarState(prev => ({ ...prev, ...updates }))}
+                     totalLoad={totalLoad}
+                   />
+                   <BudgetManager totalLoad={totalLoad} costFactor={8} />
                    <div className="p-10 rounded-[3rem] bg-slate-950 text-white border border-white/5 shadow-2xl relative overflow-hidden group">
                       <div className="relative z-10">
                         <p className="text-accent-cyber font-mono text-[10px] uppercase tracking-widest mb-4">System Console</p>

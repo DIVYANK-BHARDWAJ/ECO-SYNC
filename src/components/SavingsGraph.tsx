@@ -5,13 +5,15 @@ import { useState, useMemo } from "react";
 
 interface SavingsGraphProps {
   data: number[];
+  solarData?: number[];
 }
 
-export default function SavingsGraph({ data }: SavingsGraphProps) {
+export default function SavingsGraph({ data, solarData }: SavingsGraphProps) {
   const [hoveredPoint, setHoveredPoint] = useState<number | null>(null);
 
   // Constants for SVG scaling
-  const maxVal = Math.max(10, ...data) * 1.25; // Headroom
+  const allValues = [...data, ...(solarData || [])];
+  const maxVal = Math.max(10, ...allValues) * 1.25; // Headroom
   const width = 1000;
   const height = 400;
 
@@ -29,6 +31,19 @@ export default function SavingsGraph({ data }: SavingsGraphProps) {
     }, "");
   }, [data, maxVal]);
 
+  const solarPath = useMemo(() => {
+    if (!solarData || solarData.length < 2) return "";
+    
+    return solarData.reduce((acc, d, i, arr) => {
+      const x = (i / (arr.length - 1)) * width;
+      const y = height - (d / maxVal) * height;
+
+      if (i === 0) return `M ${x} ${y}`;
+
+      return `${acc} L ${x} ${y}`;
+    }, "");
+  }, [solarData, maxVal]);
+
   return (
     <div className="bg-slate-900/40 backdrop-blur-3xl p-6 sm:p-10 md:p-16 rounded-3xl sm:rounded-[4rem] border border-white/5 shadow-2xl relative w-full overflow-hidden">
       {/* Background Radar Mesh */}
@@ -41,8 +56,12 @@ export default function SavingsGraph({ data }: SavingsGraphProps) {
         </div>
         <div className="flex gap-4">
            <div className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-white flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-[#EAB308] animate-ping shadow-[0_0_10px_#EAB308]" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#EAB308]">Solar</span>
+           </div>
+           <div className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-white flex items-center gap-3">
               <div className="w-2 h-2 rounded-full bg-accent-emerald animate-ping shadow-[0_0_10px_#10B981]" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-accent-emerald">Live Stream</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-accent-emerald">Grid</span>
            </div>
         </div>
       </div>
@@ -101,26 +120,55 @@ export default function SavingsGraph({ data }: SavingsGraphProps) {
               <stop offset="0%" stopColor="#10B981" stopOpacity="0.15" />
               <stop offset="100%" stopColor="#10B981" stopOpacity="0" />
             </linearGradient>
+            <linearGradient id="solar-gradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#EAB308" stopOpacity="0.15" />
+              <stop offset="100%" stopColor="#EAB308" stopOpacity="0" />
+            </linearGradient>
           </defs>
 
-          {/* Fill Area */}
+          {/* Fill Area - Solar */}
+          {solarData && (
+            <path
+              d={`${solarPath} L ${width} ${height} L 0 ${height} Z`}
+              fill="url(#solar-gradient)"
+            />
+          )}
+
+          {/* Fill Area - Grid */}
           <path
             d={`${linearPath} L ${width} ${height} L 0 ${height} Z`}
             fill="url(#live-gradient)"
           />
 
-          {/* Neon Glow Outer */}
-          <motion.path
-            d={linearPath}
-            fill="none"
-            stroke="#10B981"
-            strokeWidth="10"
-            opacity="0.1"
-            strokeLinecap="round"
-            style={{ filter: "blur(6px)" }}
-          />
+          {/* Neon Glow Outer - Solar */}
+          {solarData && (
+            <motion.path
+              d={solarPath}
+              fill="none"
+              stroke="#EAB308"
+              strokeWidth="10"
+              opacity="0.1"
+              strokeLinecap="round"
+              style={{ filter: "blur(6px)" }}
+            />
+          )}
 
-          {/* Primary Data Line */}
+          {/* Primary Data Line - Solar */}
+          {solarData && (
+            <motion.path
+              d={solarPath}
+              fill="none"
+              stroke="#EAB308"
+              strokeWidth="3.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+            />
+          )}
+
+          {/* Primary Data Line - Grid */}
           <motion.path
             d={linearPath}
             fill="none"
@@ -133,7 +181,20 @@ export default function SavingsGraph({ data }: SavingsGraphProps) {
             transition={{ duration: 0.5, ease: "easeOut" }}
           />
 
-          {/* Current Position Pulse */}
+          {/* Current Position Pulse - Solar */}
+          {solarData && solarData.length > 0 && (
+             <motion.circle 
+                cx={(solarData.length - 1) / (solarData.length - 1) * width} 
+                cy={height - (solarData[solarData.length - 1] / maxVal) * height} 
+                r="5" 
+                fill="#EAB308" 
+                className="shadow-[0_0_15px_#EAB308]"
+                animate={{ scale: [1, 1.4, 1], opacity: [1, 0.6, 1] }}
+                transition={{ repeat: Infinity, duration: 1.5 }}
+             />
+          )}
+
+          {/* Current Position Pulse - Grid */}
           {data.length > 0 && (
              <motion.circle 
                 cx={(data.length - 1) / (data.length - 1) * width} 
@@ -170,29 +231,45 @@ export default function SavingsGraph({ data }: SavingsGraphProps) {
           <motion.div 
             initial={{ opacity: 0, scale: 0.9, y: -20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="absolute bg-slate-900/90 backdrop-blur-xl text-white p-6 rounded-[2rem] shadow-2xl border border-white/10 z-50 pointer-events-none"
+            className="absolute bg-slate-900/90 backdrop-blur-xl text-white p-6 rounded-[2rem] shadow-2xl border border-white/10 z-50 pointer-events-none flex flex-col gap-4"
             style={{ 
                left: `calc(16px + ${(hoveredPoint / (data.length - 1)) * (width / 1000) * 100}%)`,
                top: `calc(${height - (data[hoveredPoint] / maxVal) * height}px + 40px)`,
                transform: "translate(-50%, 0)"
             }}
           >
-             <div className="flex items-center gap-3 mb-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-accent-emerald animate-pulse shadow-[0_0_5px_#10B981]" />
-                <p className="text-[9px] font-mono text-white/40 uppercase tracking-[0.2em] font-bold">Telemetry</p>
+             <div>
+               <div className="flex items-center gap-3 mb-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-accent-emerald animate-pulse shadow-[0_0_5px_#10B981]" />
+                  <p className="text-[9px] font-mono text-white/40 uppercase tracking-[0.2em] font-bold">Grid Load</p>
+               </div>
+               <p className="text-3xl font-black tracking-tighter">
+                  {data[hoveredPoint].toFixed(2)}
+                  <span className="text-xs ml-2 text-accent-emerald uppercase font-bold tracking-widest">kW</span>
+               </p>
              </div>
-             <p className="text-4xl font-black tracking-tighter">
-                {data[hoveredPoint].toFixed(2)}
-                <span className="text-xs ml-2 text-accent-emerald uppercase font-bold tracking-widest">kW</span>
-             </p>
+             
+             {solarData && (
+               <div>
+                 <div className="flex items-center gap-3 mb-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#EAB308] animate-pulse shadow-[0_0_5px_#EAB308]" />
+                    <p className="text-[9px] font-mono text-white/40 uppercase tracking-[0.2em] font-bold">Solar Generation</p>
+                 </div>
+                 <p className="text-3xl font-black tracking-tighter">
+                    {solarData[hoveredPoint].toFixed(2)}
+                    <span className="text-xs ml-2 text-[#EAB308] uppercase font-bold tracking-widest">kW</span>
+                 </p>
+               </div>
+             )}
           </motion.div>
         )}
       </div>
 
       <div className="mt-12 sm:mt-20 flex flex-col xl:flex-row gap-8 sm:gap-16 items-start xl:items-center justify-between relative z-10 w-full">
-         <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-16 w-full sm:w-auto">
+         <div className="grid grid-cols-1 sm:grid-cols-4 gap-8 sm:gap-16 w-full sm:w-auto">
             <StatsItem label="Current Load" value={`${(data[data.length - 1] || 0).toFixed(2)} kW`} />
             <StatsItem label="System Peak" value={`${Math.max(...data).toFixed(2)} kW`} />
+            <StatsItem label="Current Solar" value={`${(solarData?.[solarData.length - 1] || 0).toFixed(2)} kW`} />
             <StatsItem label="Baseline Deviation" value="-12.4%" />
          </div>
          <div className="text-left xl:text-right glass-card p-6 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] border border-white/5 bg-white/[0.02] w-full sm:w-auto">

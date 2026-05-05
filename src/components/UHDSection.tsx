@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useState } from "react";
 import { 
   Zap, Fan, Lightbulb, Tv, Refrigerator, WashingMachine, Wind, Snowflake, 
   Waves, Search, ChevronRight, Activity, LayoutGrid, Plus, Cpu, X, Wifi, 
@@ -11,6 +12,7 @@ import {
   Volume2, Cloud, DoorOpen, LightbulbOff
 } from "lucide-react";
 import { Device } from "@/types/device";
+import SmartRoutines from "./SmartRoutines";
 
 const ICON_MAP: Record<string, any> = {
   Activity: <Activity className="w-10 h-10" />,
@@ -73,9 +75,13 @@ interface UHDSectionProps {
   onOpenPlans: () => void;
   onScrollToRadar: () => void;
   onReset: () => void;
+  activeRoutine: string | null;
+  onExecuteRoutine: (routineId: string) => void;
 }
 
-export default function UHDSection({ devices, onToggleDevice, onAddDevice, onDeleteDevice, totalLoad, onOpenPlans, onScrollToRadar, onReset }: UHDSectionProps) {
+export default function UHDSection({ devices, onToggleDevice, onAddDevice, onDeleteDevice, totalLoad, onOpenPlans, onScrollToRadar, onReset, activeRoutine, onExecuteRoutine }: UHDSectionProps) {
+  const filteredDevices = devices;
+
   return (
     <section className="bg-slate-900 py-16 sm:py-32 px-6 sm:px-12 border-t border-white/5 relative overflow-hidden">
       {/* Background Ambient Glow - Cyber Aqua */}
@@ -116,9 +122,11 @@ export default function UHDSection({ devices, onToggleDevice, onAddDevice, onDel
           </div>
         </div>
 
+
+
         {/* Appliance Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {devices.map((device) => (
+          {filteredDevices.map((device) => (
             <motion.div
               key={device.id}
               whileHover={{ y: -8, scale: 1.02 }}
@@ -209,6 +217,8 @@ export default function UHDSection({ devices, onToggleDevice, onAddDevice, onDel
              </div>
           </motion.button>
         </div>
+
+        <SmartRoutines activeRoutine={activeRoutine} onExecuteRoutine={onExecuteRoutine} />
       </div>
     </section>
   );

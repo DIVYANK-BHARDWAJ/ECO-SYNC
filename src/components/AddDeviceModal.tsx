@@ -172,6 +172,8 @@ export default function AddDeviceModal({ isOpen, onClose, onAdd }: AddDeviceModa
   const labelRef = useRef<HTMLDivElement>(null);
   const powerRef = useRef<HTMLDivElement>(null);
 
+
+
   useEffect(() => {
     if (step !== 2) return;
 
@@ -513,6 +515,8 @@ export default function AddDeviceModal({ isOpen, onClose, onAdd }: AddDeviceModa
                                     className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-6 text-white placeholder:text-white/10 focus:outline-none focus:border-accent-cyber/50 focus:bg-white/10 transition-all font-bold tracking-wide text-lg"
                                   />
                                 </div>
+
+
 
                                 <div ref={powerRef} data-section="power" className="scroll-mt-20">
                                   <div className="flex items-center gap-3 mb-6">

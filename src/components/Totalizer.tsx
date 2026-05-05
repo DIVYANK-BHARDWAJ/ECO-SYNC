@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { Info, Calculator } from "lucide-react";
 import { MetricType } from "./CalculationOverlay";
-import { Device } from "@/types/device";
+import { Device, SolarBatteryState } from "@/types/device";
 
 interface TotalizerProps {
   totalLoad: number;
@@ -11,9 +11,10 @@ interface TotalizerProps {
   devices: Device[];
   onOpenMetric: (type: MetricType) => void;
   activePlanId: string | null;
+  solarState: SolarBatteryState;
 }
 
-export default function Totalizer({ totalLoad, accumulatedKwh, devices, onOpenMetric, activePlanId }: TotalizerProps) {
+export default function Totalizer({ totalLoad, accumulatedKwh, devices, onOpenMetric, activePlanId, solarState }: TotalizerProps) {
   const carbonFactor = 0.82; // India Standard (0.82kg/unit)
   const costFactor = 8; // ₹8 per unit (Standard Indian Rate)
   
@@ -36,6 +37,10 @@ export default function Totalizer({ totalLoad, accumulatedKwh, devices, onOpenMe
     85 - usagePenalty + planBonus
   ));
 
+  const netGridLoad = Math.max(0, solarState.gridDependency);
+  const selfConsumption = totalLoad - netGridLoad;
+  const selfConsumptionPercent = totalLoad > 0 ? (selfConsumption / totalLoad) * 100 : 0;
+
   return (
     <div className="w-full">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
@@ -56,12 +61,12 @@ export default function Totalizer({ totalLoad, accumulatedKwh, devices, onOpenMe
           onClick={() => onOpenMetric("CARBON")}
         />
         <SummaryCard 
-          title="System Efficiency"
-          value={efficiency.toFixed(1)}
-          label="Optimization Score"
-          suffix="%"
-          accent="emerald"
-          onClick={() => onOpenMetric("EFFICIENCY")}
+          title="Grid Dependency"
+          value={netGridLoad.toFixed(2)}
+          label={selfConsumptionPercent > 50 ? "Mostly Self-Powered" : "Grid Reliant"}
+          suffix=" kW"
+          accent="cyber"
+          onClick={() => onOpenMetric("MAX_EFFICIENCY")} // Assuming we reuse a metric overlay or add a new one
         />
         <SummaryCard 
           title="Maximum Efficiency"

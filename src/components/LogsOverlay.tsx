@@ -13,7 +13,7 @@ import {
 export type DeviceLog = { 
   id: number; 
   label: string; 
-  action: "ON" | "OFF" | "BOOT" | "REGISTER" | "REMOVED"; 
+  action: "ON" | "OFF" | "BOOT" | "REGISTER" | "REMOVED" | "EXEC"; 
   time: string;
   details?: string;
   iconName?: string;
