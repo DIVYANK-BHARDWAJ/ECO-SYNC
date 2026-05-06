@@ -4,19 +4,19 @@ import { motion, useTransform } from "framer-motion";
 
 // Each environment gets its own distinct color so it never blends into the animation
 const colorMap: Record<string, { label: string; border: string; text: string; dot: string; cardBg: string }> = {
-  emerald: {
-    label: "#10b981",
-    border: "#10b981",
-    text: "#10b981",
-    dot: "#10b981",
-    cardBg: "rgba(4, 20, 12, 0.97)",
+  primary: {
+    label: "#007BFF",
+    border: "#007BFF",
+    text: "#007BFF",
+    dot: "#007BFF",
+    cardBg: "rgba(2, 6, 23, 0.97)",
   },
-  cyber: {
-    label: "#f59e0b",     // amber — distinct from the site's cyan AND from emerald
-    border: "#f59e0b",
-    text: "#f59e0b",
-    dot: "#f59e0b",
-    cardBg: "rgba(20, 12, 4, 0.97)",
+  secondary: {
+    label: "#FFFFFF",
+    border: "#FFFFFF",
+    text: "#FFFFFF",
+    dot: "#FFFFFF",
+    cardBg: "rgba(2, 6, 23, 0.97)",
   },
 };
 
@@ -25,19 +25,19 @@ const insights = [
     range: [0, 0.25] as [number, number],
     title: "Living Room",
     text: "Standby devices waste 10% of your bill.",
-    color: "emerald",
+    color: "primary",
   },
   {
     range: [0.35, 0.6] as [number, number],
     title: "Kitchen",
     text: "Electric cooking uses 30% less power than gas.",
-    color: "cyber",
+    color: "secondary",
   },
   {
     range: [0.7, 0.95] as [number, number],
     title: "Garage",
     text: "Solar panels can cut electricity costs by 60%.",
-    color: "emerald",
+    color: "primary",
   },
 ];
 
@@ -60,7 +60,7 @@ export default function InsightSections({ scrollProgress }: InsightSectionsProps
 }
 
 function InsightBubble({ insight, progress }: { insight: any, progress: any }) {
-  const c = colorMap[insight.color] ?? colorMap.emerald;
+  const c = colorMap[insight.color] ?? colorMap.primary;
 
   const opacity = useTransform(
     progress,

@@ -47,21 +47,21 @@ export default function SavingsGraph({ data, solarData }: SavingsGraphProps) {
   return (
     <div className="bg-slate-900/40 backdrop-blur-3xl p-6 sm:p-10 md:p-16 rounded-3xl sm:rounded-[4rem] border border-white/5 shadow-2xl relative w-full overflow-hidden">
       {/* Background Radar Mesh */}
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: "radial-gradient(#10B981 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: "radial-gradient(#007BFF 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
       
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-16 gap-8 relative z-10">
         <div>
-          <h4 className="text-2xl sm:text-4xl font-black text-white uppercase tracking-tighter italic">Live Usage <span className="text-accent-emerald">Radar</span></h4>
+          <h4 className="text-2xl sm:text-4xl font-black text-white uppercase tracking-tighter italic">Live Usage <span className="text-accent-primary">Radar</span></h4>
           <p className="text-white/40 font-mono text-[8px] sm:text-[10px] uppercase tracking-[0.2em] sm:tracking-[0.4em] font-bold">Real-time Digital Signature | Adjusted for Grid Load</p>
         </div>
         <div className="flex gap-4">
            <div className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-white flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-[#EAB308] animate-ping shadow-[0_0_10px_#EAB308]" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-[#EAB308]">Solar</span>
+              <div className="w-2 h-2 rounded-full bg-accent-secondary animate-pulse shadow-[0_0_10px_#007BFF]" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-accent-secondary">Solar</span>
            </div>
            <div className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-white flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-accent-emerald animate-ping shadow-[0_0_10px_#10B981]" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-accent-emerald">Grid</span>
+              <div className="w-2 h-2 rounded-full bg-white animate-pulse shadow-[0_0_10px_#FFFFFF]" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-white">Grid</span>
            </div>
         </div>
       </div>
@@ -81,7 +81,7 @@ export default function SavingsGraph({ data, solarData }: SavingsGraphProps) {
            <span>-30s</span>
            <span>-20s</span>
            <span>-10s</span>
-           <span className="text-accent-emerald">NOW</span>
+           <span className="text-accent-primary">NOW</span>
         </div>
 
         {/* Labels Overlay */}
@@ -117,12 +117,12 @@ export default function SavingsGraph({ data, solarData }: SavingsGraphProps) {
           {/* Area Gradient */}
           <defs>
             <linearGradient id="live-gradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#10B981" stopOpacity="0.15" />
-              <stop offset="100%" stopColor="#10B981" stopOpacity="0" />
+              <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.15" />
+              <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
             </linearGradient>
             <linearGradient id="solar-gradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#EAB308" stopOpacity="0.15" />
-              <stop offset="100%" stopColor="#EAB308" stopOpacity="0" />
+              <stop offset="0%" stopColor="#007BFF" stopOpacity="0.15" />
+              <stop offset="100%" stopColor="#007BFF" stopOpacity="0" />
             </linearGradient>
           </defs>
 
@@ -145,7 +145,7 @@ export default function SavingsGraph({ data, solarData }: SavingsGraphProps) {
             <motion.path
               d={solarPath}
               fill="none"
-              stroke="#EAB308"
+              stroke="#007BFF"
               strokeWidth="10"
               opacity="0.1"
               strokeLinecap="round"
@@ -158,7 +158,7 @@ export default function SavingsGraph({ data, solarData }: SavingsGraphProps) {
             <motion.path
               d={solarPath}
               fill="none"
-              stroke="#EAB308"
+              stroke="#007BFF"
               strokeWidth="3.5"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -172,7 +172,7 @@ export default function SavingsGraph({ data, solarData }: SavingsGraphProps) {
           <motion.path
             d={linearPath}
             fill="none"
-            stroke="#10B981"
+            stroke="#FFFFFF"
             strokeWidth="3.5"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -187,8 +187,8 @@ export default function SavingsGraph({ data, solarData }: SavingsGraphProps) {
                 cx={(solarData.length - 1) / (solarData.length - 1) * width} 
                 cy={height - (solarData[solarData.length - 1] / maxVal) * height} 
                 r="5" 
-                fill="#EAB308" 
-                className="shadow-[0_0_15px_#EAB308]"
+                fill="#007BFF" 
+                className="shadow-[0_0_15px_#007BFF]"
                 animate={{ scale: [1, 1.4, 1], opacity: [1, 0.6, 1] }}
                 transition={{ repeat: Infinity, duration: 1.5 }}
              />
@@ -200,8 +200,8 @@ export default function SavingsGraph({ data, solarData }: SavingsGraphProps) {
                 cx={(data.length - 1) / (data.length - 1) * width} 
                 cy={height - (data[data.length - 1] / maxVal) * height} 
                 r="5" 
-                fill="#10B981" 
-                className="shadow-[0_0_15px_#10B981]"
+                fill="#FFFFFF" 
+                className="shadow-[0_0_15px_#FFFFFF]"
                 animate={{ scale: [1, 1.4, 1], opacity: [1, 0.6, 1] }}
                 transition={{ repeat: Infinity, duration: 1.5 }}
              />
@@ -218,7 +218,7 @@ export default function SavingsGraph({ data, solarData }: SavingsGraphProps) {
               <g key={i} className="cursor-pointer" onMouseEnter={() => setHoveredPoint(i)} onMouseLeave={() => setHoveredPoint(null)}>
                 <circle 
                   cx={x} cy={y} r="3.5" 
-                  fill={hoveredPoint === i ? "#10B981" : "white"} 
+                  fill={hoveredPoint === i ? "#007BFF" : "white"} 
                   opacity={hoveredPoint === i ? 1 : 0.15} 
                 />
               </g>
@@ -240,24 +240,24 @@ export default function SavingsGraph({ data, solarData }: SavingsGraphProps) {
           >
              <div>
                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-accent-emerald animate-pulse shadow-[0_0_5px_#10B981]" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse shadow-[0_0_5px_#FFFFFF]" />
                   <p className="text-[9px] font-mono text-white/40 uppercase tracking-[0.2em] font-bold">Grid Load</p>
                </div>
                <p className="text-3xl font-black tracking-tighter">
                   {data[hoveredPoint].toFixed(2)}
-                  <span className="text-xs ml-2 text-accent-emerald uppercase font-bold tracking-widest">kW</span>
+                  <span className="text-xs ml-2 text-accent-primary uppercase font-bold tracking-widest">kW</span>
                </p>
              </div>
              
              {solarData && (
                <div>
                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#EAB308] animate-pulse shadow-[0_0_5px_#EAB308]" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#007BFF] animate-pulse shadow-[0_0_5px_#007BFF]" />
                     <p className="text-[9px] font-mono text-white/40 uppercase tracking-[0.2em] font-bold">Solar Generation</p>
                  </div>
                  <p className="text-3xl font-black tracking-tighter">
                     {solarData[hoveredPoint].toFixed(2)}
-                    <span className="text-xs ml-2 text-[#EAB308] uppercase font-bold tracking-widest">kW</span>
+                    <span className="text-xs ml-2 text-[#007BFF] uppercase font-bold tracking-widest">kW</span>
                  </p>
                </div>
              )}
@@ -275,7 +275,7 @@ export default function SavingsGraph({ data, solarData }: SavingsGraphProps) {
          <div className="text-left xl:text-right glass-card p-6 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] border border-white/5 bg-white/[0.02] w-full sm:w-auto">
             <p className="text-white/20 font-mono text-[8px] sm:text-[10px] uppercase tracking-widest mb-2 sm:mb-3 font-bold">Status: Synchronized</p>
             <div className="flex items-center gap-3 text-white font-black text-xl sm:text-2xl uppercase tracking-tighter italic">
-               <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-accent-emerald animate-pulse shadow-[0_0_20px_#10B981]" />
+               <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-accent-secondary animate-pulse shadow-[0_0_20px_#007BFF]" />
                Pulse Grid Optimal
             </div>
          </div>

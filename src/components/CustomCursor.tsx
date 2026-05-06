@@ -31,18 +31,18 @@ export default function CustomCursor() {
           translateY: "-50%",
           pointerEvents: "none"
         }}
-        className="fixed top-0 left-0 w-10 h-10 rounded-full border border-accent-emerald/10 z-[9999] custom-cursor flex items-center justify-center"
+        className="fixed top-0 left-0 w-10 h-10 rounded-full border border-accent-primary/10 z-[9999] custom-cursor flex items-center justify-center"
       >
         <motion.div 
            animate={{ rotate: 360 }}
            transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
-           className="absolute inset-0 border-t-2 border-r border-accent-emerald/40 rounded-full"
+           className="absolute inset-0 border-t-2 border-r border-accent-primary/40 rounded-full"
         />
         {/* Pulsing Sonar Effect */}
         <motion.div 
            animate={{ scale: [1, 1.5], opacity: [0.3, 0] }}
            transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
-           className="absolute inset-0 border border-accent-emerald/30 rounded-full"
+           className="absolute inset-0 border border-accent-primary/30 rounded-full"
         />
       </motion.div>
 
@@ -55,7 +55,7 @@ export default function CustomCursor() {
           translateY: "-50%",
           pointerEvents: "none"
         }}
-        className="fixed top-0 left-0 w-5 h-[1.5px] bg-accent-emerald/60 z-[9999] custom-cursor"
+        className="fixed top-0 left-0 w-5 h-[1.5px] bg-accent-primary/60 z-[9999] custom-cursor"
       />
 
       {/* Mechanical Crosshair - Vertical */}
@@ -67,7 +67,7 @@ export default function CustomCursor() {
           translateY: "-50%",
           pointerEvents: "none"
         }}
-        className="fixed top-0 left-0 w-[1.5px] h-5 bg-accent-emerald/60 z-[9999] custom-cursor"
+        className="fixed top-0 left-0 w-[1.5px] h-5 bg-accent-primary/60 z-[9999] custom-cursor"
       />
 
       {/* Central Precision Targeting Dot */}

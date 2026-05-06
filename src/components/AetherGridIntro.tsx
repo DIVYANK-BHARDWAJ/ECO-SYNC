@@ -32,7 +32,7 @@ export default function AetherGridIntro({ onComplete }: AetherGridIntroProps) {
               repeat: Infinity,
               delay: Math.random() * 5
             }}
-            className="absolute w-1 h-1 bg-accent-emerald rounded-full"
+            className="absolute w-1 h-1 bg-accent-primary rounded-full"
           />
         ))}
       </div>
@@ -41,30 +41,30 @@ export default function AetherGridIntro({ onComplete }: AetherGridIntroProps) {
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 1.5, ease: "easeOut" }}
-          className="mb-8"
+          transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
+          className="mb-12"
         >
-          <div className="w-24 h-24 mx-auto mb-6 relative">
+          <div className="w-24 h-24 mx-auto mb-8 relative">
             <motion.div 
               animate={{ rotate: 360 }}
               transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              className="absolute inset-0 border-2 border-accent-emerald rounded-2xl opacity-20"
+              className="absolute inset-0 border-2 border-accent-primary rounded-2xl opacity-20"
             />
             <motion.div 
               animate={{ rotate: -360 }}
               transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-              className="absolute inset-2 border-2 border-accent-cyber rounded-xl opacity-30"
+              className="absolute inset-2 border-2 border-accent-secondary rounded-xl opacity-30"
             />
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-12 h-12 bg-white rounded-lg glow-emerald" />
+              <div className="w-12 h-12 bg-white rounded-lg shadow-[0_0_30px_#fff]" />
             </div>
           </div>
           
-          <h1 className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tighter text-white mb-4 uppercase italic neon-text-pulse px-4">
-            Eco<span className="text-accent-emerald neon-text-emerald">-</span>Sync
+          <h1 className="text-6xl sm:text-8xl md:text-9xl font-black tracking-tighter text-white mb-6 uppercase italic px-4 leading-none">
+            ECO<span className="text-accent-secondary">-</span>SYNC <span className="text-accent-primary">NEXUS</span>
           </h1>
-          <p className="text-white/40 font-mono tracking-[0.2em] sm:tracking-[0.3em] uppercase text-[10px] sm:text-sm px-6">
-            Next-Gen Energy Command Center
+          <p className="text-white/30 font-mono tracking-[0.5em] uppercase text-[10px] sm:text-xs px-6">
+            THE ARCHITECTURE OF ENERGY SOVEREIGNTY
           </p>
         </motion.div>
 
@@ -73,9 +73,9 @@ export default function AetherGridIntro({ onComplete }: AetherGridIntroProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.5, duration: 0.8 }}
             onClick={onComplete}
-            className="px-8 sm:px-12 py-4 sm:py-5 bg-white text-black font-bold rounded-full hover:scale-105 transition-transform active:scale-95 glow-emerald text-xs sm:text-base uppercase tracking-widest"
+            className="px-12 sm:px-16 py-5 sm:py-6 bg-white text-black font-black rounded-full hover:scale-105 transition-all active:scale-95 shadow-[0_0_50px_rgba(255,255,255,0.3)] text-xs sm:text-sm uppercase tracking-[0.2em]"
           >
-            Start Simulator
+            Authorize Intelligence
           </motion.button>
       </div>
 
@@ -83,7 +83,7 @@ export default function AetherGridIntro({ onComplete }: AetherGridIntroProps) {
         initial={{ y: "100%" }}
         animate={{ y: "0%" }}
         transition={{ duration: 1.2, delay: 0.2 }}
-        className="absolute bottom-0 w-full h-1 bg-gradient-to-r from-transparent via-accent-emerald to-transparent opacity-50"
+        className="absolute bottom-0 w-full h-1 bg-gradient-to-r from-transparent via-accent-secondary to-transparent opacity-50"
       />
     </motion.div>
   );

@@ -14,10 +14,10 @@ interface CalculationOverlayProps {
 const themes: Record<NonNullable<MetricType>, {
   accent: string; glow: string; bg: string; border: string; strip: string;
 }> = {
-  COST:          { accent: "#f59e0b", glow: "rgba(245,158,11,0.15)",  bg: "rgba(245,158,11,0.08)",  border: "rgba(245,158,11,0.25)", strip: "#d97706" },
-  CARBON:        { accent: "#10b981", glow: "rgba(16,185,129,0.15)", bg: "rgba(16,185,129,0.08)",  border: "rgba(16,185,129,0.25)", strip: "#059669" },
-  EFFICIENCY:    { accent: "#6366f1", glow: "rgba(99,102,241,0.15)", bg: "rgba(99,102,241,0.08)",  border: "rgba(99,102,241,0.25)", strip: "#4f46e5" },
-  MAX_EFFICIENCY:{ accent: "#d946ef", glow: "rgba(217,70,239,0.15)", bg: "rgba(217,70,239,0.08)",  border: "rgba(217,70,239,0.25)", strip: "#c026d3" },
+  COST:          { accent: "#007BFF", glow: "rgba(0,123,255,0.15)",  bg: "rgba(0,123,255,0.08)",  border: "rgba(0,123,255,0.25)", strip: "#0056b3" },
+  CARBON:        { accent: "#FFFFFF", glow: "rgba(255,255,255,0.15)", bg: "rgba(255,255,255,0.08)",  border: "rgba(255,255,255,0.25)", strip: "#CCCCCC" },
+  EFFICIENCY:    { accent: "#3395FF", glow: "rgba(51,149,255,0.15)", bg: "rgba(51,149,255,0.08)",  border: "rgba(51,149,255,0.25)", strip: "#007BFF" },
+  MAX_EFFICIENCY:{ accent: "#00D1FF", glow: "rgba(0,209,255,0.15)", bg: "rgba(0,209,255,0.08)",  border: "rgba(0,209,255,0.25)", strip: "#007BFF" },
 };
 
 const content: Record<NonNullable<MetricType>, {
@@ -56,7 +56,7 @@ const content: Record<NonNullable<MetricType>, {
     subtitle: "Max savings possible",
     icon: <TrendingDown className="w-12 h-12" />,
     formula: "Current Score vs. AI Recommended Benchmarks",
-    explanation: "We analyze your usage signature against highly efficient 'Eco-Sync' benchmarks. A score below 70% suggests significant room for saving via automated plans.",
+    explanation: "We analyze your usage signature against highly efficient 'Eco-Sync Nexus' benchmarks. A score below 70% suggests significant room for saving via automated plans.",
     example: "Switching to 'Aether Pro' can jump your score from 40% to 65% instantly.",
     tips: ["Follow the AI recommendations", "Enable Auto-Sync mode", "Identify 'Vampire' appliances"]
   }

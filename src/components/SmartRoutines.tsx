@@ -28,8 +28,8 @@ export default function SmartRoutines({ onExecuteRoutine, activeRoutine }: Smart
   return (
     <div className="w-full mt-12 sm:mt-16 bg-slate-950/80 backdrop-blur-3xl border border-white/5 p-6 sm:p-10 rounded-3xl sm:rounded-[3rem] shadow-2xl">
       <div className="flex items-center gap-3 mb-6 sm:mb-8">
-        <div className="w-2 h-2 rounded-full bg-accent-cyber animate-pulse shadow-[0_0_10px_#00F0FF]" />
-        <h3 className="text-white font-black uppercase tracking-widest text-base sm:text-xl">Smart Routines</h3>
+        <div className="w-2 h-2 rounded-full bg-accent-routine animate-pulse shadow-[0_0_10px_#6366F1]" />
+        <h3 className="text-white font-black uppercase tracking-widest text-base sm:text-xl font-heading italic">Smart Routines</h3>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {ROUTINES.map((routine) => {
@@ -43,13 +43,13 @@ export default function SmartRoutines({ onExecuteRoutine, activeRoutine }: Smart
               onClick={() => onExecuteRoutine(routine.id)}
               className={`relative overflow-hidden p-4 sm:p-6 rounded-2xl sm:rounded-3xl border transition-all duration-300 flex flex-col items-center justify-center gap-3 text-center ${
                 isActive 
-                  ? "bg-accent-cyber/20 border-accent-cyber text-white shadow-[0_0_20px_rgba(0,240,255,0.2)]" 
+                  ? "bg-accent-routine/20 border-accent-routine text-white shadow-[0_0_20px_rgba(99,102,241,0.3)]" 
                   : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white hover:border-white/20"
               }`}
             >
-              <Icon className={`w-6 h-6 sm:w-8 sm:h-8 ${isActive ? "text-accent-cyber" : "text-white/40"}`} />
+              <Icon className={`w-6 h-6 sm:w-8 sm:h-8 ${isActive ? "text-accent-routine" : "text-white/40"}`} />
               <div>
-                <p className={`font-black uppercase tracking-tighter text-sm sm:text-base ${isActive ? "text-white drop-shadow-[0_0_10px_rgba(0,240,255,0.8)]" : ""}`}>{routine.label}</p>
+                <p className={`font-black uppercase tracking-tighter text-sm sm:text-base font-heading italic ${isActive ? "text-white drop-shadow-[0_0_10px_rgba(99,102,241,0.8)]" : ""}`}>{routine.label}</p>
                 <p className="text-[8px] sm:text-[10px] font-mono tracking-widest uppercase opacity-70 mt-1">{routine.desc}</p>
               </div>
             </motion.button>

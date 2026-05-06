@@ -80,13 +80,13 @@ const LOG_ICON_MAP: Record<string, any> = {
 
 // Futuristic Cyber Theme
 const THEME = {
-  accent: "#00F0FF", // Cyan/Cyber
-  accentSecondary: "#10B981", // Emerald
+  accent: "#007BFF", // Blue
+  accentSecondary: "#FFFFFF", // White
   danger: "#FF3C3C",
   bg: "#020617", // Slate 950
   surface: "rgba(15, 23, 42, 0.9)", // Slate 900 with alpha
-  border: "rgba(0, 240, 255, 0.2)",
-  glow: "rgba(0, 240, 255, 0.1)",
+  border: "rgba(0, 123, 255, 0.2)",
+  glow: "rgba(0, 123, 255, 0.1)",
 };
 
 export default function LogsOverlay({ isOpen, onClose, deviceHistory, onClearLogs }: LogsOverlayProps) {
@@ -105,8 +105,8 @@ export default function LogsOverlay({ isOpen, onClose, deviceHistory, onClearLog
            style={{ backgroundImage: "radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0)", backgroundSize: "24px 24px" }} />
       
       {/* Cyber Glow Effects */}
-      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-accent-cyber/5 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-accent-emerald/5 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-accent-secondary/5 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-accent-primary/5 blur-[120px] rounded-full pointer-events-none" />
 
       <motion.div
         initial={{ scale: 0.95, opacity: 0, rotateX: 10 }}
@@ -119,19 +119,19 @@ export default function LogsOverlay({ isOpen, onClose, deviceHistory, onClearLog
         }}
       >
         {/* Top Header Rail */}
-        <div className="h-1 w-full bg-gradient-to-r from-accent-cyber via-accent-emerald to-accent-cyber animate-gradient-x" />
+        <div className="h-1 w-full bg-gradient-to-r from-accent-secondary via-accent-primary to-accent-secondary animate-gradient-x" />
 
         <div className="p-8 border-b border-white/5 bg-slate-900/50 flex flex-col gap-6">
           <div className="flex justify-between items-start">
             <div className="flex items-center gap-5">
-              <div className="w-14 h-14 rounded-2xl bg-accent-cyber/10 border border-accent-cyber/20 flex items-center justify-center relative group">
-                <div className="absolute inset-0 bg-accent-cyber/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-                <Terminal className="w-7 h-7 text-accent-cyber relative z-10" />
+              <div className="w-14 h-14 rounded-2xl bg-accent-secondary/10 border border-accent-secondary/20 flex items-center justify-center relative group">
+                <div className="absolute inset-0 bg-accent-secondary/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                <Terminal className="w-7 h-7 text-accent-secondary relative z-10" />
               </div>
               <div>
                 <div className="flex items-center gap-3 mb-1">
-                  <h3 className="text-2xl font-black text-white uppercase tracking-tighter italic">Grid <span className="text-accent-cyber">Protocol</span></h3>
-                  <div className="px-2 py-0.5 rounded bg-accent-cyber/10 border border-accent-cyber/20 text-[8px] font-black text-accent-cyber uppercase tracking-widest">v4.2.0</div>
+                  <h3 className="text-2xl font-black text-white uppercase tracking-tighter italic">Grid <span className="text-accent-secondary">Protocol</span></h3>
+                  <div className="px-2 py-0.5 rounded bg-accent-secondary/10 border border-accent-secondary/20 text-[8px] font-black text-accent-secondary uppercase tracking-widest">v4.2.0</div>
                 </div>
                 <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/40 font-bold flex items-center gap-2">
                   <ShieldCheck className="w-3 h-3" /> System Integrity Monitor
@@ -167,8 +167,8 @@ export default function LogsOverlay({ isOpen, onClose, deviceHistory, onClearLog
             <div className="p-4 rounded-xl bg-black/40 border border-white/5">
               <p className="text-[9px] uppercase tracking-widest text-white/30 mb-1 font-black">Status</p>
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-accent-emerald animate-pulse" />
-                <p className="text-xl font-black text-accent-emerald italic uppercase">Active</p>
+                <div className="w-2 h-2 rounded-full bg-accent-primary animate-pulse" />
+                <p className="text-xl font-black text-accent-primary italic uppercase">Active</p>
               </div>
             </div>
             <div className="p-4 rounded-xl bg-black/40 border border-white/5">
@@ -191,12 +191,12 @@ export default function LogsOverlay({ isOpen, onClose, deviceHistory, onClearLog
                 className="relative flex items-center gap-6 p-5 mb-3 rounded-2xl border transition-all hover:bg-white/5 group"
                 style={{
                   background: log.action === "ON" || log.action === "REGISTER" 
-                    ? "rgba(16, 185, 129, 0.03)" 
+                    ? "rgba(0, 123, 255, 0.05)" 
                     : log.action === "REMOVED" || log.action === "OFF"
                     ? "rgba(255, 60, 60, 0.03)"
                     : "rgba(255, 255, 255, 0.02)",
                   borderColor: log.action === "ON" || log.action === "REGISTER"
-                    ? "rgba(16, 185, 129, 0.1)"
+                    ? "rgba(0, 123, 255, 0.15)"
                     : log.action === "REMOVED" || log.action === "OFF"
                     ? "rgba(255, 60, 60, 0.1)"
                     : "rgba(255, 255, 255, 0.05)"
@@ -209,7 +209,7 @@ export default function LogsOverlay({ isOpen, onClose, deviceHistory, onClearLog
 
                 {/* Status Icon with Glow */}
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 relative transition-transform group-hover:scale-110
-                  ${log.action === "ON" || log.action === "REGISTER" ? "bg-accent-emerald/10 text-accent-emerald border border-accent-emerald/20" : 
+                  ${log.action === "ON" || log.action === "REGISTER" ? "bg-accent-primary/10 text-accent-primary border border-accent-primary/20" : 
                     log.action === "REMOVED" || log.action === "OFF" ? "bg-danger/10 text-danger border border-danger/20" : 
                     "bg-white/5 text-white/40 border border-white/10"}`}
                 >
@@ -226,7 +226,7 @@ export default function LogsOverlay({ isOpen, onClose, deviceHistory, onClearLog
 
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-1">
-                    <p className="font-black text-lg text-white uppercase tracking-tight italic group-hover:text-accent-cyber transition-colors">
+                    <p className="font-black text-lg text-white uppercase tracking-tight italic group-hover:text-accent-secondary transition-colors">
                       {log.label}
                     </p>
                     <span className="font-mono text-[10px] text-white/20 bg-white/5 px-2 py-1 rounded border border-white/5 uppercase">
@@ -235,9 +235,9 @@ export default function LogsOverlay({ isOpen, onClose, deviceHistory, onClearLog
                   </div>
                   <div className="flex items-center gap-3">
                     <div className={`text-[10px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded
-                      ${log.action === "ON" ? "bg-accent-emerald/10 text-accent-emerald" : 
+                      ${log.action === "ON" ? "bg-accent-primary/10 text-accent-primary" : 
                         log.action === "OFF" ? "bg-danger/10 text-danger" : 
-                        log.action === "REGISTER" ? "bg-accent-cyber/10 text-accent-cyber" :
+                        log.action === "REGISTER" ? "bg-accent-secondary/10 text-accent-secondary" :
                         log.action === "REMOVED" ? "bg-danger/10 text-danger" :
                         "bg-white/10 text-white/60"}`}
                     >
@@ -277,11 +277,11 @@ export default function LogsOverlay({ isOpen, onClose, deviceHistory, onClearLog
         {/* Footer Interaction Bar */}
         <div className="p-6 border-t border-white/5 bg-slate-900/50 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="w-3 h-3 rounded-full bg-accent-cyber animate-ping" />
-            <p className="font-mono text-[9px] text-accent-cyber uppercase tracking-widest font-black">Socket Stream: Active</p>
+            <div className="w-3 h-3 rounded-full bg-accent-secondary animate-ping" />
+            <p className="font-mono text-[9px] text-accent-secondary uppercase tracking-widest font-black">Socket Stream: Active</p>
           </div>
           <p className="text-[9px] text-white/20 uppercase tracking-[0.3em] font-bold">
-            Eco-Sync Console v1.0.4
+            Eco-Sync Nexus Console v1.0.4
           </p>
         </div>
       </motion.div>

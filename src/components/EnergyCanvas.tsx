@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useTransform } from "framer-motion";
 
-const FRAME_COUNT = 128;
+const FRAME_COUNT = 144;
 
 interface EnergyCanvasProps {
   scrollProgress: any; // MotionValue<number>
@@ -61,7 +61,7 @@ export default function EnergyCanvas({ scrollProgress }: EnergyCanvasProps) {
 
     const loadFrame = (i: number) => {
       const img = new Image();
-      img.src = `/sequence/frame_${i.toString().padStart(3, "0")}_delay-0.062s.png`;
+      img.src = `/new_animation/frame_${i.toString().padStart(3, "0")}_delay-0.055s.png`;
       imgs[i] = img;
 
       img.onload = () => {
@@ -109,7 +109,7 @@ export default function EnergyCanvas({ scrollProgress }: EnergyCanvasProps) {
       className="fixed inset-0 z-0 h-screen w-full pointer-events-none overflow-hidden"
       style={{ 
         opacity, 
-        background: "radial-gradient(ellipse at center, #0a1628 0%, #050d0a 60%, #000 100%)" 
+        background: "radial-gradient(ellipse at center, #001f3f 0%, #000 100%)" 
       } as any}
     >
       <canvas ref={canvasRef} className="h-full w-full object-cover" style={{ background: "transparent" }} />

@@ -5,12 +5,12 @@ import { X, Check, Target, Zap, TrendingDown, ArrowLeft } from "lucide-react";
 
 // Amber/Orange theme — warm "wealth & savings" palette
 const A = {
-  accent: "#f59e0b",
-  accentDark: "#d97706",
-  glow: "rgba(245,158,11,0.14)",
-  bg: "rgba(245,158,11,0.07)",
-  border: "rgba(245,158,11,0.22)",
-  popularBg: "rgba(245,158,11,0.12)",
+  accent: "#007BFF",
+  accentDark: "#0056b3",
+  glow: "rgba(0,123,255,0.14)",
+  bg: "rgba(0,123,255,0.07)",
+  border: "rgba(0,123,255,0.22)",
+  popularBg: "rgba(0,123,255,0.12)",
 };
 
 interface SavingsPlansProps {
@@ -53,7 +53,7 @@ export default function SavingsPlans({ isOpen, onClose, activePlanId, onSelectPl
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[120] overflow-y-auto flex items-start justify-center p-4 md:p-8 backdrop-blur-3xl"
-      style={{ background: "rgba(6,4,0,0.92)" }}
+      style={{ background: "rgba(3,2,10,0.95)" }}
     >
       {/* Amber glow in background */}
       <div
@@ -66,13 +66,13 @@ export default function SavingsPlans({ isOpen, onClose, activePlanId, onSelectPl
         animate={{ scale: 1, y: 0 }}
         className="w-full max-w-6xl my-auto rounded-3xl sm:rounded-[4rem] shadow-2xl overflow-hidden flex flex-col relative z-10 mx-auto"
         style={{
-          background: "#0d0a04",
+          background: "#05030A",
           border: `1px solid ${A.border}`,
           boxShadow: `0 40px 100px -20px ${A.glow}`,
         }}
       >
         {/* Amber top strip */}
-        <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${A.accentDark}, ${A.accent}, #fbbf24)` }} />
+        <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${A.accentDark}, ${A.accent}, #3395FF)` }} />
 
         {/* Header */}
         <div
@@ -136,7 +136,7 @@ export default function SavingsPlans({ isOpen, onClose, activePlanId, onSelectPl
                   className="absolute top-8 right-8 px-4 py-1.5 rounded-full text-[9px] font-black flex gap-2 items-center"
                   style={{ background: activePlanId === plan.name ? "#fff" : A.accent, color: "#0d0a04" }}
                 >
-                  {activePlanId === plan.name && <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />}
+                  {activePlanId === plan.name && <div className="w-1.5 h-1.5 rounded-full bg-accent-secondary animate-pulse shadow-[0_0_8px_#007BFF]" />}
                   {activePlanId === plan.name ? "CURRENTLY ACTIVE" : "RECOMMENDED"}
                 </div>
               )}
@@ -159,7 +159,7 @@ export default function SavingsPlans({ isOpen, onClose, activePlanId, onSelectPl
                     <div
                       className="w-6 h-6 rounded-full flex items-center justify-center"
                       style={{
-                        background: plan.popular ? `rgba(245,158,11,0.15)` : "rgba(255,255,255,0.08)",
+                        background: plan.popular ? `rgba(0,123,255,0.15)` : "rgba(255,255,255,0.08)",
                         color: plan.popular ? A.accent : "rgba(255,255,255,0.4)",
                       }}
                     >

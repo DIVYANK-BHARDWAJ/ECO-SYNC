@@ -83,27 +83,27 @@ export default function UHDSection({ devices, onToggleDevice, onAddDevice, onDel
   const filteredDevices = devices;
 
   return (
-    <section className="bg-slate-900 py-16 sm:py-32 px-6 sm:px-12 border-t border-white/5 relative overflow-hidden">
-      {/* Background Ambient Glow - Cyber Aqua */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[300px] sm:h-[500px] bg-accent-cyber/5 blur-[120px] rounded-full -mt-[150px] sm:-mt-[250px]" />
+    <section className="bg-slate-950 py-16 sm:py-32 px-6 sm:px-12 border-t border-white/5 relative overflow-hidden">
+      {/* Background Ambient Glow - Deep Blue */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[300px] sm:h-[500px] bg-accent-secondary/5 blur-[120px] rounded-full -mt-[150px] sm:-mt-[250px]" />
 
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 sm:mb-20 gap-6 sm:gap-8">
           <div>
             <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
-               <div className="w-2 h-2 rounded-full bg-accent-cyber animate-pulse shadow-[0_0_10px_#00F0FF]" />
+               <div className="w-2 h-2 rounded-full bg-accent-secondary animate-pulse shadow-[0_0_10px_#007BFF]" />
                <p className="text-white/40 font-mono text-[8px] sm:text-[10px] uppercase tracking-[0.2em] sm:tracking-[0.4em] font-black">Control Hub V3.6.0</p>
             </div>
-            <h2 className="text-4xl sm:text-6xl md:text-7xl font-black text-white tracking-tighter uppercase mb-2 sm:mb-4 leading-none italic">
-               Command <span className="text-accent-cyber">Center</span>
+            <h2 className="text-4xl sm:text-6xl md:text-7xl font-black text-white tracking-tighter uppercase mb-2 sm:mb-4 leading-none italic font-heading">
+               NEXUS <span className="text-accent-secondary">Oversight</span>
             </h2>
           </div>
           
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-6 bg-slate-950/50 backdrop-blur-3xl border border-white/5 p-6 sm:p-8 rounded-3xl sm:rounded-[3rem] shadow-2xl w-full sm:w-auto">
             <div className="text-left flex-1 sm:flex-none">
                <p className="text-white/40 text-[8px] sm:text-[10px] uppercase font-mono tracking-widest mb-1 font-bold">Grid Load Meter</p>
-               <p className="text-white text-4xl sm:text-6xl font-black tracking-tighter tabular-nums drop-shadow-[0_0_20px_rgba(0,240,255,0.2)]">
-                 {totalLoad.toFixed(2)}<span className="text-xs sm:text-lg text-white/20 ml-1 sm:ml-2">kW</span>
+               <p className="text-white text-4xl sm:text-6xl font-bold tracking-tighter tabular-nums drop-shadow-[0_0_20px_rgba(0,123,255,0.2)] font-mono">
+                 {totalLoad.toFixed(2)}<span className="text-xs sm:text-lg text-white/20 ml-1 sm:ml-2 font-sans font-black">kW</span>
                </p>
             </div>
             
@@ -115,7 +115,7 @@ export default function UHDSection({ devices, onToggleDevice, onAddDevice, onDel
                 Reset
               </button>
               
-              <div className={`w-14 h-14 sm:w-20 sm:h-20 rounded-2xl sm:rounded-[2rem] flex items-center justify-center border border-white/10 transition-all duration-500 ${totalLoad > 7 ? "bg-red-500 text-white shadow-[0_15px_30px_rgba(239,68,68,0.3)]" : "bg-accent-cyber text-slate-900 shadow-[0_0_30px_rgba(0,240,255,0.4)]"}`}>
+              <div className={`w-14 h-14 sm:w-20 sm:h-20 rounded-2xl sm:rounded-[2rem] flex items-center justify-center border border-white/10 transition-all duration-500 ${totalLoad > 7 ? "bg-red-500 text-white shadow-[0_15px_30px_rgba(239,68,68,0.3)]" : "bg-accent-secondary text-slate-900 shadow-[0_0_30px_rgba(0,123,255,0.4)]"}`}>
                  <Activity className={`w-6 h-6 sm:w-10 sm:h-10 ${totalLoad > 7 ? "animate-[pulse_1s_infinite]" : "animate-pulse"}`} />
               </div>
             </div>
@@ -136,13 +136,13 @@ export default function UHDSection({ devices, onToggleDevice, onAddDevice, onDel
                 onClick={() => onToggleDevice(device.id)}
                 className={`w-full relative overflow-hidden flex flex-col items-start p-6 sm:p-10 rounded-3xl sm:rounded-[3.5rem] border transition-all duration-500 ${
                   device.isOn 
-                    ? "bg-slate-800 border-accent-cyber shadow-2xl shadow-cyan-500/10" 
-                    : "bg-slate-800/20 border-white/5 hover:bg-slate-800/40 hover:border-white/10 shadow-sm"
+                    ? "bg-slate-900 border-accent-secondary shadow-2xl shadow-accent-secondary/10" 
+                    : "bg-slate-900/20 border-white/5 hover:bg-slate-900/40 hover:border-white/10 shadow-sm"
                 }`}
               >
                 <div className={`w-14 h-14 sm:w-20 sm:h-20 rounded-2xl sm:rounded-[2rem] flex items-center justify-center mb-6 sm:mb-10 transition-all duration-500 ${
                   device.isOn 
-                    ? "bg-accent-cyber text-slate-900 shadow-[0_0_20px_rgba(0,240,255,0.3)]" 
+                    ? "bg-accent-secondary text-slate-900 shadow-[0_0_20px_rgba(0,123,255,0.3)]" 
                     : "bg-slate-900/50 text-white/20"
                 }`}>
                   <div className="scale-75 sm:scale-100 flex items-center justify-center">
@@ -151,7 +151,7 @@ export default function UHDSection({ devices, onToggleDevice, onAddDevice, onDel
                 </div>
 
                 <div className="text-left relative z-10 w-full">
-                  <h4 className={`text-xl sm:text-2xl font-black tracking-tight mb-1 sm:mb-2 uppercase ${
+                  <h4 className={`text-xl sm:text-2xl font-black tracking-tight mb-1 sm:mb-2 uppercase font-heading italic ${
                     device.isOn ? "text-white" : "text-white/20"
                   }`}>
                     {device.label}
@@ -162,11 +162,11 @@ export default function UHDSection({ devices, onToggleDevice, onAddDevice, onDel
 
                   <div className="flex items-center justify-between w-full pt-4 sm:pt-6 border-t border-white/5">
                      <p className={`text-[8px] sm:text-xs font-mono tracking-widest uppercase font-black ${
-                       device.isOn ? "text-accent-cyber" : "text-white/60"
+                       device.isOn ? "text-accent-secondary" : "text-white/60"
                      }`}>
                        {device.isOn ? "ACTIVE" : "STANDBY"}
                      </p>
-                     <p className="text-white/80 font-black text-xs sm:text-sm">{device.power} kW</p>
+                      <p className="text-white/80 font-bold text-xs sm:text-sm font-mono tracking-tighter">{device.power} kW</p>
                   </div>
                 </div>
               </button>
@@ -191,8 +191,8 @@ export default function UHDSection({ devices, onToggleDevice, onAddDevice, onDel
             whileTap={{ scale: 0.98 }}
             className="p-8 sm:p-10 rounded-3xl sm:rounded-[3.5rem] border border-dashed border-white/10 bg-white/5 hover:bg-white/10 flex flex-col items-center justify-center group transition-all min-h-[300px]"
           >
-             <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:border-accent-cyber/50 transition-all">
-                <Plus className="w-8 h-8 text-white/20 group-hover:text-accent-cyber transition-all" />
+             <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:border-accent-secondary/50 transition-all">
+                <Plus className="w-8 h-8 text-white/20 group-hover:text-accent-secondary transition-all" />
              </div>
              <p className="text-white/30 text-xs font-mono uppercase tracking-[0.2em] font-black group-hover:text-white transition-all text-center">Add New <br/> Smart Interface</p>
           </motion.button>
@@ -202,16 +202,16 @@ export default function UHDSection({ devices, onToggleDevice, onAddDevice, onDel
             onClick={onScrollToRadar}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="p-8 sm:p-10 rounded-3xl sm:rounded-[3.5rem] border border-accent-emerald/20 bg-accent-emerald/5 backdrop-blur-md flex flex-col justify-between group shadow-lg text-left min-h-[220px]"
+            className="p-8 sm:p-10 rounded-3xl sm:rounded-[3.5rem] border border-accent-primary/20 bg-accent-primary/5 backdrop-blur-md flex flex-col justify-between group shadow-lg text-left min-h-[220px]"
           >
-             <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl sm:rounded-3xl bg-accent-emerald text-slate-900 flex items-center justify-center mb-6 sm:mb-8 border border-white/10">
+             <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl sm:rounded-3xl bg-accent-primary text-slate-900 flex items-center justify-center mb-6 sm:mb-8 border border-white/10">
                 <Activity className="w-6 h-6 sm:w-8 sm:h-8" />
              </div>
              <div>
-               <p className="text-accent-emerald font-mono text-[8px] sm:text-[10px] uppercase tracking-[0.1em] sm:tracking-[0.2em] mb-2 sm:mb-4 font-black">Live Pulse Stream</p>
-               <h3 className="text-white font-black text-2xl sm:text-3xl leading-tight uppercase tracking-tighter">Live <br/> Grid Radar.</h3>
+               <p className="text-accent-primary font-mono text-[8px] sm:text-[10px] uppercase tracking-[0.1em] sm:tracking-[0.2em] mb-2 sm:mb-4 font-black">Live Pulse Stream</p>
+                <h3 className="text-white font-black text-2xl sm:text-3xl leading-tight uppercase tracking-tighter font-heading italic">Power <br/> Horizon Telemetry.</h3>
              </div>
-             <div className="flex items-center gap-4 text-accent-emerald font-black uppercase text-[10px] sm:text-xs tracking-widest mt-6 sm:mt-8 group-hover:gap-6 transition-all">
+             <div className="flex items-center gap-4 text-accent-primary font-black uppercase text-[10px] sm:text-xs tracking-widest mt-6 sm:mt-8 group-hover:gap-6 transition-all">
                 <span>VIEW TELEMETRY</span>
                 <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
              </div>

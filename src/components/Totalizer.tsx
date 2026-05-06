@@ -49,7 +49,7 @@ export default function Totalizer({ totalLoad, accumulatedKwh, devices, onOpenMe
           value={`₹${(currentCost * 720 / 24).toFixed(0)}`}
           label="Estimated Bill"
           suffix="/mo"
-          accent="cyber"
+          accent="tertiary"
           onClick={() => onOpenMetric("COST")}
         />
         <SummaryCard 
@@ -57,23 +57,23 @@ export default function Totalizer({ totalLoad, accumulatedKwh, devices, onOpenMe
           value={currentCarbon.toFixed(3)}
           label="kg CO2 Output"
           suffix=" kg"
-          accent="emerald"
+          accent="tertiary"
           onClick={() => onOpenMetric("CARBON")}
         />
         <SummaryCard 
           title="Grid Dependency"
           value={netGridLoad.toFixed(2)}
-          label={selfConsumptionPercent > 50 ? "Mostly Self-Powered" : "Grid Reliant"}
+          label={selfConsumptionPercent > 50 ? "AUTONOMOUS STATUS" : "GRID DEPENDENT"}
           suffix=" kW"
-          accent="cyber"
+          accent="tertiary"
           onClick={() => onOpenMetric("MAX_EFFICIENCY")} // Assuming we reuse a metric overlay or add a new one
         />
         <SummaryCard 
           title="Maximum Efficiency"
           value={efficiency.toFixed(0)}
-          label={efficiency > 70 ? "Peak optimization active." : "Optimization recommended."}
+          label={efficiency > 70 ? "OPTIMAL EFFICIENCY REACHED" : "OPTIMIZATION REQUIRED"}
           suffix="%"
-          accent="cyber"
+          accent="tertiary"
           onClick={() => onOpenMetric("MAX_EFFICIENCY")}
         />
       </div>
@@ -86,13 +86,14 @@ function SummaryCard({ title, value, label, suffix, accent, onClick }: {
   value: string | number; 
   label: string;
   suffix?: string;
-  accent: "emerald" | "cyber";
+  accent: "primary" | "secondary" | "tertiary";
   onClick: () => void;
 }) {
-  const accentColor = accent === "emerald" ? "#10B981" : "#00F0FF";
-  const borderClass = accent === "emerald" ? "border-accent-emerald/30" : "border-accent-cyber/30";
-  const bgClass = accent === "emerald" ? "bg-accent-emerald/5 hover:bg-accent-emerald/10" : "bg-accent-cyber/5 hover:bg-accent-cyber/10";
-  const textColor = accent === "emerald" ? "text-accent-emerald" : "text-accent-cyber";
+  const accentColor = accent === "primary" ? "#FFFFFF" : accent === "tertiary" ? "#22D3EE" : "#007BFF";
+  const borderClass = accent === "primary" ? "border-accent-primary/30" : accent === "tertiary" ? "border-accent-tertiary/30" : "border-accent-secondary/30";
+  const bgClass = accent === "primary" ? "bg-accent-primary/5 hover:bg-accent-primary/10" : accent === "tertiary" ? "bg-accent-tertiary/5 hover:bg-accent-tertiary/10" : "bg-accent-secondary/5 hover:bg-accent-secondary/10";
+  const textColor = accent === "primary" ? "text-accent-primary" : accent === "tertiary" ? "text-accent-tertiary" : "text-accent-secondary";
+  const shadowColor = accent === "primary" ? "shadow-white/5" : accent === "tertiary" ? "shadow-accent-tertiary/10" : "shadow-accent-secondary/10";
 
   return (
     <motion.button 
@@ -102,27 +103,27 @@ function SummaryCard({ title, value, label, suffix, accent, onClick }: {
       whileHover={{ y: -5, scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       viewport={{ once: true }}
-      className={`p-6 sm:p-10 rounded-[2.5rem] sm:rounded-[3.5rem] border ${borderClass} ${bgClass} backdrop-blur-3xl relative overflow-hidden group transition-all duration-500 text-left w-full h-full flex flex-col justify-between shadow-2xl shadow-cyan-900/20`}
+      className={`p-6 sm:p-10 rounded-[2.5rem] sm:rounded-[3.5rem] border ${borderClass} ${bgClass} backdrop-blur-3xl relative overflow-hidden group transition-all duration-500 text-left w-full h-full flex flex-col justify-between shadow-2xl ${shadowColor}`}
     >
       <div className="flex justify-between items-start mb-6 sm:mb-10 w-full relative z-10">
         <h4 className="text-white/40 font-mono text-[8px] sm:text-[10px] uppercase tracking-[0.2em] sm:tracking-[0.4em] font-bold">{title}</h4>
-        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 group-hover:text-amber-400 group-hover:bg-white/10 transition-all">
+        <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 group-hover:${textColor} group-hover:bg-white/10 transition-all`}>
           <Calculator className="w-4 h-4 sm:w-5 sm:h-5" />
         </div>
       </div>
 
       <div className="relative z-10 w-full overflow-hidden mb-4 sm:mb-6">
         <div className="flex items-baseline mb-1 sm:mb-2 flex-wrap max-w-full">
-          <span className={`text-3xl sm:text-5xl lg:text-7xl font-black tracking-tighter ${textColor} break-all drop-shadow-[0_0_15px_rgba(0,240,255,0.3)]`}>
+          <span className={`text-3xl sm:text-5xl lg:text-7xl font-black tracking-tighter ${textColor} font-mono drop-shadow-[0_0_15px_rgba(34,211,238,0.4)]`}>
             {value}
           </span>
           {suffix && (
-            <span className="text-base sm:text-xl text-white/40 font-bold ml-1 sm:ml-2">
+            <span className="text-base sm:text-xl text-white/40 font-bold ml-1 sm:ml-2 font-mono">
               {suffix}
             </span>
           )}
         </div>
-        <p className="text-white font-black tracking-tight text-base sm:text-lg leading-tight uppercase opacity-80 break-words">
+        <p className="text-white font-black tracking-tight text-base sm:text-lg leading-tight uppercase opacity-80 break-words font-heading italic">
           {label}
         </p>
       </div>

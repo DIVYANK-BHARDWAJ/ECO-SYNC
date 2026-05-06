@@ -69,8 +69,8 @@ function Hotspot({ opacity, scale, top, left, label, value, icon, className }: a
     >
       <div className="relative">
          {/* Pulsing Ring */}
-         <div className="absolute inset-0 w-12 h-12 bg-accent-emerald/20 rounded-full animate-ping" />
-         <div className="relative w-12 h-12 bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center text-white cursor-pointer group-hover:bg-accent-emerald group-hover:text-black transition-all">
+         <div className="absolute inset-0 w-12 h-12 bg-accent-secondary/20 rounded-full animate-ping" />
+         <div className="relative w-12 h-12 bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center text-white cursor-pointer group-hover:bg-accent-secondary group-hover:text-white transition-all">
             <Info className="w-6 h-6" />
          </div>
 
@@ -78,7 +78,7 @@ function Hotspot({ opacity, scale, top, left, label, value, icon, className }: a
          <div className="absolute bottom-16 left-1/2 -translate-x-1/2 w-[70vw] sm:w-48 opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100 pointer-events-none">
             <div className="bg-black/80 backdrop-blur-xl border border-white/20 p-4 sm:p-5 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden">
                <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2">
-                  <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-white/5 flex items-center justify-center text-accent-emerald scale-75 sm:scale-100">
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-white/5 flex items-center justify-center text-accent-secondary scale-75 sm:scale-100">
                      {icon}
                   </div>
                   <p className="text-white/40 font-mono text-[10px] sm:text-[12px] uppercase tracking-widest">{label}</p>
@@ -86,7 +86,7 @@ function Hotspot({ opacity, scale, top, left, label, value, icon, className }: a
                <p className="text-white font-black text-xs sm:text-sm uppercase tracking-tighter">{value}</p>
                
                {/* Decorative Gradient Line */}
-               <div className="h-0.5 w-full bg-gradient-to-r from-accent-emerald/50 to-transparent mt-3 sm:mt-4" />
+               <div className="h-0.5 w-full bg-gradient-to-r from-accent-secondary/50 to-transparent mt-3 sm:mt-4" />
             </div>
          </div>
       </div>

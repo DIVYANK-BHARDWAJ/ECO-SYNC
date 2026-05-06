@@ -29,15 +29,15 @@ export default function StartTitle({ scrollProgress }: StartTitleProps) {
         className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm"
       >
         <div className="flex items-center gap-2 sm:gap-4 mb-2 sm:mb-4">
-           <div className="h-[1px] w-8 sm:w-12 bg-accent-cyber" />
-           <p className="text-accent-cyber font-mono text-[8px] sm:text-[10px] uppercase tracking-[0.4em] sm:tracking-[0.8em] font-black">Initializing Model</p>
-           <div className="h-[1px] w-8 sm:w-12 bg-accent-cyber" />
+           <div className="h-[1px] w-8 sm:w-12 bg-accent-secondary" />
+            <p className="text-accent-secondary font-mono text-[8px] sm:text-[10px] uppercase tracking-[0.4em] sm:tracking-[0.8em] font-bold">Initializing Model</p>
+           <div className="h-[1px] w-8 sm:w-12 bg-accent-secondary" />
         </div>
-        <h1 className="text-6xl sm:text-9xl md:text-[12rem] font-black text-white tracking-tighter uppercase leading-[0.8] text-center italic">
-          Eco<span className="text-accent-cyber">-</span>Sync
+        <h1 className="text-6xl sm:text-9xl md:text-[12rem] font-black text-white tracking-tighter uppercase leading-[0.8] text-center italic font-heading">
+          ECO<span className="text-accent-secondary">-</span>SYNC <span className="text-accent-primary drop-shadow-[0_0_30px_rgba(255,255,255,0.2)]">NEXUS</span>
         </h1>
         <div className="mt-4 sm:mt-8 px-4 sm:px-8 py-2 sm:py-3 bg-white/5 border border-white/10 rounded-full">
-         <p className="text-white/40 font-mono text-[8px] sm:text-[10px] uppercase tracking-widest font-bold">Smart Home Energy Dashboard</p>
+         <p className="text-white/40 font-mono text-[8px] sm:text-[10px] uppercase tracking-widest font-bold">The Architecture of Energy Sovereignty</p>
         </div>
       </motion.div>
 
@@ -49,15 +49,15 @@ export default function StartTitle({ scrollProgress }: StartTitleProps) {
         <div
           className="backdrop-blur-2xl px-3 sm:px-4 py-2 sm:py-3 rounded-xl sm:rounded-2xl"
           style={{
-            background: "rgba(2,8,6,0.95)",
-            border: "1px solid rgba(0,240,255,0.25)",
-            borderLeft: "3px solid #00F0FF",
+            background: "rgba(0,0,0,0.95)",
+            border: "1px solid rgba(0,123,255,0.25)",
+            borderLeft: "3px solid #007BFF",
             boxShadow: "0 4px 24px rgba(0,0,0,0.7)",
           }}
         >
-           <p className="text-accent-cyber font-mono text-[8px] sm:text-[9px] uppercase tracking-[0.2em] sm:tracking-[0.3em] mb-1 font-black">Assistant</p>
+            <p className="text-accent-secondary font-mono text-[8px] sm:text-[9px] uppercase tracking-[0.2em] sm:tracking-[0.3em] mb-1 font-bold">Assistant</p>
            <p className="text-white text-[10px] sm:text-xs leading-relaxed font-medium">
-             Toggle appliances and see your bill change live.
+             Real-time energy optimization and economic forecasting. Master your home's ecosystem.
            </p>
         </div>
       </motion.div>
