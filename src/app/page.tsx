@@ -28,14 +28,14 @@ const PLAN_CONFIG: Record<string, { reduction: string; multiplier: number }> = {
 };
 
 const INITIAL_DEVICES: Device[] = [
-  { id: "hvac-1", label: "Thermal Control", power: 1.8, isOn: false, iconName: "Wind", desc: "Precision Climate Regulation" },
-  { id: "ev-1", label: "Aether Node", power: 7.2, isOn: false, iconName: "Zap", desc: "Rapid Transit Infusion" },
-  { id: "fridge-1", label: "Cryo Storage", power: 0.15, isOn: true, iconName: "Snowflake", desc: "Main Refrigerator" },
-  { id: "tv-1", label: "Cinema Unit", power: 0.18, isOn: false, iconName: "Tv", desc: "UHD Sensory Output" },
-  { id: "lights-1", label: "Lumen Mesh", power: 0.08, isOn: true, iconName: "Lightbulb", desc: "Photonic Environment" },
-  { id: "dish-1", label: "Hydro Cycle", power: 1.5, isOn: false, iconName: "Waves", desc: "Sanitization Sequence" },
-  { id: "purifier-1", label: "Atmosphere Unit", power: 0.07, isOn: true, iconName: "Search", desc: "HEPA Filtration" },
-  { id: "router-1", label: "Quantum Router", power: 0.02, isOn: true, iconName: "Wifi", desc: "Mesh Uplink" },
+  { id: "hvac-1", label: "Climate Control", power: 1.8, isOn: false, iconName: "Wind", desc: "Zoned Heating & Cooling" },
+  { id: "ev-1", label: "EV Charger", power: 7.2, isOn: false, iconName: "Zap", desc: "Level 2 Fast Charger" },
+  { id: "fridge-1", label: "Refrigerator", power: 0.15, isOn: true, iconName: "Snowflake", desc: "Kitchen Refrigerator" },
+  { id: "tv-1", label: "Living Room TV", power: 0.18, isOn: false, iconName: "Tv", desc: "4K Smart TV" },
+  { id: "lights-1", label: "Home Lighting", power: 0.08, isOn: true, iconName: "Lightbulb", desc: "Smart LED Grid" },
+  { id: "dish-1", label: "Dishwasher", power: 1.5, isOn: false, iconName: "Waves", desc: "Energy Star Cycle" },
+  { id: "purifier-1", label: "Air Purifier", power: 0.07, isOn: true, iconName: "Search", desc: "HEPA Filter Unit" },
+  { id: "router-1", label: "Smart Router", power: 0.02, isOn: true, iconName: "Wifi", desc: "Dual-Band Mesh Uplink" },
 ];
 
 export default function Home() {
@@ -325,8 +325,7 @@ export default function Home() {
   };
 
   return (
-    <main className="relative bg-black min-h-screen cursor-none selection:bg-accent-secondary selection:text-black">
-      <CustomCursor />
+    <main className="relative bg-[#09090b] min-h-screen selection:bg-zinc-800 selection:text-white">
       
       <AnimatePresence>
         {showIntro && (
@@ -372,11 +371,11 @@ export default function Home() {
               initial={{ opacity: 0, y: -20, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9, y: -20 }}
-              className="bg-slate-900/80 backdrop-blur-2xl border border-accent-secondary/30 p-5 rounded-2xl shadow-2xl flex items-center justify-between group"
+              className="bg-zinc-950/80 backdrop-blur-2xl border border-white/10 p-5 rounded-2xl shadow-2xl flex items-center justify-between group"
             >
               <div className="flex items-center gap-4">
-                <div className="w-2 h-2 rounded-full bg-accent-secondary animate-pulse shadow-[0_0_10px_#007BFF]" />
-                <p className="text-white font-black uppercase text-[10px] tracking-widest font-heading italic">{notif.message}</p>
+                <div className="w-2 h-2 rounded-full bg-accent-secondary animate-pulse" />
+                <p className="text-white font-black uppercase text-[10px] tracking-widest font-heading">{notif.message}</p>
               </div>
               <button 
                 onClick={() => removeNotification(notif.id)}
@@ -422,26 +421,25 @@ export default function Home() {
             />
 
             {/* Dedicated Real-Time Radar Section */}
-            <section id="grid-radar" className="bg-slate-950 py-32 border-t border-white/5 px-12 relative overflow-hidden">
-               <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-accent-primary/10 blur-[120px] -translate-y-1/2 translate-x-1/2" />
+            <section id="grid-radar" className="bg-[#09090b] py-32 border-t border-white/5 px-12 relative overflow-hidden">
                <div className="max-w-7xl mx-auto relative z-10">
                   <div className="mb-16">
                      <div className="flex items-center gap-4 mb-4">
-                        <div className="w-2 h-2 rounded-full bg-accent-primary animate-pulse shadow-[0_0_10px_#007BFF]" />
+                        <div className="w-2 h-2 rounded-full bg-accent-primary animate-pulse" />
                         <p className="text-white/40 font-mono text-[10px] uppercase tracking-[0.4em] font-black">Live Pulse Stream</p>
                      </div>
-                     <h2 className="text-7xl font-black text-white tracking-tighter uppercase mb-4 italic font-heading">Power <span className="text-accent-secondary">Horizon</span></h2>
+                     <h2 className="text-7xl font-black text-white tracking-tighter uppercase mb-4 font-heading">Power <span className="text-accent-secondary">Horizon</span></h2>
                   </div>
                   <SavingsGraph data={loadHistory} solarData={solarHistory} />
                </div>
             </section>
 
             {/* Analytics Summary Section */}
-            <section className="relative z-50 bg-slate-950 py-32 border-t border-white/5">
+            <section className="relative z-50 bg-[#09090b] py-32 border-t border-white/5">
               <div className="max-w-7xl mx-auto px-12 grid grid-cols-1 lg:grid-cols-3 gap-16 items-start">
                  <div className="lg:col-span-2">
                    <div className="mb-20">
-                     <h2 className="text-7xl font-black text-white tracking-tighter uppercase mb-2 italic font-heading">Energy <span className="text-accent-tertiary">Dynamics</span></h2>
+                     <h2 className="text-7xl font-black text-white tracking-tighter uppercase mb-2 font-heading">Energy <span className="text-accent-tertiary">Dynamics</span></h2>
                      <p className="text-white/40 font-mono text-[10px] uppercase tracking-[0.4em] font-black">Your usage, costs & carbon — updated every second</p>
                    </div>
                    <Totalizer 
@@ -460,18 +458,18 @@ export default function Home() {
                      totalLoad={totalLoad}
                    />
                    <BudgetManager totalLoad={totalLoad} costFactor={8} />
-                   <div className="p-10 rounded-[3rem] bg-slate-950 text-white border border-white/5 shadow-2xl relative overflow-hidden group">
+                   <div className="p-8 rounded-2xl bg-[#121214] text-white border border-white/5 shadow-2xl relative overflow-hidden group">
                       <div className="relative z-10">
-                        <p className="text-accent-system font-mono text-[10px] uppercase tracking-widest mb-4">System Console</p>
-                        <p className="text-2xl font-black uppercase tracking-tight mb-6 leading-tight font-heading italic">Status: <span className="text-accent-system">OPTIMIZED</span></p>
+                        <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-widest mb-4">System Console</p>
+                        <p className="text-2xl font-black uppercase tracking-tight mb-6 leading-tight font-heading">Status: <span className="text-zinc-400">OPTIMIZED</span></p>
                         
                         {/* mini log preview */}
                         <div className="space-y-3 mb-8">
                           {deviceHistory.slice(0, 3).map((log) => (
                             <div key={log.id} className="flex items-center gap-3 opacity-60 hover:opacity-100 transition-opacity">
-                              <div className={`w-1 h-1 rounded-full ${log.action === 'ON' || log.action === 'REGISTER' ? 'bg-accent-primary' : 'bg-accent-system'}`} />
+                              <div className={`w-1 h-1 rounded-full ${log.action === 'ON' || log.action === 'REGISTER' ? 'bg-zinc-500' : 'bg-zinc-700'}`} />
                               <p className="font-mono text-[9px] uppercase tracking-tighter truncate flex-1">
-                                <span className="text-white/40">{log.time}</span> • {log.label} • <span className={log.action === 'ON' ? 'text-accent-primary' : 'text-accent-system'}>{log.action}</span>
+                                <span className="text-white/40">{log.time}</span> • {log.label} • <span className={log.action === 'ON' ? 'text-white' : 'text-zinc-400'}>{log.action}</span>
                               </p>
                             </div>
                           ))}
@@ -479,15 +477,15 @@ export default function Home() {
 
                         <button 
                           onClick={() => setShowLogs(true)}
-                           className="w-full py-5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all mb-4 flex items-center justify-center gap-3 group/btn font-heading italic"
+                           className="w-full py-5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all mb-4 flex items-center justify-center gap-3 group/btn font-heading"
                         >
-                          <Terminal className="w-4 h-4 text-accent-system group-hover/btn:scale-110 transition-transform" />
+                          <Terminal className="w-4 h-4 text-zinc-500 group-hover/btn:scale-110 transition-transform" />
                           Launch System Logs
                         </button>
                       </div>
                    </div>
-                   <div className="p-10 rounded-[3rem] bg-slate-800/40 backdrop-blur-xl border border-white/5 shadow-xl">
-                      <p className="text-white text-xl font-black uppercase tracking-tight leading-tight mb-6 font-heading italic">
+                   <div className="p-8 rounded-2xl bg-[#121214] border border-white/5 shadow-xl">
+                      <p className="text-white text-xl font-bold uppercase tracking-tight leading-tight mb-6 font-heading">
                         {activePlanId && PLAN_CONFIG[activePlanId]
                           ? `Active Plan: ${activePlanId} — ${PLAN_CONFIG[activePlanId].reduction} Reduction` 
                           : activePlanId

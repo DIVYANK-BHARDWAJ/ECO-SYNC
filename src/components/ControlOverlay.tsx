@@ -40,16 +40,16 @@ export default function ControlOverlay({ applianceState, setApplianceState, tota
         initial={{ x: 400, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         exit={{ x: 400, opacity: 0 }}
-        className="w-[420px] bg-black/40 backdrop-blur-3xl border border-white/10 rounded-[3rem] p-10 pointer-events-auto shadow-2xl relative overflow-hidden group"
+        className="w-[420px] bg-zinc-950/90 backdrop-blur-3xl border border-white/10 rounded-2xl p-10 pointer-events-auto shadow-2xl relative overflow-hidden group"
       >
         {/* Glow Background */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-accent-primary/10 blur-[100px] -mr-32 -mt-32 transition-colors duration-700" 
-             style={{ backgroundColor: totalLoad > 8 ? "rgba(239, 68, 68, 0.1)" : "rgba(0, 123, 255, 0.1)" }} />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-accent-primary/5 blur-[100px] -mr-32 -mt-32 transition-colors duration-700" 
+             style={{ backgroundColor: totalLoad > 8 ? "rgba(239, 68, 68, 0.05)" : "rgba(59, 130, 246, 0.05)" }} />
 
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-10">
             <div>
-              <h2 className="text-white font-black text-3xl tracking-tighter uppercase italic">Aether<span className="text-accent-secondary">UHD</span></h2>
+              <h2 className="text-white font-black text-3xl tracking-tighter uppercase">Aether<span className="text-accent-secondary">UHD</span></h2>
               <p className="text-white/30 text-[10px] font-mono uppercase tracking-[0.2em] mt-1">Grid System v2.0</p>
             </div>
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border transition-all ${totalLoad > 8 ? "bg-red-500/10 border-red-500/20" : "bg-white/5 border-white/10"}`}>
@@ -58,7 +58,7 @@ export default function ControlOverlay({ applianceState, setApplianceState, tota
           </div>
 
           {/* Load Meter */}
-          <div className="mb-12 p-6 bg-white/5 rounded-[2rem] border border-white/5 relative overflow-hidden">
+          <div className="mb-12 p-6 bg-white/5 rounded-xl border border-white/5 relative overflow-hidden">
             <div className="flex justify-between items-end mb-4">
               <span className="text-white/40 text-[10px] font-mono tracking-widest uppercase">Live Demand</span>
               <span className="text-white font-black text-4xl tabular-nums tracking-tighter">
@@ -69,7 +69,7 @@ export default function ControlOverlay({ applianceState, setApplianceState, tota
             <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
               <motion.div 
                 animate={{ width: `${Math.min((totalLoad / 12) * 100, 100)}%` }}
-                className={`h-full transition-colors duration-500 ${totalLoad > 8 ? "bg-red-500 shadow-[0_0_15px_#ef4444]" : "bg-accent-secondary shadow-[0_0_15px_#007BFF]"}`}
+                className={`h-full transition-colors duration-500 ${totalLoad > 8 ? "bg-red-500" : "bg-accent-secondary"}`}
               />
             </div>
           </div>

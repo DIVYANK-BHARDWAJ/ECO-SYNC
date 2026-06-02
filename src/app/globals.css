@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
 @import "tailwindcss/base";
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
@@ -6,9 +8,12 @@
   --foreground-rgb: 255, 255, 255;
   --background-start-rgb: 10, 10, 10;
   --background-end-rgb: 0, 0, 0;
+  --font-outfit: 'Outfit', sans-serif;
+  --font-space-mono: 'Space Mono', monospace;
 }
 
 body {
+  font-family: var(--font-outfit);
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-start-rgb));
   margin: 0;
@@ -22,21 +27,6 @@ html {
   width: 100%;
 }
 
-/* Force cursor none globally to prevent hand sign (overridden by touch media query) */
-* {
-  cursor: none !important;
-}
-
-/* Hide custom cursor on mobile/touch devices and restore native cursor */
-@media (pointer: coarse) {
-  body, * {
-    cursor: auto !important;
-  }
-  .custom-cursor {
-    display: none !important;
-  }
-}
-
 @layer utilities {
   .text-balance {
     text-wrap: balance;
@@ -44,72 +34,50 @@ html {
 }
 
 .glass-panel {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  background: rgba(24, 24, 27, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .glass-panel-premium {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
-  backdrop-filter: blur(32px);
-  -webkit-backdrop-filter: blur(32px);
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.02);
+  background: rgba(18, 18, 20, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
 }
 
 .glow-primary {
-  box-shadow: 0 0 30px rgba(255, 255, 255, 0.2), inset 0 0 15px rgba(255, 255, 255, 0.05);
+  box-shadow: none;
 }
 
 .glow-secondary {
-  box-shadow: 0 0 30px rgba(0, 123, 255, 0.3), inset 0 0 15px rgba(0, 123, 255, 0.1);
+  box-shadow: none;
 }
 
 .neon-border-primary {
-  border-color: rgba(255, 255, 255, 0.4);
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.1), inset 0 0 10px rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.05);
 }
 
 .neon-border-secondary {
-  border-color: rgba(0, 123, 255, 0.5);
-  box-shadow: 0 0 15px rgba(0, 123, 255, 0.2), inset 0 0 10px rgba(0, 123, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .neon-text-primary {
-  text-shadow: 0 0 15px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.3);
+  text-shadow: none;
 }
 
 .neon-text-secondary {
-  text-shadow: 0 0 15px rgba(0, 123, 255, 0.8), 0 0 30px rgba(0, 123, 255, 0.4);
+  text-shadow: none;
 }
 
 .neon-text-pulse {
-  animation: neon-pulse 4s ease-in-out infinite;
-}
-
-@keyframes neon-pulse {
-  0%, 100% {
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.2), 0 0 20px rgba(0, 123, 255, 0.4), 0 0 30px rgba(0, 123, 255, 0.2);
-    opacity: 0.8;
-  }
-  50% {
-    text-shadow: 0 0 20px rgba(255, 255, 255, 0.4), 0 0 40px rgba(0, 123, 255, 0.8), 0 0 60px rgba(0, 123, 255, 0.4);
-    opacity: 1;
-  }
+  animation: none;
 }
 
 .mesh-bg {
-  background-color: #000000;
-  background-image: 
-    radial-gradient(at 0% 0%, rgba(255, 255, 255, 0.05) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(0, 123, 255, 0.1) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(0, 123, 255, 0.1) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, rgba(255, 255, 255, 0.05) 0px, transparent 50%);
+  background-color: #09090b;
 }
 
 .iridescent-border {
@@ -124,10 +92,9 @@ html {
   padding: 1px;
   background: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.4) 0%,
-    rgba(255, 255, 255, 0.1) 20%,
-    rgba(0, 123, 255, 0.3) 50%,
-    rgba(0, 123, 255, 0.1) 80%,
+    rgba(255, 255, 255, 0.15) 0%,
+    rgba(255, 255, 255, 0.03) 40%,
+    rgba(255, 255, 255, 0.02) 60%,
     rgba(255, 255, 255, 0.1) 100%
   );
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);

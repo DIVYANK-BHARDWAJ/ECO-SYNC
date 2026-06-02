@@ -56,11 +56,11 @@ export default function AetherGridIntro({ onComplete }: AetherGridIntroProps) {
               className="absolute inset-2 border-2 border-accent-secondary rounded-xl opacity-30"
             />
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-12 h-12 bg-white rounded-lg shadow-[0_0_30px_#fff]" />
+              <div className="w-12 h-12 bg-white rounded-lg" />
             </div>
           </div>
           
-          <h1 className="text-6xl sm:text-8xl md:text-9xl font-black tracking-tighter text-white mb-6 uppercase italic px-4 leading-none">
+          <h1 className="text-6xl sm:text-8xl md:text-9xl font-black tracking-tighter text-white mb-6 uppercase px-4 leading-none">
             ECO<span className="text-accent-secondary">-</span>SYNC <span className="text-accent-primary">NEXUS</span>
           </h1>
           <p className="text-white/30 font-mono tracking-[0.5em] uppercase text-[10px] sm:text-xs px-6">
@@ -73,9 +73,9 @@ export default function AetherGridIntro({ onComplete }: AetherGridIntroProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.5, duration: 0.8 }}
             onClick={onComplete}
-            className="px-12 sm:px-16 py-5 sm:py-6 bg-white text-black font-black rounded-full hover:scale-105 transition-all active:scale-95 shadow-[0_0_50px_rgba(255,255,255,0.3)] text-xs sm:text-sm uppercase tracking-[0.2em]"
+            className="px-12 sm:px-16 py-5 sm:py-6 bg-white text-black font-black rounded-full hover:scale-105 transition-all active:scale-95 text-xs sm:text-sm uppercase tracking-[0.2em]"
           >
-            Authorize Intelligence
+            Enter Dashboard
           </motion.button>
       </div>
 

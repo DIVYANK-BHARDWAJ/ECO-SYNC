@@ -178,15 +178,15 @@ export default function EnergyTrading() {
             <span className="font-mono text-[10px] uppercase tracking-widest font-bold">Return to Grid</span>
           </Link>
           <div className="flex items-center gap-4">
-            <div className="w-3 h-3 rounded-full bg-accent-secondary animate-pulse shadow-[0_0_15px_rgba(0,123,255,0.5)]" />
-            <span className="font-mono text-[10px] uppercase tracking-[0.3em] font-black text-accent-secondary">Grid Nexus Connected</span>
+            <div className="w-2 h-2 rounded-full bg-accent-secondary animate-pulse" />
+            <span className="font-mono text-[10px] uppercase tracking-[0.3em] font-black text-accent-secondary">Grid Connected</span>
           </div>
         </header>
 
         {/* Page Title */}
         <div className="mb-16">
-          <h1 className="text-6xl sm:text-8xl font-black uppercase tracking-tighter italic leading-none mb-4">
-            Liquidity <span className="text-accent-secondary">Matrix</span>
+          <h1 className="text-6xl sm:text-8xl font-black uppercase tracking-tighter leading-none mb-4">
+            Energy <span className="text-accent-secondary">Exchange</span>
           </h1>
           <p className="text-white/40 font-mono text-xs uppercase tracking-[0.3em] font-bold">
             Peer-to-Peer Energy Sovereignty & Real-Time Settlement
@@ -197,8 +197,8 @@ export default function EnergyTrading() {
           {/* Left Column - Solar & Market Data */}
           <div className="lg:col-span-5 flex flex-col gap-8">
             {/* Wallet & Market Status */}
-            <div className="bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden group">
-              <div className="absolute inset-0 bg-gradient-to-br from-accent-secondary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-8 shadow-xl relative overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-br from-accent-secondary/2 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="flex items-start justify-between mb-8 relative z-10">
                 <div className="flex items-center gap-3 text-accent-secondary">
                   <Wallet className="w-6 h-6" />
@@ -246,20 +246,20 @@ export default function EnergyTrading() {
             </div>
 
             {/* Current Solar Status */}
-            <div className="bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden">
+            <div className="bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-8 shadow-xl relative overflow-hidden">
                <div className="flex items-center gap-3 text-accent-primary mb-8">
                   <Sun className="w-6 h-6" />
                   <h3 className="font-mono text-[11px] uppercase tracking-widest font-black">Local Generation</h3>
                </div>
                
                <div className="grid grid-cols-2 gap-4">
-                 <div className="bg-black/50 rounded-3xl p-6 border border-white/5">
+                 <div className="bg-black/50 rounded-xl p-6 border border-white/5">
                    <p className="text-white/40 font-mono text-[9px] uppercase tracking-widest mb-2 font-bold">Solar Yield</p>
-                   <p className="text-3xl font-black text-white tabular-nums">{solarState.solarGeneration.toFixed(1)}<span className="text-sm text-white/40 ml-1">kW</span></p>
+                   <p className="text-3xl font-black text-white tabular-nums">{solarState.solarGeneration.toFixed(1)}<span className="text-sm text-white/40 ml-1 font-sans text-white/20 font-bold">kW</span></p>
                  </div>
-                 <div className="bg-black/50 rounded-3xl p-6 border border-white/5">
+                 <div className="bg-black/50 rounded-xl p-6 border border-white/5">
                    <p className="text-white/40 font-mono text-[9px] uppercase tracking-widest mb-2 font-bold">Stored Energy</p>
-                   <p className="text-3xl font-black text-white tabular-nums">{solarState.batteryLevel.toFixed(1)}<span className="text-sm text-white/40 ml-1">kWh</span></p>
+                   <p className="text-3xl font-black text-white tabular-nums">{solarState.batteryLevel.toFixed(1)}<span className="text-sm text-white/40 ml-1 font-sans text-white/20 font-bold">kWh</span></p>
                  </div>
                </div>
             </div>
@@ -268,14 +268,14 @@ export default function EnergyTrading() {
           {/* Right Column - Trading Interface */}
           <div className="lg:col-span-7 flex flex-col gap-8">
             {/* Sell Form */}
-            <div className="bg-slate-900/80 backdrop-blur-xl border border-accent-secondary/30 rounded-[2.5rem] p-8 md:p-12 shadow-[0_0_50px_rgba(0,240,255,0.05)] relative overflow-hidden">
+            <div className="bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-8 md:p-12 shadow-xl relative overflow-hidden">
               <div className="flex items-center gap-4 mb-10">
-                <div className="w-12 h-12 rounded-2xl bg-accent-secondary text-slate-900 flex items-center justify-center shadow-[0_0_20px_rgba(0,240,255,0.3)]">
+                <div className="w-12 h-12 rounded-xl bg-accent-secondary text-slate-900 flex items-center justify-center">
                   <ArrowRight className="w-6 h-6" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-black uppercase tracking-tight italic">Asset <span className="text-accent-secondary">Settlement</span></h2>
-                  <p className="text-white/40 font-mono text-[10px] uppercase tracking-widest">Offload excess battery capacity to the national node</p>
+                  <h2 className="text-2xl font-black uppercase tracking-tight">Asset <span className="text-accent-secondary">Settlement</span></h2>
+                  <p className="text-white/40 font-mono text-[10px] uppercase tracking-widest">Offload excess battery capacity to the grid</p>
                 </div>
               </div>
 
@@ -294,12 +294,12 @@ export default function EnergyTrading() {
                       min="0"
                       step="0.1"
                       placeholder="0.0"
-                      className="w-full bg-black/50 border border-white/10 rounded-3xl px-8 py-8 text-5xl font-black text-white focus:outline-none focus:border-accent-secondary/50 focus:bg-white/5 transition-all tabular-nums"
+                      className="w-full bg-black/50 border border-white/10 rounded-xl px-8 py-8 text-5xl font-black text-white focus:outline-none focus:border-accent-secondary/30 focus:bg-white/5 transition-all tabular-nums"
                     />
                     <div className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center gap-2">
                       <button 
                         onClick={() => setSellAmount(solarState.batteryLevel)}
-                        className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-black uppercase tracking-widest transition-colors border border-white/10"
+                        className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-xs font-black uppercase tracking-widest transition-colors border border-white/10"
                       >
                         Max
                       </button>
@@ -307,7 +307,7 @@ export default function EnergyTrading() {
                   </div>
                 </div>
 
-                <div className="bg-white/5 rounded-3xl p-6 flex items-center justify-between border border-white/10">
+                <div className="bg-white/5 rounded-xl p-6 flex items-center justify-between border border-white/10">
                   <span className="text-white/60 font-mono text-[11px] uppercase tracking-widest font-bold">Estimated Return</span>
                   <div className="flex items-center gap-2">
                     <Coins className="w-5 h-5 text-accent-secondary" />
@@ -320,7 +320,7 @@ export default function EnergyTrading() {
                 <button
                   onClick={handleSell}
                   disabled={isSelling || !sellAmount || Number(sellAmount) <= 0 || Number(sellAmount) > solarState.batteryLevel}
-                  className="w-full relative py-6 bg-accent-secondary rounded-[2rem] disabled:bg-slate-800 disabled:text-white/20 disabled:border-white/10 overflow-hidden group border border-accent-secondary transition-all"
+                  className="w-full relative py-6 bg-accent-secondary rounded-xl disabled:bg-slate-800 disabled:text-white/20 disabled:border-white/10 overflow-hidden group border border-accent-secondary transition-all"
                 >
                   <AnimatePresence mode="wait">
                     {isSelling ? (
@@ -352,10 +352,10 @@ export default function EnergyTrading() {
             </div>
 
             {/* Transaction History */}
-            <div className="bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8">
+            <div className="bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-8">
               <div className="flex items-center gap-3 mb-8">
                 <History className="w-5 h-5 text-white/40" />
-                <h3 className="font-mono text-[11px] uppercase tracking-widest font-black text-white/60">Node Consensus History</h3>
+                <h3 className="font-mono text-[11px] uppercase tracking-widest font-black text-white/60">Grid Transaction History</h3>
               </div>
 
               <div className="space-y-4">

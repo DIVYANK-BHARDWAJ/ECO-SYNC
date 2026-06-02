@@ -15,7 +15,7 @@ export function KnowledgeHub() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 mb-32">
           {/* About Us */}
           <div>
-            <h2 className="text-4xl sm:text-7xl font-black text-white mb-8 sm:mb-12 tracking-tighter uppercase italic">
+            <h2 className="text-4xl sm:text-7xl font-black text-white mb-8 sm:mb-12 tracking-tighter uppercase">
               What we <span className="text-accent-system">do</span>
             </h2>
             <p className="text-white/50 text-lg sm:text-xl leading-relaxed font-light mb-8 font-sans">
@@ -37,7 +37,7 @@ export function KnowledgeHub() {
 
           {/* How We Achieve It */}
           <div>
-            <h2 className="text-4xl sm:text-7xl font-black text-white mb-8 sm:mb-12 tracking-tighter uppercase italic">
+            <h2 className="text-4xl sm:text-7xl font-black text-white mb-8 sm:mb-12 tracking-tighter uppercase">
               How we <span className="text-accent-system">work</span>
             </h2>
             <div className="space-y-6">
@@ -99,7 +99,7 @@ function MaximizeSavingsSection() {
           <p className="text-accent-system/60 font-mono text-[9px] sm:text-[11px] uppercase tracking-[0.4em] mb-2 sm:mb-3 font-bold">
             {unlocked ? "— Intelligence Unlocked —" : "— Encrypted Strategies —"}
           </p>
-          <h2 className="text-4xl sm:text-6xl font-black text-white tracking-tighter uppercase italic font-heading">
+          <h2 className="text-4xl sm:text-6xl font-black text-white tracking-tighter uppercase font-heading">
             Optimize <span className="text-accent-system" style={{ textShadow: "0 0 30px rgba(168,85,247,0.3)" }}>Savings</span>
           </h2>
         </div>
@@ -209,7 +209,7 @@ function TipCard({ icon, title, tips, badge }: { icon: any; title: string; tips:
           {badge}
         </span>
       </div>
-      <h3 className="text-2xl font-bold text-white mb-6 uppercase tracking-tight italic font-heading">{title}</h3>
+      <h3 className="text-2xl font-bold text-white mb-6 uppercase tracking-tight font-heading">{title}</h3>
       <ul className="space-y-4">
         {tips.map((tip, i) => (
           <motion.li

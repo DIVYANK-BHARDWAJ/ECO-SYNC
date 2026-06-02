@@ -21,7 +21,7 @@ export default function SolarPanelManager({ solarState, onUpdateSolarState, tota
   // Solar and Battery stats are currently displayed directly.
 
   return (
-    <div className="bg-slate-900 border border-white/10 rounded-[2rem] p-6 sm:p-8 backdrop-blur-xl relative overflow-hidden group">
+    <div className="bg-slate-900 border border-white/10 rounded-2xl p-6 sm:p-8 backdrop-blur-xl relative overflow-hidden group">
       <div className="absolute inset-0 bg-gradient-to-br from-accent-solar/5 to-transparent opacity-50" />
       
       <div className="relative z-10 flex flex-col gap-6">
@@ -31,13 +31,13 @@ export default function SolarPanelManager({ solarState, onUpdateSolarState, tota
               <Sun className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-white font-black uppercase tracking-widest text-sm font-heading italic">Microgrid Status</h3>
+              <h3 className="text-white font-black uppercase tracking-widest text-sm font-heading">Microgrid Status</h3>
               <p className="text-white/40 text-[10px] uppercase font-mono tracking-widest">Solar & Battery</p>
             </div>
           </div>
           <button 
             onClick={handleSimulateSun}
-            className="px-4 py-2 bg-accent-solar/10 hover:bg-accent-solar/20 text-accent-solar rounded-xl text-[10px] font-black uppercase tracking-widest border border-accent-solar/30 transition-all font-heading italic"
+            className="px-4 py-2 bg-accent-solar/10 hover:bg-accent-solar/20 text-accent-solar rounded-xl text-[10px] font-black uppercase tracking-widest border border-accent-solar/30 transition-all font-heading"
           >
             {solarState.solarGeneration > 0 ? "Eclipse" : "Simulate Sun"}
           </button>
@@ -68,7 +68,9 @@ export default function SolarPanelManager({ solarState, onUpdateSolarState, tota
         <div className="p-4 rounded-2xl bg-accent-solar/5 border border-accent-solar/20 flex justify-between items-center">
           <div>
             <p className="text-[10px] uppercase font-bold tracking-wider text-white/60 mb-1">Grid Draw</p>
-            <p className="text-xl font-bold text-accent-solar font-mono tracking-tighter">{solarState.gridDependency.toFixed(1)} kW</p>
+            <p className="text-xl font-bold text-accent-solar font-mono tracking-tighter">
+              {solarState.gridDependency.toFixed(1)} <span className="font-sans text-xs text-white/40 font-black ml-1">kW</span>
+            </p>
           </div>
           {solarState.gridDependency <= 0 && (
             <div className="flex items-center gap-2 text-accent-primary text-[10px] uppercase font-black tracking-widest bg-accent-primary/10 px-3 py-1.5 rounded-full border border-accent-primary/20">

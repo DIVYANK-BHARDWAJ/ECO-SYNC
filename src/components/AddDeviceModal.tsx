@@ -276,14 +276,14 @@ export default function AddDeviceModal({ isOpen, onClose, onAdd }: AddDeviceModa
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            className="relative w-full max-w-5xl bg-slate-950 border border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+            className="relative w-full max-w-5xl bg-zinc-950 border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
           >
             {/* Background Glow */}
-            <div className="absolute top-0 right-0 w-96 h-96 bg-accent-secondary/10 blur-[120px] -mr-48 -mt-48 pointer-events-none" />
+            <div className="absolute top-0 right-0 w-96 h-96 bg-accent-secondary/5 blur-[120px] -mr-48 -mt-48 pointer-events-none" />
             
             <div className="relative z-10 flex flex-col h-full">
               {/* Header */}
-              <div className="p-8 sm:p-10 border-b border-white/5 flex justify-between items-center bg-slate-950/50 backdrop-blur-xl">
+              <div className="p-8 sm:p-10 border-b border-white/5 flex justify-between items-center bg-zinc-950/50 backdrop-blur-xl">
                 <div className="flex items-center gap-4">
                   {step === 2 && (
                     <button 
@@ -294,7 +294,7 @@ export default function AddDeviceModal({ isOpen, onClose, onAdd }: AddDeviceModa
                     </button>
                   )}
                   <div>
-                    <h2 className="text-white font-black text-2xl sm:text-3xl tracking-tighter uppercase italic leading-none">
+                    <h2 className="text-white font-black text-2xl sm:text-3xl tracking-tighter uppercase leading-none">
                       {step === 1 ? "Select" : "Configure"} <span className="text-accent-secondary">Appliance</span>
                     </h2>
                     <p className="text-white/30 text-[10px] font-mono uppercase tracking-[0.2em] mt-2 font-bold">
@@ -340,7 +340,7 @@ export default function AddDeviceModal({ isOpen, onClose, onAdd }: AddDeviceModa
                               onClick={() => setActiveCategory(cat)}
                               className={`px-4 py-2 rounded-xl text-[9px] font-mono uppercase tracking-widest font-black transition-all border ${
                                 activeCategory === cat 
-                                  ? "bg-accent-secondary text-slate-900 border-accent-secondary shadow-[0_0_20px_rgba(0,123,255,0.3)]" 
+                                  ? "bg-accent-secondary text-slate-900 border-accent-secondary shadow-sm" 
                                   : "bg-white/5 text-white/40 border-white/5 hover:border-white/10 hover:text-white"
                               }`}
                             >
@@ -355,19 +355,19 @@ export default function AddDeviceModal({ isOpen, onClose, onAdd }: AddDeviceModa
                         {filteredPresets.map((preset) => (
                           <motion.button
                             key={preset.label}
-                            whileHover={{ y: -4, backgroundColor: "rgba(255,255,255,0.05)", borderColor: "rgba(0,123,255,0.3)" }}
+                            whileHover={{ y: -4, backgroundColor: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.1)" }}
                             whileTap={{ scale: 0.97 }}
                             onClick={() => handleSelectPreset(preset)}
-                            className={`flex flex-col items-center p-6 rounded-3xl border transition-all text-center group ${
+                            className={`flex flex-col items-center p-6 rounded-xl border transition-all text-center group ${
                               selectedPreset?.label === preset.label 
-                                ? "bg-accent-secondary/10 border-accent-secondary shadow-[0_0_20px_rgba(0,123,255,0.2)]" 
+                                ? "bg-accent-secondary/10 border-accent-secondary shadow-sm" 
                                 : "bg-white/2 border-white/5"
                             }`}
                           >
                             <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-4 transition-all shadow-inner ${
                               selectedPreset?.label === preset.label 
                                 ? "bg-accent-secondary text-slate-900" 
-                                : "bg-slate-800 group-hover:bg-accent-secondary group-hover:text-slate-900"
+                                : "bg-zinc-800 group-hover:bg-accent-secondary group-hover:text-slate-900"
                             }`}>
                               <preset.icon className="w-8 h-8" />
                             </div>
@@ -407,7 +407,7 @@ export default function AddDeviceModal({ isOpen, onClose, onAdd }: AddDeviceModa
                            
                            {/* Active Progress Line */}
                            <motion.div 
-                             className="absolute left-1/2 -translate-x-1/2 w-[2px] bg-accent-secondary shadow-[0_0_15px_rgba(0,123,255,0.4)] z-10"
+                             className="absolute left-1/2 -translate-x-1/2 w-[2px] bg-accent-secondary z-10"
                              initial={false}
                              animate={{ 
                                top: "96px",
@@ -418,7 +418,7 @@ export default function AddDeviceModal({ isOpen, onClose, onAdd }: AddDeviceModa
 
                            {/* Glow Indicator */}
                            <motion.div 
-                             className="absolute left-1/2 -translate-x-1/2 w-2 h-2 bg-accent-secondary rounded-full shadow-[0_0_20px_#007BFF] z-20"
+                             className="absolute left-1/2 -translate-x-1/2 w-2 h-2 bg-accent-secondary rounded-full z-20"
                              initial={false}
                              animate={{ 
                                top: activeSection === 'info' ? '120px' : activeSection === 'label' ? '216px' : '312px'
@@ -434,7 +434,7 @@ export default function AddDeviceModal({ isOpen, onClose, onAdd }: AddDeviceModa
                              >
                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-lg border-2 ${
                                  activeSection === 'info' 
-                                   ? "bg-accent-secondary text-slate-900 shadow-accent-secondary/30 border-accent-secondary" 
+                                   ? "bg-accent-secondary text-slate-900 border-accent-secondary" 
                                    : "bg-white/5 border-white/10 text-white/20 group-hover:border-accent-secondary/50 group-hover:bg-accent-secondary/10"
                                }`}>
                                  <Info className="w-6 h-6" />
@@ -451,7 +451,7 @@ export default function AddDeviceModal({ isOpen, onClose, onAdd }: AddDeviceModa
                              >
                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-lg border-2 ${
                                  activeSection === 'label' 
-                                   ? "bg-accent-secondary text-slate-900 shadow-accent-secondary/30 border-accent-secondary" 
+                                   ? "bg-accent-secondary text-slate-900 border-accent-secondary" 
                                    : "bg-white/5 border-white/10 text-white/20 group-hover:border-accent-secondary/50 group-hover:bg-accent-secondary/10"
                                }`}>
                                  <Tag className="w-6 h-6" />
@@ -468,7 +468,7 @@ export default function AddDeviceModal({ isOpen, onClose, onAdd }: AddDeviceModa
                              >
                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-lg border-2 ${
                                  activeSection === 'power' 
-                                   ? "bg-accent-secondary text-slate-900 shadow-accent-secondary/30 border-accent-secondary" 
+                                   ? "bg-accent-secondary text-slate-900 border-accent-secondary" 
                                    : "bg-white/5 border-white/10 text-white/20 group-hover:border-accent-secondary/50 group-hover:bg-accent-secondary/10"
                                }`}>
                                  <Zap className="w-6 h-6" />
@@ -485,10 +485,10 @@ export default function AddDeviceModal({ isOpen, onClose, onAdd }: AddDeviceModa
                          <div className="max-w-2xl mx-auto">
                             <div ref={configRef} data-section="info" className="flex flex-col items-center text-center mb-16 scroll-mt-20">
                               <p className="text-accent-secondary font-mono text-[10px] uppercase tracking-[0.4em] mb-6 font-black">Node Intelligence v1.0</p>
-                              <div className="w-32 h-32 rounded-[2.5rem] bg-accent-secondary text-slate-900 flex items-center justify-center mb-8 shadow-[0_0_50px_rgba(0,123,255,0.4)] border-4 border-white/20">
+                              <div className="w-32 h-32 rounded-2xl bg-accent-secondary text-slate-900 flex items-center justify-center mb-8 border-4 border-white/20 shadow-md">
                                 {selectedPreset ? <selectedPreset.icon className="w-16 h-16" /> : <Plus className="w-16 h-16 text-slate-900/20" />}
                               </div>
-                              <h3 className="text-white text-4xl font-black uppercase tracking-tighter italic leading-none mb-4">
+                              <h3 className="text-white text-4xl font-black uppercase tracking-tighter leading-none mb-4">
                                 {selectedPreset ? selectedPreset.label : "Select a Device"}
                               </h3>
                               <div className="px-4 py-1 rounded-full bg-white/5 border border-white/10">
@@ -505,14 +505,14 @@ export default function AddDeviceModal({ isOpen, onClose, onAdd }: AddDeviceModa
                                     <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
                                       <Tag className="w-4 h-4 text-accent-secondary" />
                                     </div>
-                                    <label className="text-white font-black text-xs uppercase tracking-widest italic">Identity Tag</label>
+                                    <label className="text-white font-black text-xs uppercase tracking-widest">Identity Tag</label>
                                   </div>
                                   <input 
                                     type="text" 
                                     value={customName}
                                     onChange={(e) => setCustomName(e.target.value)}
                                     placeholder="ENTER CUSTOM LABEL..."
-                                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-6 text-white placeholder:text-white/10 focus:outline-none focus:border-accent-secondary/50 focus:bg-white/10 transition-all font-bold tracking-wide text-lg"
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-8 py-6 text-white placeholder:text-white/10 focus:outline-none focus:border-accent-secondary/50 focus:bg-white/10 transition-all font-bold tracking-wide text-lg"
                                   />
                                 </div>
 
@@ -523,7 +523,7 @@ export default function AddDeviceModal({ isOpen, onClose, onAdd }: AddDeviceModa
                                     <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
                                       <Zap className="w-4 h-4 text-accent-secondary" />
                                     </div>
-                                    <label className="text-white font-black text-xs uppercase tracking-widest italic">Consumption Matrix</label>
+                                    <label className="text-white font-black text-xs uppercase tracking-widest">Consumption Matrix</label>
                                   </div>
                                   <div className="relative group">
                                     <input 
@@ -532,10 +532,10 @@ export default function AddDeviceModal({ isOpen, onClose, onAdd }: AddDeviceModa
                                       value={power}
                                       onChange={(e) => setPower(e.target.value)}
                                       placeholder="0.00"
-                                      className="w-full bg-white/5 border border-white/10 rounded-[2rem] px-8 py-12 text-7xl font-black text-white focus:outline-none focus:border-accent-secondary/50 focus:bg-white/10 transition-all text-center tabular-nums shadow-inner group-hover:border-white/20"
+                                      className="w-full bg-white/5 border border-white/10 rounded-xl px-8 py-12 text-7xl font-black text-white focus:outline-none focus:border-accent-secondary/50 focus:bg-white/10 transition-all text-center tabular-nums shadow-inner group-hover:border-white/20"
                                       required
                                     />
-                                    <div className="absolute right-10 top-1/2 -translate-y-1/2 text-white/10 font-black text-3xl uppercase tracking-tighter italic group-focus-within:text-accent-secondary/30 transition-colors">kW</div>
+                                    <div className="absolute right-10 top-1/2 -translate-y-1/2 text-white/10 font-black text-3xl uppercase tracking-tighter group-focus-within:text-accent-secondary/30 transition-colors">kW</div>
                                   </div>
                                   <p className="mt-4 text-center text-[10px] font-mono text-white/20 uppercase tracking-[0.2em]">Estimated nominal load for this appliance class</p>
                                 </div>
@@ -544,7 +544,7 @@ export default function AddDeviceModal({ isOpen, onClose, onAdd }: AddDeviceModa
                               <button
                                 type="submit"
                                 disabled={!selectedPreset}
-                                className="group relative w-full py-8 bg-accent-secondary disabled:bg-slate-800 disabled:text-white/10 rounded-[2rem] overflow-hidden shadow-[0_20px_50px_rgba(0,123,255,0.4)] transition-all active:scale-[0.98] hover:shadow-accent-secondary/50 hover:-translate-y-1"
+                                className="group relative w-full py-8 bg-accent-secondary disabled:bg-slate-800 disabled:text-white/10 rounded-xl overflow-hidden shadow-lg transition-all active:scale-[0.98] hover:-translate-y-1"
                               >
                                 <div className="absolute inset-0 bg-white/30 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
                                 <span className="relative z-10 text-slate-900 font-black uppercase tracking-[0.3em] text-sm flex items-center justify-center gap-4">

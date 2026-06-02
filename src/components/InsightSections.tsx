@@ -5,10 +5,10 @@ import { motion, useTransform } from "framer-motion";
 // Each environment gets its own distinct color so it never blends into the animation
 const colorMap: Record<string, { label: string; border: string; text: string; dot: string; cardBg: string }> = {
   primary: {
-    label: "#007BFF",
-    border: "#007BFF",
-    text: "#007BFF",
-    dot: "#007BFF",
+    label: "#3b82f6",
+    border: "#3b82f6",
+    text: "#3b82f6",
+    dot: "#3b82f6",
     cardBg: "rgba(2, 6, 23, 0.97)",
   },
   secondary: {
@@ -85,7 +85,7 @@ function InsightBubble({ insight, progress }: { insight: any, progress: any }) {
           background: c.cardBg,
           border: `1px solid ${c.border}`,
           borderLeft: `3px solid ${c.border}`,
-          boxShadow: `0 4px 20px rgba(0,0,0,0.7), 0 0 12px ${c.border}18`,
+          boxShadow: "0 4px 20px rgba(0,0,0,0.7)",
         }}
       >
         {/* Label */}

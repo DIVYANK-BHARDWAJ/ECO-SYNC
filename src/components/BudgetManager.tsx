@@ -28,7 +28,7 @@ export default function BudgetManager({ totalLoad, costFactor }: BudgetManagerPr
   };
 
   return (
-    <div className="bg-slate-900 border border-white/10 rounded-[2rem] p-6 sm:p-8 backdrop-blur-xl relative overflow-hidden group">
+    <div className="bg-slate-900 border border-white/10 rounded-2xl p-6 sm:p-8 backdrop-blur-xl relative overflow-hidden group">
       <div className={`absolute inset-0 bg-gradient-to-br ${isOverBudget ? 'from-red-500/5' : 'from-accent-budget/5'} to-transparent opacity-50 transition-colors duration-500`} />
       
       <div className="relative z-10 flex flex-col gap-6">
@@ -47,7 +47,7 @@ export default function BudgetManager({ totalLoad, costFactor }: BudgetManagerPr
               if (isEditing) handleSave();
               else setIsEditing(true);
             }}
-            className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl text-[10px] font-black uppercase tracking-widest border border-white/10 transition-all font-heading italic"
+            className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl text-[10px] font-black uppercase tracking-widest border border-white/10 transition-all font-heading"
           >
             {isEditing ? "Save" : "Set Target"}
           </button>

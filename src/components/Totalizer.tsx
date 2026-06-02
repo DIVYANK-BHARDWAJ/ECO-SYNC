@@ -89,32 +89,32 @@ function SummaryCard({ title, value, label, suffix, accent, onClick }: {
   accent: "primary" | "secondary" | "tertiary";
   onClick: () => void;
 }) {
-  const accentColor = accent === "primary" ? "#FFFFFF" : accent === "tertiary" ? "#22D3EE" : "#007BFF";
-  const borderClass = accent === "primary" ? "border-accent-primary/30" : accent === "tertiary" ? "border-accent-tertiary/30" : "border-accent-secondary/30";
-  const bgClass = accent === "primary" ? "bg-accent-primary/5 hover:bg-accent-primary/10" : accent === "tertiary" ? "bg-accent-tertiary/5 hover:bg-accent-tertiary/10" : "bg-accent-secondary/5 hover:bg-accent-secondary/10";
+  const accentColor = accent === "primary" ? "#FFFFFF" : accent === "tertiary" ? "#14b8a6" : "#3b82f6";
+  const borderClass = accent === "primary" ? "border-accent-primary/10" : accent === "tertiary" ? "border-accent-tertiary/10" : "border-accent-secondary/10";
+  const bgClass = "bg-zinc-900/40 hover:bg-zinc-900/60";
   const textColor = accent === "primary" ? "text-accent-primary" : accent === "tertiary" ? "text-accent-tertiary" : "text-accent-secondary";
-  const shadowColor = accent === "primary" ? "shadow-white/5" : accent === "tertiary" ? "shadow-accent-tertiary/10" : "shadow-accent-secondary/10";
+  const shadowColor = "shadow-sm";
 
   return (
     <motion.button 
       onClick={onClick}
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -5, scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+      whileHover={{ y: -4, scale: 1.01 }}
+      whileTap={{ scale: 0.99 }}
       viewport={{ once: true }}
-      className={`p-6 sm:p-10 rounded-[2.5rem] sm:rounded-[3.5rem] border ${borderClass} ${bgClass} backdrop-blur-3xl relative overflow-hidden group transition-all duration-500 text-left w-full h-full flex flex-col justify-between shadow-2xl ${shadowColor}`}
+      className={`p-6 sm:p-10 rounded-2xl border ${borderClass} ${bgClass} backdrop-blur-3xl relative overflow-hidden group transition-all duration-500 text-left w-full h-full flex flex-col justify-between shadow-lg ${shadowColor}`}
     >
       <div className="flex justify-between items-start mb-6 sm:mb-10 w-full relative z-10">
         <h4 className="text-white/40 font-mono text-[8px] sm:text-[10px] uppercase tracking-[0.2em] sm:tracking-[0.4em] font-bold">{title}</h4>
-        <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 group-hover:${textColor} group-hover:bg-white/10 transition-all`}>
+        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 group-hover:text-white group-hover:bg-white/10 transition-all">
           <Calculator className="w-4 h-4 sm:w-5 sm:h-5" />
         </div>
       </div>
 
       <div className="relative z-10 w-full overflow-hidden mb-4 sm:mb-6">
         <div className="flex items-baseline mb-1 sm:mb-2 flex-wrap max-w-full">
-          <span className={`text-3xl sm:text-5xl lg:text-7xl font-black tracking-tighter ${textColor} font-mono drop-shadow-[0_0_15px_rgba(34,211,238,0.4)]`}>
+          <span className={`text-3xl sm:text-5xl lg:text-7xl font-black tracking-tighter ${textColor} font-mono`}>
             {value}
           </span>
           {suffix && (
@@ -123,7 +123,7 @@ function SummaryCard({ title, value, label, suffix, accent, onClick }: {
             </span>
           )}
         </div>
-        <p className="text-white font-black tracking-tight text-base sm:text-lg leading-tight uppercase opacity-80 break-words font-heading italic">
+        <p className="text-white font-black tracking-tight text-base sm:text-lg leading-tight uppercase opacity-80 break-words font-heading">
           {label}
         </p>
       </div>
@@ -133,7 +133,7 @@ function SummaryCard({ title, value, label, suffix, accent, onClick }: {
          <span>Explore Calculation Formula</span>
       </div>
 
-      <div className="absolute -bottom-10 -right-10 w-32 h-32 sm:w-48 sm:h-48 blur-[80px] sm:blur-[100px] rounded-full opacity-10 transition-opacity group-hover:opacity-30" 
+      <div className="absolute -bottom-10 -right-10 w-32 h-32 sm:w-48 sm:h-48 blur-[80px] sm:blur-[100px] rounded-full opacity-5 transition-opacity group-hover:opacity-15" 
            style={{ backgroundColor: accentColor }} />
     </motion.button>
   );

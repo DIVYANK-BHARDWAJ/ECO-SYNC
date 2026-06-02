@@ -9,19 +9,19 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "#05030A",
+        background: "#09090b",
         accent: {
           primary: "#FFFFFF",    // White (Neutral/Control)
-          secondary: "#007BFF",  // Electric Blue (Radar/Grid)
-          tertiary: "#00D1FF",   // Cyan (Analytics/Dynamics)
-          solar: "#F59E0B",      // Amber (Solar/Generation)
-          budget: "#10B981",     // Emerald (Budget/Savings)
-          system: "#A855F7",     // Purple (Console/Logs)
-          routine: "#6366F1",    // Indigo (Routines)
+          secondary: "#3b82f6",  // Royal/Electric Blue
+          tertiary: "#14b8a6",   // Muted Teal/Cyan (Premium Analytics)
+          solar: "#f59e0b",      // Balanced Amber
+          budget: "#10b981",     // Deep Emerald
+          system: "#71717a",     // Steel/Zinc Gray (System Console)
+          routine: "#6366f1",    // Refined Indigo
         },
       },
       fontFamily: {
-        heading: ["var(--font-syne)", "sans-serif"],
+        heading: ["var(--font-outfit)", "sans-serif"],
         sans: ["var(--font-outfit)", "sans-serif"],
         mono: ["var(--font-space-mono)", "monospace"],
       },
