@@ -1,3 +1,29 @@
+# Dynamic Scroll-Prioritized Animation Preloading Implementation Plan
+
+> **For Antigravity:** REQUIRED WORKFLOW: Use `.agent/workflows/execute-plan.md` to execute this plan in single-flow mode.
+
+**Goal:** Implement a scroll-aware progressive preloader with closest-frame fallback for the 144-frame canvas animation to make it buttery smooth on first load without blocking the dashboard.
+
+**Architecture:**
+- **Phase 1 (Baseline)**: Instantly load every 8th frame to create a low-overhead, fast baseline.
+- **Phase 2 (Scroll-Aware)**: Prioritize loading the frame neighborhood (current + next 4, previous 1) based on the user's scroll.
+- **Phase 3 (Background Fill)**: Sequentially load remaining gaps in the background using small delays to not block the UI.
+- **Phase 4 (Closest-Frame Fallback)**: If a target frame isn't loaded yet, scan outward to render the closest loaded frame instead of showing a black screen.
+
+**Tech Stack:** Next.js, React, Canvas 2D API, Framer Motion
+
+---
+
+### Task 1: Modify EnergyCanvas component to support progressive loading and fallback
+
+**Files:**
+- Modify: [EnergyCanvas.tsx](file:///c:/Users/DIVYANK%20BHARDWAJ/Desktop/Projects/eco%20sync%20updated/eco-sync/src/components/EnergyCanvas.tsx)
+
+**Step 1: Replace implementation in EnergyCanvas.tsx**
+We will replace the existing loading and rendering code with the progressive preloading, neighborhood prioritizer, background fill, and outward fallback search.
+
+Code implementation details:
+```typescript
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -196,7 +222,6 @@ export default function EnergyCanvas({ scrollProgress }: EnergyCanvasProps) {
 
       loadNextFillBatch();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Update canvas on scroll / resize
@@ -217,7 +242,6 @@ export default function EnergyCanvas({ scrollProgress }: EnergyCanvasProps) {
       window.removeEventListener("resize", handleResize);
       unsubscribe();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, frameIndex]);
 
   return (
@@ -232,3 +256,8 @@ export default function EnergyCanvas({ scrollProgress }: EnergyCanvasProps) {
     </motion.div>
   );
 }
+```
+
+**Step 2: Verify changes locally**
+We will verify that the compilation is successful and the build does not fail.
+Command: `npm run build` or similar.

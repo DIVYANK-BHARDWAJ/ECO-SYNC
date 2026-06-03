@@ -102,7 +102,7 @@ function InsightBubble({ insight, progress }: { insight: any, progress: any }) {
           </span>
         </div>
         {/* Tip */}
-        <p className="text-white text-xs leading-relaxed font-medium">
+        <p className="text-slate-100 text-xs leading-relaxed font-medium">
           {insight.text}
         </p>
       </div>

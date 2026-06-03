@@ -1,6 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: "class",
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -9,15 +10,16 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "#09090b",
+        background: "var(--background)",
+        foreground: "var(--foreground)",
         accent: {
-          primary: "#FFFFFF",    // White (Neutral/Control)
-          secondary: "#3b82f6",  // Royal/Electric Blue
-          tertiary: "#14b8a6",   // Muted Teal/Cyan (Premium Analytics)
-          solar: "#f59e0b",      // Balanced Amber
-          budget: "#10b981",     // Deep Emerald
-          system: "#71717a",     // Steel/Zinc Gray (System Console)
-          routine: "#6366f1",    // Refined Indigo
+          primary: "rgb(var(--accent-primary-rgb) / <alpha-value>)",    // Dynamic Neutral (White in Dark, Dark Gray in Light)
+          secondary: "rgb(var(--accent-secondary-rgb) / <alpha-value>)",  // Royal/Electric Blue
+          tertiary: "rgb(var(--accent-tertiary-rgb) / <alpha-value>)",   // Muted Teal/Cyan (Premium Analytics)
+          solar: "rgb(var(--accent-solar-rgb) / <alpha-value>)",      // Balanced Amber
+          budget: "rgb(var(--accent-budget-rgb) / <alpha-value>)",     // Deep Emerald
+          system: "rgb(var(--accent-system-rgb) / <alpha-value>)",     // Steel/Zinc Gray (System Console)
+          routine: "rgb(var(--accent-routine-rgb) / <alpha-value>)",    // Refined Indigo
         },
       },
       fontFamily: {

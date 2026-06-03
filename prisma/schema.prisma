@@ -1,0 +1,47 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  name        String?  @default("Nexus Explorer")
+  bio         String?  @default("")
+  avatarUrl   String?  @default("/avatars/nexus-default.png")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Functional Settings
+  themeMode   String   @default("system") // "dark" | "light" | "system"
+  costFactor  Float    @default(8.0)
+  batteryCap  Float    @default(13.5)
+  
+  otps         OtpVerification[]
+  transactions Transaction[]
+}
+
+model OtpVerification {
+  id        String   @id @default(uuid())
+  email     String
+  code      String   // 4-digit OTP
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String?
+}
+
+model Transaction {
+  id        String   @id @default(uuid())
+  hash      String   @unique
+  amount    Float
+  price     Float
+  total     Float
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+}

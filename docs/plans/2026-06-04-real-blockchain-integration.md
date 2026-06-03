@@ -1,3 +1,341 @@
+# Real Blockchain & MetaMask Integration Implementation Plan
+
+> **For Antigravity:** REQUIRED WORKFLOW: Use `.agent/workflows/execute-plan.md` to execute this plan in single-flow mode.
+
+**Goal:** Replace the mock energy trading simulation in the Next.js app with a live, on-chain ERC-20 token ecosystem on the Ethereum Sepolia Testnet using MetaMask.
+
+**Architecture:** We will implement a custom `EcoToken.sol` ERC-20 contract, compile it using a local build script, and deploy it to Sepolia. The Next.js API endpoint will act as a relayer that sponsors gas to mint/transfer ECO tokens to users after verifying their gasless cryptographic signature.
+
+**Tech Stack:** Solidity v0.8.20, Ethers.js v6, Next.js App Router, Tailwind CSS, MetaMask SDK.
+
+---
+
+### Task 1: Environment & Dependencies
+**Files:**
+- Modify: [package.json](file:///c:/Users/DIVYANK%20BHARDWAJ/Desktop/Projects/eco%20sync%20updated/eco-sync/package.json)
+- Modify: [.env.local](file:///c:/Users/DIVYANK%20BHARDWAJ/Desktop/Projects/eco%20sync%20updated/eco-sync/.env.local)
+
+**Step 1: Install Solidity Compiler dependency**
+Run: `npm install -D solc@0.8.20`
+Expected: Installs compiler successfully.
+
+**Step 2: Add Blockchain configuration placeholders to `.env.local`**
+Add the following keys to [env.local](file:///c:/Users/DIVYANK%20BHARDWAJ/Desktop/Projects/eco%20sync%20updated/eco-sync/.env.local):
+```env
+NEXT_PUBLIC_ECO_TOKEN_ADDRESS=""
+NEXT_PUBLIC_SEPOLIA_RPC_URL="https://ethereum-sepolia-rpc.publicnode.com"
+BLOCKCHAIN_PRIVATE_KEY=""
+```
+Expected: Configuration placeholders added.
+
+**Step 3: Commit**
+```bash
+git add package.json package-lock.json .env.local
+git commit -m "chore: setup solidity compiler and blockchain env variables"
+```
+
+---
+
+### Task 2: EcoToken Smart Contract
+**Files:**
+- Create: `contracts/EcoToken.sol`
+
+**Step 1: Write the minimal Solidity ERC-20 contract**
+Write the following code to `contracts/EcoToken.sol`:
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract EcoToken {
+    string public name = "Eco Sync Token";
+    string public symbol = "ECO";
+    uint8 public decimals = 18;
+    uint256 public totalSupply;
+    address public owner;
+
+    mapping(address => uint256) public balanceOf;
+    mapping(address => mapping(address => uint256)) public allowance;
+
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Not owner");
+        _;
+    }
+
+    function transfer(address to, uint256 value) public returns (bool) {
+        require(balanceOf[msg.sender] >= value, "Insufficient balance");
+        balanceOf[msg.sender] -= value;
+        balanceOf[to] += value;
+        emit Transfer(msg.sender, to, value);
+        return true;
+    }
+
+    function approve(address spender, uint256 value) public returns (bool) {
+        allowance[msg.sender][spender] = value;
+        emit Approval(msg.sender, spender, value);
+        return true;
+    }
+
+    function transferFrom(address from, address to, uint256 value) public returns (bool) {
+        require(balanceOf[from] >= value, "Insufficient balance");
+        require(allowance[from][msg.sender] >= value, "Insufficient allowance");
+        balanceOf[from] -= value;
+        allowance[from][msg.sender] -= value;
+        balanceOf[to] += value;
+        emit Transfer(from, to, value);
+        return true;
+    }
+
+    function mint(address to, uint256 amount) public onlyOwner returns (bool) {
+        totalSupply += amount;
+        balanceOf[to] += amount;
+        emit Transfer(address(0), to, amount);
+        return true;
+    }
+}
+```
+
+**Step 2: Commit**
+```bash
+git add contracts/EcoToken.sol
+git commit -m "feat: add EcoToken ERC-20 smart contract"
+```
+
+---
+
+### Task 3: Compiler Script
+**Files:**
+- Create: `scripts/compile.js`
+
+**Step 1: Write compiling logic**
+Write the following code to `scripts/compile.js`:
+```javascript
+const path = require("path");
+const fs = require("fs");
+const solc = require("solc");
+
+const contractPath = path.resolve(__dirname, "../contracts/EcoToken.sol");
+const source = fs.readFileSync(contractPath, "utf8");
+
+const input = {
+  language: "Solidity",
+  sources: {
+    "EcoToken.sol": {
+      content: source,
+    },
+  },
+  settings: {
+    outputSelection: {
+      "*": {
+        "*": ["abi", "evm.bytecode"],
+      },
+    },
+  },
+};
+
+console.log("Compiling contract...");
+const output = JSON.parse(solc.compile(JSON.stringify(input)));
+
+if (output.errors) {
+  output.errors.forEach((err) => {
+    console.error(err.formattedMessage);
+  });
+  if (output.errors.some(err => err.severity === 'error')) {
+    process.exit(1);
+  }
+}
+
+const contractData = output.contracts["EcoToken.sol"]["EcoToken"];
+
+const artifactsDir = path.resolve(__dirname, "../artifacts");
+if (!fs.existsSync(artifactsDir)) {
+  fs.mkdirSync(artifactsDir);
+}
+
+fs.writeFileSync(
+  path.resolve(artifactsDir, "EcoToken.json"),
+  JSON.stringify(
+    {
+      abi: contractData.abi,
+      bytecode: contractData.evm.bytecode.object,
+    },
+    null,
+    2
+  )
+);
+
+console.log("Compilation successful! Artifacts written to artifacts/EcoToken.json");
+```
+
+**Step 2: Run the compiler script to generate JSON artifacts**
+Run: `node scripts/compile.js`
+Expected: Output showing "Compilation successful!" and creation of `artifacts/EcoToken.json`.
+
+**Step 3: Commit**
+```bash
+git add scripts/compile.js artifacts/EcoToken.json
+git commit -m "feat: add compile script and build EcoToken artifact"
+```
+
+---
+
+### Task 4: Deployment Script
+**Files:**
+- Create: `scripts/deploy-eco-token.js`
+
+**Step 1: Write deployment logic**
+Write the following code to `scripts/deploy-eco-token.js` (Ethers v6 compatible):
+```javascript
+require("dotenv").config({ path: ".env.local" });
+const { ethers } = require("ethers");
+const fs = require("fs");
+const path = require("path");
+
+async function main() {
+  const privateKey = process.env.BLOCKCHAIN_PRIVATE_KEY;
+  const rpcUrl = process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL;
+
+  if (!privateKey) {
+    console.error("Please set BLOCKCHAIN_PRIVATE_KEY in .env.local");
+    process.exit(1);
+  }
+
+  console.log("Connecting to Sepolia via RPC URL:", rpcUrl);
+  const provider = new ethers.JsonRpcProvider(rpcUrl);
+  const wallet = new ethers.Wallet(privateKey, provider);
+
+  console.log("Deployer address:", wallet.address);
+  const balance = await provider.getBalance(wallet.address);
+  console.log("Deployer balance:", ethers.formatEther(balance), "ETH");
+
+  const artifactPath = path.resolve(__dirname, "../artifacts/EcoToken.json");
+  if (!fs.existsSync(artifactPath)) {
+    console.error("Artifact not found. Please run: node scripts/compile.js");
+    process.exit(1);
+  }
+
+  const { abi, bytecode } = JSON.parse(fs.readFileSync(artifactPath, "utf8"));
+  
+  console.log("Deploying contract...");
+  const factory = new ethers.ContractFactory(abi, bytecode, wallet);
+  const contract = await factory.deploy();
+
+  console.log("Waiting for deployment transaction...");
+  await contract.waitForDeployment();
+
+  const address = await contract.getAddress();
+  console.log("EcoToken deployed successfully!");
+  console.log("Contract Address:", address);
+  console.log("Update NEXT_PUBLIC_ECO_TOKEN_ADDRESS in .env.local with this address.");
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
+```
+
+**Step 2: Commit**
+```bash
+git add scripts/deploy-eco-token.js
+git commit -m "feat: add EcoToken deploy script"
+```
+
+---
+
+### Task 5: Backend API Settle Route
+**Files:**
+- Create: `src/app/api/trading/sell/route.ts`
+
+**Step 1: Write API endpoint logic**
+Write the following code to `src/app/api/trading/sell/route.ts`:
+```typescript
+import { NextRequest, NextResponse } from "next/server";
+import { ethers } from "ethers";
+import fs from "fs";
+import path from "path";
+
+export async function POST(req: NextRequest) {
+  try {
+    const { userAddress, amount, price, signature } = await req.json();
+
+    if (!userAddress || !amount || !price || !signature) {
+      return NextResponse.json({ error: "Missing required parameters" }, { status: 400 });
+    }
+
+    // 1. Verify user signature
+    const message = `Authorize sale of ${Number(amount).toFixed(1)} kWh for ${(Number(amount) * Number(price)).toFixed(2)} ECO tokens`;
+    const signerAddress = ethers.verifyMessage(message, signature);
+
+    if (signerAddress.toLowerCase() !== userAddress.toLowerCase()) {
+      return NextResponse.json({ error: "Signature verification failed" }, { status: 401 });
+    }
+
+    // 2. Load contract address & backend keys
+    const contractAddress = process.env.NEXT_PUBLIC_ECO_TOKEN_ADDRESS;
+    const rpcUrl = process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL;
+    const privateKey = process.env.BLOCKCHAIN_PRIVATE_KEY;
+
+    if (!contractAddress || !privateKey) {
+      return NextResponse.json({ error: "Blockchain configuration is missing on the server" }, { status: 500 });
+    }
+
+    // 3. Connect to Sepolia via Ethers.js
+    const provider = new ethers.JsonRpcProvider(rpcUrl);
+    const serverWallet = new ethers.Wallet(privateKey, provider);
+
+    // 4. Load contract ABI
+    const artifactPath = path.resolve(process.cwd(), "./artifacts/EcoToken.json");
+    if (!fs.existsSync(artifactPath)) {
+      return NextResponse.json({ error: "Contract artifacts missing" }, { status: 500 });
+    }
+
+    const { abi } = JSON.parse(fs.readFileSync(artifactPath, "utf8"));
+    const contract = new ethers.Contract(contractAddress, abi, serverWallet);
+
+    // Calculate token value with 18 decimals (multiply by 10^18)
+    const tokenAmount = ethers.parseEther((amount * price).toFixed(6));
+
+    // 5. Mint tokens directly to user wallet
+    console.log(`Minting ${amount * price} ECO tokens to ${userAddress}`);
+    const tx = await contract.mint(userAddress, tokenAmount);
+    
+    // Return transaction hash immediately so client can track
+    return NextResponse.json({ 
+      success: true, 
+      txHash: tx.hash,
+      message: "Transaction broadcast successfully."
+    });
+
+  } catch (error: any) {
+    console.error("Trading settlement API error:", error);
+    return NextResponse.json({ error: error.message || "Failed to execute transaction" }, { status: 500 });
+  }
+}
+```
+
+**Step 2: Commit**
+```bash
+git add src/app/api/trading/sell/route.ts
+git commit -m "feat: add backend settlement API route to mint ERC-20 tokens"
+```
+
+---
+
+### Task 6: Frontend Trading Integration
+**Files:**
+- Modify: [src/app/trading/page.tsx](file:///c:/Users/DIVYANK%20BHARDWAJ/Desktop/Projects/eco%20sync%20updated/eco-sync/src/app/trading/page.tsx)
+
+**Step 1: Integrate real Sepolia & MetaMask connection in UI**
+Modify [page.tsx](file:///c:/Users/DIVYANK%20BHARDWAJ/Desktop/Projects/eco%20sync%20updated/eco-sync/src/app/trading/page.tsx) to query the real contract balance, enforce Sepolia chain, prompt MetaMask signatures, and process the settlement via Next.js API.
+Replace the whole file or matching chunks in [page.tsx](file:///c:/Users/DIVYANK%20BHARDWAJ/Desktop/Projects/eco%20sync%20updated/eco-sync/src/app/trading/page.tsx) with:
+```typescript
 "use client";
 
 import { useEffect, useState } from "react";
@@ -5,16 +343,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   ArrowLeft, Sun, Zap, ArrowRight, 
   History, ShieldCheck, Check, Fingerprint, Coins, Network, 
-  Wallet, TrendingUp, AlertTriangle, Loader2
+  Wallet, TrendingUp, AlertTriangle
 } from "lucide-react";
 import Link from "next/link";
-import { Device, SolarBatteryState } from "@/types/device";
+import { SolarBatteryState } from "@/types/device";
 import { ethers } from "ethers";
 import UserProfileHeader from "@/components/UserProfileHeader";
 import AuthModal from "@/components/AuthModal";
 import SettingsDrawer from "@/components/SettingsDrawer";
 import { useAuth } from "@/context/AuthContext";
 import AuthPage from "@/components/AuthPage";
+import { Loader2 } from "lucide-react";
 
 type Transaction = {
   id: string;
@@ -26,7 +365,7 @@ type Transaction = {
   status: "completed" | "pending";
 };
 
-const SEPOLIA_CHAIN_ID = "0xaa36a7"; // 11155111 in hex (Sepolia Testnet)
+const SEPOLIA_CHAIN_ID = "0xf3e1"; // 11155111 in hex
 
 const ECO_TOKEN_ABI = [
   "function balanceOf(address owner) view returns (uint256)",
@@ -48,7 +387,9 @@ export default function EnergyTrading() {
 
   const [walletBalance, setWalletBalance] = useState(0.00);
   const [marketPrice, setMarketPrice] = useState(0.18);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([
+    { id: "1", hash: "0x8f...3a2b", amount: 5.2, price: 0.18, total: 0.936, time: "10 mins ago", status: "completed" }
+  ]);
 
   const [isSelling, setIsSelling] = useState(false);
   const [sellAmount, setSellAmount] = useState<number | "">("");
@@ -56,7 +397,6 @@ export default function EnergyTrading() {
   const [account, setAccount] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isWrongNetwork, setIsWrongNetwork] = useState(false);
-  const [detectedChainId, setDetectedChainId] = useState<string | null>(null);
   const [txProgressMessage, setTxProgressMessage] = useState("");
 
   // Connect MetaMask Wallet
@@ -72,6 +412,21 @@ export default function EnergyTrading() {
           const currentAccount = accounts[0];
           setAccount(currentAccount);
           await checkNetworkAndSync(currentAccount);
+          
+          // Listen to changes
+          (window as any).ethereum.on('accountsChanged', async (newAccounts: string[]) => {
+            if (newAccounts.length > 0) {
+              setAccount(newAccounts[0]);
+              await checkNetworkAndSync(newAccounts[0]);
+            } else {
+              setAccount(null);
+              setWalletBalance(0.00);
+            }
+          });
+
+          (window as any).ethereum.on('chainChanged', () => {
+            window.location.reload();
+          });
         }
       } catch (err) {
         console.error("Wallet connection failed", err);
@@ -83,7 +438,7 @@ export default function EnergyTrading() {
     }
   };
 
-  // Switch to Sepolia automatically (with fallback to add network)
+  // Switch to Sepolia automatically
   const switchNetwork = async () => {
     if (typeof window !== "undefined" && (window as any).ethereum) {
       try {
@@ -93,31 +448,6 @@ export default function EnergyTrading() {
         });
       } catch (switchError: any) {
         console.error("Failed to switch network", switchError);
-        // Error code 4902 indicates that the chain has not been added to MetaMask.
-        if (switchError.code === 4902) {
-          try {
-            await (window as any).ethereum.request({
-              method: "wallet_addEthereumChain",
-              params: [
-                {
-                  chainId: SEPOLIA_CHAIN_ID,
-                  chainName: "Sepolia Test Network",
-                  rpcUrls: ["https://ethereum-sepolia-rpc.publicnode.com"],
-                  nativeCurrency: {
-                    name: "Sepolia Ether",
-                    symbol: "ETH",
-                    decimals: 18,
-                  },
-                  blockExplorerUrls: ["https://sepolia.etherscan.io"],
-                },
-              ],
-            });
-          } catch (addError) {
-            console.error("Failed to add network", addError);
-          }
-        } else {
-          alert(`Failed to switch to Sepolia: ${switchError.message || switchError}`);
-        }
       }
     }
   };
@@ -128,9 +458,7 @@ export default function EnergyTrading() {
       const provider = new ethers.BrowserProvider((window as any).ethereum);
       const network = await provider.getNetwork();
 
-      setDetectedChainId(network.chainId.toString());
-
-      if (network.chainId !== BigInt(11155111)) {
+      if (network.chainId !== 11155111n) {
         setIsWrongNetwork(true);
         setWalletBalance(0.00);
         return;
@@ -152,78 +480,35 @@ export default function EnergyTrading() {
     }
   };
 
-  // Auto-connect and listen to changes on mount
-  useEffect(() => {
-    const initWallet = async () => {
-      if (typeof window !== "undefined" && (window as any).ethereum) {
-        try {
-          const provider = new ethers.BrowserProvider((window as any).ethereum);
-          
-          // Check if already authorized
-          const accounts = await provider.send("eth_accounts", []);
-          if (accounts.length > 0) {
-            const currentAccount = accounts[0];
-            setAccount(currentAccount);
-            await checkNetworkAndSync(currentAccount);
-          }
-
-          // Register listeners
-          (window as any).ethereum.on('accountsChanged', async (newAccounts: string[]) => {
-            if (newAccounts.length > 0) {
-              setAccount(newAccounts[0]);
-              await checkNetworkAndSync(newAccounts[0]);
-            } else {
-              setAccount(null);
-              setWalletBalance(0.00);
-              setDetectedChainId(null);
-            }
-          });
-
-          (window as any).ethereum.on('chainChanged', () => {
-            window.location.reload();
-          });
-
-        } catch (e) {
-          console.error("Error checking pre-authorized accounts", e);
-        }
-      }
-    };
-
-    initWallet();
-  }, []);
-
   useEffect(() => {
     if (account) {
       checkNetworkAndSync(account);
     }
   }, [account]);
 
-  // Keep sellAmount synchronized with stored energy (batteryLevel) in real-time
-  useEffect(() => {
-    if (solarState.batteryLevel >= 0) {
-      setSellAmount(Number(solarState.batteryLevel.toFixed(1)));
-    }
-  }, [solarState.batteryLevel]);
-
   // Sync profile settings with simulator values
   useEffect(() => {
     if (user) {
-      setSolarState(prev => {
-        const updated = {
-          ...prev,
-          batteryCapacity: user.batteryCap,
-          batteryLevel: Math.min(prev.batteryLevel, user.batteryCap),
-        };
-        localStorage.setItem("eco-sync-solar", JSON.stringify(updated));
-        return updated;
-      });
+      setSolarState(prev => ({
+        ...prev,
+        batteryCapacity: user.batteryCap,
+        batteryLevel: Math.min(prev.batteryLevel, user.batteryCap),
+      }));
     }
   }, [user]);
 
-  // Save solar to localStorage on change
+  // Load solar state from localStorage
   useEffect(() => {
-    localStorage.setItem("eco-sync-solar", JSON.stringify(solarState));
-  }, [solarState]);
+    const savedSolar = localStorage.getItem("eco-sync-solar");
+    if (savedSolar) {
+      try {
+        const parsed = JSON.parse(savedSolar);
+        setSolarState(parsed);
+      } catch (e) {
+        console.error("Failed to load solar state", e);
+      }
+    }
+  }, []);
 
   // Simulator settings states
   const [lowBatteryThreshold, setLowBatteryThreshold] = useState(15);
@@ -245,203 +530,23 @@ export default function EnergyTrading() {
 
   const refreshRateMs = refreshRate === "1s" ? 1000 : refreshRate === "5s" ? 5000 : 3000;
 
-  // Load simulator parameters from localStorage dynamically
-  const [simDevices, setSimDevices] = useState<Device[]>([]);
-  const [simActivePlan, setSimActivePlan] = useState<string | null>(null);
-  const [simGridSellback, setSimGridSellback] = useState(false);
-
-  useEffect(() => {
-    const loadParams = () => {
-      const savedDevices = localStorage.getItem("eco-sync-devices");
-      if (savedDevices) {
-        try {
-          setSimDevices(JSON.parse(savedDevices));
-        } catch (e) {}
-      }
-      setSimActivePlan(localStorage.getItem("eco-sync-active-plan"));
-      setSimGridSellback(localStorage.getItem("eco-sync-grid-sellback") === "true");
-    };
-
-    loadParams();
-    const interval = setInterval(loadParams, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Run background simulator loop on trading page when active
-  useEffect(() => {
-    const PLAN_CONFIG: Record<string, { reduction: string; multiplier: number }> = {
-      "Core Nexus": { reduction: "15%", multiplier: 0.85 },
-      "Titan Pulse": { reduction: "40%", multiplier: 0.60 },
-      "Zenith Zero": { reduction: "75%", multiplier: 0.25 },
-    };
-
-    const interval = setInterval(() => {
-      const SIMULATION_SPEED_MULTIPLIER = 300; // 300x faster than real-time
-      const intervalHours = (refreshRateMs * SIMULATION_SPEED_MULTIPLIER) / 3600000;
-      
-      // Calculate current load based on localStorage devices list
-      let load = 0.2; // Baseline
-      simDevices.forEach(d => {
-        if (d.isOn) load += d.power;
-      });
-      if (simActivePlan && PLAN_CONFIG[simActivePlan]) {
-        load *= PLAN_CONFIG[simActivePlan].multiplier;
-      }
-
-      setSolarState(prev => {
-        let dependency = load - prev.solarGeneration;
-        let newLevel = prev.batteryLevel;
-        
-        const chargeEfficiency = 0.95;
-        const dischargeEfficiency = 0.95;
-        
-        if (dependency < 0) {
-          // charge battery
-          const availableChargeKw = Math.min(-dependency, prev.batteryChargeRate);
-          const chargeKwh = availableChargeKw * intervalHours;
-          newLevel = Math.min(prev.batteryCapacity, prev.batteryLevel + (chargeKwh * chargeEfficiency));
-          dependency = 0;
-        } else if (dependency > 0 && prev.batteryLevel > 0) {
-          // discharge battery
-          const requiredFromBatteryKw = dependency / dischargeEfficiency;
-          const actualDrawKw = Math.min(requiredFromBatteryKw, prev.batteryChargeRate);
-          const actualDrawKwh = actualDrawKw * intervalHours;
-          const finalDrawKwh = Math.min(actualDrawKwh, prev.batteryLevel);
-          const energyProvidedKw = (finalDrawKwh / intervalHours) * dischargeEfficiency;
-          
-          newLevel = prev.batteryLevel - finalDrawKwh;
-          dependency = load - prev.solarGeneration - energyProvidedKw;
-        }
-
-        const updatedState = {
-          ...prev,
-          batteryLevel: newLevel,
-          gridDependency: Math.max(0, dependency)
-        };
-
-        // Save back to localStorage to keep other tabs/views in sync
-        localStorage.setItem("eco-sync-solar", JSON.stringify(updatedState));
-        return updatedState;
-      });
-
-    }, refreshRateMs);
-
-    return () => clearInterval(interval);
-  }, [simDevices, simActivePlan, refreshRateMs, simGridSellback]);
-
-  // Synchronize solar state with localStorage in real-time
-  useEffect(() => {
-    const syncSolar = () => {
-      const savedSolar = localStorage.getItem("eco-sync-solar");
-      if (savedSolar) {
-        try {
-          const parsed = JSON.parse(savedSolar);
-          setSolarState(prev => {
-            // Only update if there is a real difference to avoid infinite loops
-            if (
-              prev.solarGeneration === parsed.solarGeneration &&
-              prev.batteryCapacity === parsed.batteryCapacity &&
-              prev.batteryLevel === parsed.batteryLevel &&
-              prev.batteryChargeRate === parsed.batteryChargeRate &&
-              prev.gridDependency === parsed.gridDependency
-            ) {
-              return prev;
-            }
-            return { ...prev, ...parsed };
-          });
-        } catch (e) {
-          // ignore parsing errors
-        }
-      }
-    };
-
-    // 1. Listen to storage changes from other tabs/pages
-    window.addEventListener("storage", syncSolar);
-
-    // 2. Poll localStorage periodically to capture updates in same-tab navigation instantly
-    const interval = setInterval(syncSolar, 500);
-
-    return () => {
-      window.removeEventListener("storage", syncSolar);
-      clearInterval(interval);
-    };
-  }, []);
-
-
-
   const batteryPct = solarState.batteryCapacity > 0
     ? Math.round((solarState.batteryLevel / solarState.batteryCapacity) * 100)
     : 0;
   const isLowBattery = batteryPct <= lowBatteryThreshold;
 
-  // Update market price immediately when inputs change, and also dynamically on interval
+  // Update market price dynamically
   useEffect(() => {
-    const updatePrice = () => {
+    const interval = setInterval(() => {
       setMarketPrice(prev => {
-        const costMultiplier = user?.costFactor ?? 8.0;
-        // Base price scales dynamically with the user's grid cost multiplier
-        const basePrice = 0.15 * (costMultiplier / 8.0);
+        const basePrice = 0.15;
         const demandPremium = (solarState.gridDependency / 100) * 0.15;
         const fluctuation = (Math.random() - 0.5) * 0.02;
-        return Math.max(0.02, Math.min(2.00, basePrice + demandPremium + fluctuation));
+        return Math.max(0.10, Math.min(0.40, basePrice + demandPremium + fluctuation));
       });
-    };
-
-    updatePrice(); // Update immediately on load or dependency change
-
-    const interval = setInterval(updatePrice, refreshRateMs);
+    }, refreshRateMs);
     return () => clearInterval(interval);
-  }, [solarState.gridDependency, refreshRateMs, user?.costFactor]);
-
-  // Fetch transaction history from database
-  const fetchTransactionHistory = async () => {
-    if (!user?.email) return;
-    try {
-      const res = await fetch(`/api/trading/history?email=${encodeURIComponent(user.email)}`);
-      const data = await res.json();
-      if (res.ok && data.success) {
-        const formatted = data.transactions.map((tx: any) => {
-          const date = new Date(tx.createdAt);
-          const now = new Date();
-          const diffMs = now.getTime() - date.getTime();
-          const diffMins = Math.floor(diffMs / 60000);
-          let timeLabel = "";
-          if (diffMins < 1) {
-            timeLabel = "Just now";
-          } else if (diffMins < 60) {
-            timeLabel = `${diffMins} mins ago`;
-          } else {
-            const diffHours = Math.floor(diffMins / 60);
-            if (diffHours < 24) {
-              timeLabel = `${diffHours} hours ago`;
-            } else {
-              timeLabel = date.toLocaleDateString();
-            }
-          }
-
-          return {
-            id: tx.id,
-            hash: tx.hash,
-            amount: tx.amount,
-            price: tx.price,
-            total: tx.total,
-            time: timeLabel,
-            status: "completed" as const
-          };
-        });
-        setTransactions(formatted);
-      }
-    } catch (error) {
-      console.error("Failed to fetch transaction history:", error);
-    }
-  };
-
-  // Sync transaction history when user loads
-  useEffect(() => {
-    if (user) {
-      fetchTransactionHistory();
-    }
-  }, [user]);
+  }, [solarState.gridDependency, refreshRateMs]);
 
   // Settle sale transaction on-chain
   const handleSell = async () => {
@@ -458,7 +563,7 @@ export default function EnergyTrading() {
       // 1. Gasless user authorization signature
       const earned = amount * marketPrice;
       const message = `Authorize sale of ${amount.toFixed(1)} kWh for ${earned.toFixed(2)} ECO tokens`;
-      const signature = await signer.signMessage(message);
+      const signature = await signer.personalSign(message);
 
       setTxProgressMessage("Broadcasting trade to the Sepolia Grid...");
 
@@ -470,8 +575,7 @@ export default function EnergyTrading() {
           userAddress: account,
           amount: amount,
           price: marketPrice,
-          signature: signature,
-          email: user?.email
+          signature: signature
         })
       });
 
@@ -493,11 +597,21 @@ export default function EnergyTrading() {
       // 4. Update local states on success
       setWalletBalance(prev => prev + earned);
       
+      const newTx: Transaction = {
+        id: Date.now().toString(),
+        hash: `${txHash.slice(0, 6)}...${txHash.slice(-4)}`,
+        amount: amount,
+        price: marketPrice,
+        total: earned,
+        time: "Just now",
+        status: "completed"
+      };
+      
+      setTransactions(prev => [newTx, ...prev]);
+      
       const newState = { ...solarState, batteryLevel: solarState.batteryLevel - amount };
       setSolarState(newState);
       localStorage.setItem("eco-sync-solar", JSON.stringify(newState));
-      
-      await fetchTransactionHistory();
       
       setSellAmount("");
       setTxProgressMessage("");
@@ -526,7 +640,7 @@ export default function EnergyTrading() {
   }
 
   return (
-    <main className="min-h-screen bg-background text-foreground selection:bg-accent-secondary selection:text-black font-sans relative overflow-hidden font-heading">
+    <main className="min-h-screen bg-background text-foreground selection:bg-accent-secondary selection:text-black font-sans relative overflow-hidden">
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-accent-secondary/5 blur-[150px] -translate-y-1/2 translate-x-1/2 rounded-full" />
         <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-accent-primary/5 blur-[120px] translate-y-1/2 -translate-x-1/2 rounded-full" />
@@ -563,7 +677,7 @@ export default function EnergyTrading() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 font-sans">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-5 flex flex-col gap-8">
             <div className="bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-8 shadow-xl relative overflow-hidden group">
               <div className="absolute inset-0 bg-gradient-to-br from-accent-secondary/2 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -585,24 +699,17 @@ export default function EnergyTrading() {
                   {account ? `Wallet: ${account.slice(0, 6)}...${account.slice(-4)}` : "Available Balance"}
                 </p>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-5xl font-black tabular-nums tracking-tighter font-mono">{walletBalance.toFixed(4)}</span>
+                  <span className="text-5xl font-black tabular-nums tracking-tighter">{walletBalance.toFixed(4)}</span>
                   <span className="text-accent-secondary font-black tracking-widest">ECO</span>
                 </div>
                 
                 {isWrongNetwork && (
-                  <div className="flex flex-col gap-2 mt-4">
-                    <button 
-                      onClick={switchNetwork}
-                      className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-xl text-red-500 font-mono text-[10px] uppercase tracking-widest transition-colors flex items-center gap-2 cursor-pointer w-fit"
-                    >
-                      <AlertTriangle className="w-4 h-4" /> Switch to Sepolia
-                    </button>
-                    {detectedChainId && (
-                      <p className="text-[10px] font-mono text-zinc-500">
-                        Detected Chain ID: <span className="text-red-400 font-bold">{detectedChainId}</span> (Expected: 11155111)
-                      </p>
-                    )}
-                  </div>
+                  <button 
+                    onClick={switchNetwork}
+                    className="mt-4 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-xl text-red-500 font-mono text-[10px] uppercase tracking-widest transition-colors flex items-center gap-2 cursor-pointer"
+                  >
+                    <AlertTriangle className="w-4 h-4" /> Switch to Sepolia
+                  </button>
                 )}
 
                 {!account && (
@@ -619,8 +726,8 @@ export default function EnergyTrading() {
               <div className="pt-8 border-t border-white/10 flex items-center justify-between relative z-10">
                 <div>
                   <p className="text-white/40 font-mono text-[10px] uppercase tracking-widest mb-1 font-bold">Market Rate</p>
-                  <p className="text-2xl font-bold tabular-nums flex items-center gap-2 font-mono">
-                    {marketPrice.toFixed(3)} <span className="text-sm text-white/40 font-sans">ECO/kWh</span>
+                  <p className="text-2xl font-bold tabular-nums flex items-center gap-2">
+                    {marketPrice.toFixed(3)} <span className="text-sm text-white/40">ECO/kWh</span>
                   </p>
                 </div>
                 <div className="w-12 h-12 rounded-2xl bg-accent-secondary/10 flex items-center justify-center border border-accent-secondary/20">
@@ -642,13 +749,13 @@ export default function EnergyTrading() {
                <div className="grid grid-cols-2 gap-4">
                  <div className="bg-black/50 rounded-xl p-6 border border-white/5">
                    <p className="text-white/40 font-mono text-[9px] uppercase tracking-widest mb-2 font-bold">Solar Yield</p>
-                   <p className="text-3xl font-black text-white tabular-nums font-mono">{solarState.solarGeneration.toFixed(1)}<span className="text-sm text-white/40 ml-1 font-sans text-white/20 font-bold">kW</span></p>
+                   <p className="text-3xl font-black text-white tabular-nums">{solarState.solarGeneration.toFixed(1)}<span className="text-sm text-white/40 ml-1 font-sans text-white/20 font-bold">kW</span></p>
                  </div>
                  <div className={`bg-black/50 rounded-xl p-6 border transition-all ${isLowBattery ? "border-red-900/30" : "border-white/5"}`}>
                    <p className="text-white/40 font-mono text-[9px] uppercase tracking-widest mb-2 font-bold flex items-center gap-1.5">
                      Stored Energy {isLowBattery && <span className="text-[7px] text-red-500 bg-red-950/20 px-1.5 py-0.5 rounded border border-red-900/30 font-black animate-pulse">LOW</span>}
                    </p>
-                   <p className={`text-3xl font-black tabular-nums transition-colors font-mono ${isLowBattery ? "text-red-500" : "text-white"}`}>
+                   <p className={`text-3xl font-black tabular-nums transition-colors ${isLowBattery ? "text-red-500" : "text-white"}`}>
                      {solarState.batteryLevel.toFixed(1)}
                      <span className="text-sm text-white/40 ml-1 font-sans text-white/20 font-bold">kWh ({batteryPct}%)</span>
                    </p>
@@ -688,7 +795,7 @@ export default function EnergyTrading() {
                       min="0"
                       step="0.1"
                       placeholder="0.0"
-                      className="w-full bg-black/50 border border-white/10 rounded-xl px-8 py-8 text-5xl font-black text-white focus:outline-none focus:border-accent-secondary/30 focus:bg-white/5 transition-all tabular-nums font-mono"
+                      className="w-full bg-black/50 border border-white/10 rounded-xl px-8 py-8 text-5xl font-black text-white focus:outline-none focus:border-accent-secondary/30 focus:bg-white/5 transition-all tabular-nums"
                     />
                     <div className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center gap-2">
                       <button 
@@ -705,7 +812,7 @@ export default function EnergyTrading() {
                   <span className="text-white/60 font-mono text-[11px] uppercase tracking-widest font-bold">Estimated Return</span>
                   <div className="flex items-center gap-2">
                     <Coins className="w-5 h-5 text-accent-secondary" />
-                    <span className="text-2xl font-bold tabular-nums font-mono">
+                    <span className="text-2xl font-bold tabular-nums">
                       {sellAmount ? (Number(sellAmount) * marketPrice).toFixed(2) : "0.00"} ECO
                     </span>
                   </div>
@@ -790,7 +897,7 @@ export default function EnergyTrading() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-black text-lg text-accent-secondary font-mono">+{tx.total.toFixed(2)} ECO</p>
+                        <p className="font-black text-lg text-accent-secondary">+{tx.total.toFixed(2)} ECO</p>
                         <p className="font-mono text-[9px] text-white/40 uppercase tracking-widest">@ {tx.price.toFixed(3)}</p>
                       </div>
                     </motion.div>
@@ -819,3 +926,10 @@ export default function EnergyTrading() {
     </main>
   );
 }
+```
+
+**Step 2: Commit**
+```bash
+git add src/app/trading/page.tsx
+git commit -m "feat: complete frontend web3 MetaMask integration for Sepolia"
+```

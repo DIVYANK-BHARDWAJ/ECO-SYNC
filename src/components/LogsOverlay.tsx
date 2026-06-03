@@ -13,7 +13,7 @@ import {
 export type DeviceLog = { 
   id: number; 
   label: string; 
-  action: "ON" | "OFF" | "BOOT" | "REGISTER" | "REMOVED" | "EXEC"; 
+  action: "ON" | "OFF" | "BOOT" | "REGISTER" | "REMOVED" | "EXEC" | "SELL"; 
   time: string;
   details?: string;
   iconName?: string;
@@ -97,12 +97,11 @@ export default function LogsOverlay({ isOpen, onClose, deviceHistory, onClearLog
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[110] overflow-hidden flex items-center justify-center p-4 md:p-8 backdrop-blur-md"
-      style={{ background: "rgba(0,0,0,0.85)" }}
+      className="fixed inset-0 z-[110] overflow-hidden flex items-center justify-center p-4 md:p-8 backdrop-blur-md bg-black/60 dark:bg-black/85"
     >
       {/* Background Grid Pattern */}
       <div className="absolute inset-0 opacity-10 pointer-events-none" 
-           style={{ backgroundImage: "radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0)", backgroundSize: "24px 24px" }} />
+           style={{ backgroundImage: "radial-gradient(circle at 2px 2px, var(--border-medium) 1px, transparent 0)", backgroundSize: "24px 24px" }} />
       
       {/* Cyber Glow Effects */}
       <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-accent-secondary/5 blur-[120px] rounded-full pointer-events-none" />
@@ -112,10 +111,9 @@ export default function LogsOverlay({ isOpen, onClose, deviceHistory, onClearLog
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="w-full max-w-3xl h-[85vh] rounded-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col relative z-10"
+        className="w-full max-w-3xl h-[85vh] rounded-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col bg-[#09090b] relative z-10"
         style={{
-          background: THEME.bg,
-          boxShadow: `0 0 0 1px ${THEME.border}, 0 20px 50px rgba(0,0,0,0.8)`,
+          boxShadow: `0 20px 50px rgba(0,0,0,0.8)`,
         }}
       >
         {/* Top Header Rail */}
@@ -193,12 +191,12 @@ export default function LogsOverlay({ isOpen, onClose, deviceHistory, onClearLog
                     ? "rgba(59, 130, 246, 0.03)" 
                     : log.action === "REMOVED" || log.action === "OFF"
                     ? "rgba(239, 68, 68, 0.02)"
-                    : "rgba(255, 255, 255, 0.02)",
+                    : "var(--border-subtle)",
                   borderColor: log.action === "ON" || log.action === "REGISTER"
                     ? "rgba(59, 130, 246, 0.1)"
                     : log.action === "REMOVED" || log.action === "OFF"
                     ? "rgba(239, 68, 68, 0.08)"
-                    : "rgba(255, 255, 255, 0.04)"
+                    : "var(--border-medium)"
                 }}
               >
                 {/* Timeline Connector Line */}

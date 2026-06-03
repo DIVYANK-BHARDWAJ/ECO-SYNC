@@ -53,8 +53,7 @@ export default function SavingsPlans({ isOpen, onClose, activePlanId, onSelectPl
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[120] overflow-y-auto flex items-start justify-center p-4 md:p-8 backdrop-blur-3xl"
-      style={{ background: "rgba(9,9,11,0.95)" }}
+      className="fixed inset-0 z-[120] overflow-y-auto flex items-start justify-center p-4 md:p-8 backdrop-blur-3xl bg-black/60 dark:bg-black/85"
     >
       {/* Amber glow in background */}
       <div
@@ -65,10 +64,8 @@ export default function SavingsPlans({ isOpen, onClose, activePlanId, onSelectPl
       <motion.div
         initial={{ scale: 0.95, y: 30 }}
         animate={{ scale: 1, y: 0 }}
-        className="w-full max-w-6xl my-auto rounded-2xl shadow-2xl overflow-hidden flex flex-col relative z-10 mx-auto"
+        className="w-full max-w-6xl my-auto rounded-2xl shadow-2xl overflow-hidden flex flex-col relative z-10 mx-auto bg-[#09090b] border border-white/10"
         style={{
-          background: "#09090b",
-          border: `1px solid ${A.border}`,
           boxShadow: `0 40px 100px -20px ${A.glow}`,
         }}
       >
@@ -77,8 +74,7 @@ export default function SavingsPlans({ isOpen, onClose, activePlanId, onSelectPl
 
         {/* Header */}
         <div
-          className="p-8 sm:p-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-6 sm:gap-8 border-b"
-          style={{ borderColor: A.border, background: "rgba(255,255,255,0.01)" }}
+          className="p-8 sm:p-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-6 sm:gap-8 border-b border-white/10 bg-white/1"
         >
           <div>
             <div className="flex items-center gap-3 sm:gap-4 mb-4">
@@ -119,18 +115,21 @@ export default function SavingsPlans({ isOpen, onClose, activePlanId, onSelectPl
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
               viewport={{ once: true }}
-              className="p-6 sm:p-10 rounded-2xl flex flex-col relative transition-all duration-500 hover:scale-[1.01]"
+              className={`p-6 sm:p-10 rounded-2xl flex flex-col relative transition-all duration-500 hover:scale-[1.01] border ${
+                activePlanId === plan.name 
+                  ? "border-accent-secondary" 
+                  : plan.popular
+                    ? "border-accent-secondary/20"
+                    : "border-white/5"
+              }`}
               style={{
-                background: plan.popular ? A.popularBg : "rgba(255,255,255,0.02)",
-                border: activePlanId === plan.name 
-                  ? `2px solid ${A.accent}` 
-                  : `1px solid ${plan.popular ? A.border : "rgba(255,255,255,0.04)"}`,
+                background: plan.popular ? A.popularBg : "var(--border-subtle)",
               }}
             >
               {(plan.popular || activePlanId === plan.name) && (
                 <div
                   className="absolute top-6 right-6 px-3 py-1 rounded-full text-[8px] font-black flex gap-2 items-center"
-                  style={{ background: activePlanId === plan.name ? "#fff" : A.accent, color: "#000" }}
+                  style={{ background: activePlanId === plan.name ? "var(--accent-primary)" : A.accent, color: activePlanId === plan.name ? "var(--background)" : "#fff" }}
                 >
                   {activePlanId === plan.name && <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />}
                   {activePlanId === plan.name ? "CURRENTLY ACTIVE" : "RECOMMENDED"}
@@ -139,7 +138,7 @@ export default function SavingsPlans({ isOpen, onClose, activePlanId, onSelectPl
 
               <div
                 className="mb-4 sm:mb-6 font-black text-4xl sm:text-5xl tracking-tighter"
-                style={{ color: plan.popular ? A.accent : "rgba(255,255,255,0.35)" }}
+                style={{ color: plan.popular ? A.accent : "var(--text-muted)" }}
               >
                 {plan.savings}
               </div>
@@ -167,10 +166,10 @@ export default function SavingsPlans({ isOpen, onClose, activePlanId, onSelectPl
                 className="mt-6 sm:mt-8 w-full py-4 rounded-xl font-black text-xs uppercase tracking-widest transition-all hover:scale-[1.01] flex items-center justify-center gap-2"
                 style={
                   activePlanId === plan.name
-                    ? { background: "#fff", color: "#000" }
+                    ? { background: "var(--accent-primary)", color: "var(--background)" }
                     : plan.popular
                     ? { background: A.accent, color: "#fff" }
-                    : { background: "rgba(255,255,255,0.05)", color: "white", border: `1px solid ${A.border}` }
+                    : { background: "var(--border-subtle)", color: "var(--accent-primary)", border: "1px solid var(--border-medium)" }
                 }
               >
                 {activePlanId === plan.name ? "Deactivate" : "Activate Plan"}
@@ -181,8 +180,7 @@ export default function SavingsPlans({ isOpen, onClose, activePlanId, onSelectPl
 
         {/* Footer */}
         <div
-          className="p-8 flex flex-col md:flex-row gap-8 items-center justify-center text-center border-t border-white/5"
-          style={{ background: "rgba(255,255,255,0.01)" }}
+          className="p-8 flex flex-col md:flex-row gap-8 items-center justify-center text-center border-t border-white/5 bg-white/1"
         >
           <PlanAdvice icon={<Zap className="w-4 h-4 text-white/40" />} text="Plans update every 12 months based on grid tariff changes." accent="#fff" />
           <PlanAdvice icon={<TrendingDown className="w-4 h-4 text-white/40" />} text="Total potential savings calculated from your live load signature." accent="#fff" />

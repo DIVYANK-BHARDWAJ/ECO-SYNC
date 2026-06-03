@@ -14,10 +14,10 @@ interface CalculationOverlayProps {
 const themes: Record<NonNullable<MetricType>, {
   accent: string; glow: string; bg: string; border: string; strip: string;
 }> = {
-  COST:          { accent: "#3b82f6", glow: "rgba(59,130,246,0.05)",  bg: "rgba(59,130,246,0.02)",  border: "rgba(255,255,255,0.08)", strip: "#2563eb" },
-  CARBON:        { accent: "#FFFFFF", glow: "rgba(255,255,255,0.03)", bg: "rgba(255,255,255,0.02)",  border: "rgba(255,255,255,0.08)", strip: "#e4e4e7" },
-  EFFICIENCY:    { accent: "#10b981", glow: "rgba(16,185,129,0.05)", bg: "rgba(16,185,129,0.02)",  border: "rgba(255,255,255,0.08)", strip: "#059669" },
-  MAX_EFFICIENCY:{ accent: "#14b8a6", glow: "rgba(20,184,166,0.05)", bg: "rgba(20,184,166,0.02)",  border: "rgba(255,255,255,0.08)", strip: "#0d9488" },
+  COST:          { accent: "var(--accent-secondary)", glow: "rgba(59,130,246,0.05)",  bg: "rgba(59,130,246,0.02)",  border: "rgba(255,255,255,0.08)", strip: "var(--accent-secondary)" },
+  CARBON:        { accent: "var(--accent-primary)",   glow: "rgba(255,255,255,0.03)", bg: "rgba(255,255,255,0.02)",  border: "rgba(255,255,255,0.08)", strip: "var(--accent-primary)" },
+  EFFICIENCY:    { accent: "var(--accent-budget)",    glow: "rgba(16,185,129,0.05)", bg: "rgba(16,185,129,0.02)",  border: "rgba(255,255,255,0.08)", strip: "var(--accent-budget)" },
+  MAX_EFFICIENCY:{ accent: "var(--accent-tertiary)",  glow: "rgba(20,184,166,0.05)", bg: "rgba(20,184,166,0.02)",  border: "rgba(255,255,255,0.08)", strip: "var(--accent-tertiary)" },
 };
 
 const content: Record<NonNullable<MetricType>, {
@@ -76,8 +76,7 @@ export default function CalculationOverlay({ type, onClose }: CalculationOverlay
     >
       {/* Tinted backdrop unique to each metric */}
       <div
-        className="absolute inset-0 backdrop-blur-3xl"
-        style={{ backgroundColor: "rgba(2,4,15,0.92)" }}
+        className="absolute inset-0 backdrop-blur-3xl bg-black/60 dark:bg-black/80"
         onClick={onClose}
       />
       {/* Subtle colored glow blob behind the card */}
@@ -92,10 +91,8 @@ export default function CalculationOverlay({ type, onClose }: CalculationOverlay
         initial={{ scale: 0.95, y: 30, opacity: 0 }}
         animate={{ scale: 1, y: 0, opacity: 1 }}
         exit={{ scale: 0.95, y: 30, opacity: 0 }}
-        className="relative z-10 w-full max-w-4xl my-auto overflow-hidden rounded-2xl shadow-2xl"
+        className="relative z-10 w-full max-w-4xl my-auto overflow-hidden rounded-2xl shadow-2xl bg-[#09090b] border border-white/10"
         style={{
-          background: "#09090b",
-          border: `1px solid ${t.border}`,
           boxShadow: `0 40px 80px -20px ${t.glow}`,
         }}
       >
@@ -105,8 +102,8 @@ export default function CalculationOverlay({ type, onClose }: CalculationOverlay
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 p-3 rounded-full transition-all"
-          style={{ background: `${t.bg}`, border: `1px solid ${t.border}`, color: t.accent }}
+          className="absolute top-6 right-6 p-3 rounded-full transition-all border border-white/10 bg-white/5 hover:bg-white/10"
+          style={{ color: t.accent }}
         >
           <X className="w-5 h-5" />
         </button>
@@ -115,8 +112,8 @@ export default function CalculationOverlay({ type, onClose }: CalculationOverlay
           {/* Header */}
           <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-center md:items-start mb-10 md:mb-12 text-center md:text-left">
             <div
-              className="p-5 rounded-xl flex-shrink-0"
-              style={{ background: t.bg, border: `1px solid ${t.border}`, color: t.accent }}
+              className="p-5 rounded-xl flex-shrink-0 border border-white/10 bg-white/5"
+              style={{ color: t.accent }}
             >
               {data.icon}
             </div>
@@ -139,8 +136,8 @@ export default function CalculationOverlay({ type, onClose }: CalculationOverlay
                   <Calculator className="w-4 h-4" /> Calculation Method
                 </p>
                 <p
-                  className="text-xl md:text-2xl font-black p-6 rounded-xl leading-tight text-center"
-                  style={{ color: t.accent, background: "rgba(255,255,255,0.02)", border: `1px solid ${t.border}` }}
+                  className="text-xl md:text-2xl font-black p-6 rounded-xl leading-tight text-center bg-white/5 border border-white/10"
+                  style={{ color: t.accent }}
                 >
                   {data.formula}
                 </p>
@@ -156,8 +153,7 @@ export default function CalculationOverlay({ type, onClose }: CalculationOverlay
             <div className="space-y-8">
               {/* Example box */}
               <div
-                className="p-6 rounded-xl"
-                style={{ background: t.bg, border: `1px solid ${t.border}` }}
+                className="p-6 rounded-xl bg-white/5 border border-white/10"
               >
                 <p
                   className="font-black text-[10px] uppercase tracking-widest mb-3 flex items-center gap-2"
@@ -179,8 +175,7 @@ export default function CalculationOverlay({ type, onClose }: CalculationOverlay
                   {data.tips.map((tip, i) => (
                     <div
                       key={i}
-                      className="flex items-center gap-3 font-bold text-white/80 p-3.5 rounded-xl"
-                      style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}
+                      className="flex items-center gap-3 font-bold text-white/80 p-3.5 rounded-xl bg-white/5 border border-white/5"
                     >
                       <div
                         className="w-1.5 h-1.5 rounded-full flex-shrink-0"
@@ -203,7 +198,7 @@ export default function CalculationOverlay({ type, onClose }: CalculationOverlay
               className="px-10 py-4 rounded-xl font-black uppercase tracking-widest text-xs transition-all"
               style={{
                 background: t.accent,
-                color: "#000",
+                color: type === "CARBON" ? "var(--background)" : "#ffffff",
               }}
             >
               Return to Dashboard

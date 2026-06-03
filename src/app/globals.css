@@ -5,21 +5,240 @@
 @import "tailwindcss/utilities";
 
 :root {
-  --foreground-rgb: 255, 255, 255;
-  --background-start-rgb: 10, 10, 10;
-  --background-end-rgb: 0, 0, 0;
+  /* Light mode (default) */
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card-bg: rgba(255, 255, 255, 0.85);
+  --card-border: rgba(15, 23, 42, 0.08);
+  --text-muted: #64748b;
+  --panel-bg: rgba(241, 245, 249, 0.9);
+  --accent-primary: #0f172a;
+  --accent-primary-rgb: 15 23 42;
+
+  --accent-secondary: #1d4ed8;
+  --accent-secondary-rgb: 29 78 216;
+
+  --accent-tertiary: #0f766e;
+  --accent-tertiary-rgb: 15 118 110;
+
+  --accent-solar: #b45309;
+  --accent-solar-rgb: 180 83 9;
+
+  --accent-budget: #047857;
+  --accent-budget-rgb: 4 120 87;
+
+  --accent-system: #4b5563;
+  --accent-system-rgb: 75 85 99;
+
+  --accent-routine: #4338ca;
+  --accent-routine-rgb: 67 56 202;
+
+  /* Surface tokens used throughout the app */
+  --surface-950: #f1f5f9;
+  --surface-900: #e2e8f0;
+  --surface-800: #cbd5e1;
+  --surface-700: #94a3b8;
+  --surface-600: #64748b;
+  --surface-500: #475569;
+  --surface-400: #334155;
+  --surface-300: #1e293b;
+  --surface-200: #0f172a;
+  --surface-100: #020617;
+
+  /* Text tokens */
+  --text-primary: #0f172a;
+  --text-secondary: rgba(15, 23, 42, 0.6);
+  --text-muted-2: rgba(15, 23, 42, 0.4);
+
+  /* Border tokens */
+  --border-subtle: rgba(15, 23, 42, 0.06);
+  --border-medium: rgba(15, 23, 42, 0.12);
+  --border-strong: rgba(15, 23, 42, 0.2);
+
   --font-outfit: 'Outfit', sans-serif;
   --font-space-mono: 'Space Mono', monospace;
 }
 
+html.dark {
+  --background: #09090b;
+  --foreground: #f4f4f5;
+  --card-bg: rgba(24, 24, 27, 0.6);
+  --card-border: rgba(255, 255, 255, 0.05);
+  --text-muted: #a1a1aa;
+  --panel-bg: rgba(18, 18, 20, 0.8);
+  --accent-primary: #ffffff;
+  --accent-primary-rgb: 255 255 255;
+
+  --accent-secondary: #3b82f6;
+  --accent-secondary-rgb: 59 130 246;
+
+  --accent-tertiary: #14b8a6;
+  --accent-tertiary-rgb: 20 184 166;
+
+  --accent-solar: #f59e0b;
+  --accent-solar-rgb: 245 158 11;
+
+  --accent-budget: #10b981;
+  --accent-budget-rgb: 16 185 129;
+
+  --accent-system: #71717a;
+  --accent-system-rgb: 113 113 122;
+
+  --accent-routine: #6366f1;
+  --accent-routine-rgb: 99 102 241;
+
+  --surface-950: #09090b;
+  --surface-900: #18181b;
+  --surface-800: #27272a;
+  --surface-700: #3f3f46;
+  --surface-600: #52525b;
+  --surface-500: #71717a;
+  --surface-400: #a1a1aa;
+  --surface-300: #d4d4d8;
+  --surface-200: #e4e4e7;
+  --surface-100: #f4f4f5;
+
+  --text-primary: #f4f4f5;
+  --text-secondary: rgba(244, 244, 245, 0.6);
+  --text-muted-2: rgba(244, 244, 245, 0.4);
+
+  --border-subtle: rgba(255, 255, 255, 0.04);
+  --border-medium: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.15);
+}
+
+/* ===== LIGHT MODE GLOBAL OVERRIDES ===== */
+/* These override hardcoded dark Tailwind utility colors when html.light is active */
+html:not(.dark) {
+  /* Main page backgrounds */
+  --tw-bg-slate-950: #f8fafc;
+  --tw-bg-zinc-950: #f1f5f9;
+  --tw-bg-zinc-900: #e2e8f0;
+  --tw-bg-zinc-800: #cbd5e1;
+  --tw-bg-black: #f1f5f9;
+
+  color-scheme: light;
+}
+
+html:not(.dark) body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* Override hardcoded section background colors for light mode */
+html:not(.dark) [class*="bg-slate-950"],
+html:not(.dark) [class*="bg-[#09090b]"],
+html:not(.dark) [class*="bg-[#121214]"] {
+  background-color: #f8fafc !important;
+}
+
+html:not(.dark) [class*="bg-zinc-950"] {
+  background-color: #f1f5f9 !important;
+}
+
+html:not(.dark) [class*="bg-slate-900"],
+html:not(.dark) [class*="bg-zinc-900"] {
+  background-color: #e2e8f0 !important;
+}
+
+html:not(.dark) [class*="bg-slate-800"],
+html:not(.dark) [class*="bg-zinc-800"] {
+  background-color: #cbd5e1 !important;
+}
+
+html:not(.dark) [class*="bg-black\/"] {
+  background-color: rgba(241, 245, 249, 0.8) !important;
+}
+
+html:not(.dark) [class*="bg-white/0"],
+html:not(.dark) [class*="bg-white/1"],
+html:not(.dark) [class*="bg-white/2"],
+html:not(.dark) [class*="bg-white/3"],
+html:not(.dark) [class*="bg-white/4"],
+html:not(.dark) [class*="bg-white/5"],
+html:not(.dark) [class*="bg-white/6"],
+html:not(.dark) [class*="bg-white/7"],
+html:not(.dark) [class*="bg-white/8"],
+html:not(.dark) [class*="bg-white/9"],
+html:not(.dark) [class*="bg-white/10"],
+html:not(.dark) [class*="bg-white/15"],
+html:not(.dark) [class*="bg-white/20"],
+html:not(.dark) [class*="bg-white/["] {
+  background-color: rgba(15, 23, 42, 0.04) !important;
+}
+
+/* Specific styling for alerts/banners in light mode */
+html:not(.dark) [class*="bg-red-950"] {
+  background-color: #fef2f2 !important;
+}
+html:not(.dark) [class*="border-red-900"] {
+  border-color: #fecaca !important;
+}
+html:not(.dark) [class*="bg-emerald-950"] {
+  background-color: #ecfdf5 !important;
+}
+html:not(.dark) [class*="border-emerald-900"] {
+  border-color: #a7f3d0 !important;
+}
+
+/* Text overrides in light mode */
+html:not(.dark) .text-white {
+  color: #0f172a !important;
+}
+
+html:not(.dark) [class*="text-white\/"] {
+  color: rgba(15, 23, 42, var(--tw-text-opacity, 0.6)) !important;
+}
+
+html:not(.dark) [class*="text-zinc-"],
+html:not(.dark) [class*="text-slate-"] {
+  color: #334155 !important;
+}
+
+html:not(.dark) .text-red-400,
+html:not(.dark) .text-red-500 {
+  color: #dc2626 !important;
+}
+
+html:not(.dark) .text-emerald-400,
+html:not(.dark) .text-emerald-500 {
+  color: #059669 !important;
+}
+
+/* Border overrides in light mode */
+html:not(.dark) [class*="border-white\/"] {
+  border-color: rgba(15, 23, 42, 0.1) !important;
+}
+
+html:not(.dark) [class*="border-zinc-"],
+html:not(.dark) [class*="border-slate-"] {
+  border-color: #cbd5e1 !important;
+}
+
+/* Settings drawer specific */
+html:not(.dark) .bg-zinc-950.border-l {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Scrollbar specific overrides in light mode */
+html:not(.dark) .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.15) !important;
+}
+html:not(.dark) .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 23, 42, 0.3) !important;
+}
+
+
 body {
   font-family: var(--font-outfit);
-  color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-start-rgb));
+  color: var(--foreground);
+  background: var(--background);
   margin: 0;
   padding: 0;
   overflow-x: hidden;
   width: 100%;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 html {
@@ -34,18 +253,22 @@ html {
 }
 
 .glass-panel {
-  background: rgba(24, 24, 27, 0.6);
+  background: var(--card-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--card-border);
 }
 
 .glass-panel-premium {
-  background: rgba(18, 18, 20, 0.8);
+  background: var(--panel-bg);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+}
+
+html.dark .glass-panel-premium {
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
 }
 
 .glow-primary {

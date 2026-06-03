@@ -32,7 +32,7 @@ export default function AetherGridIntro({ onComplete }: AetherGridIntroProps) {
               repeat: Infinity,
               delay: Math.random() * 5
             }}
-            className="absolute w-1 h-1 bg-accent-primary rounded-full"
+             className="absolute w-1 h-1 bg-slate-300 rounded-full"
           />
         ))}
       </div>
@@ -48,7 +48,7 @@ export default function AetherGridIntro({ onComplete }: AetherGridIntroProps) {
             <motion.div 
               animate={{ rotate: 360 }}
               transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              className="absolute inset-0 border-2 border-accent-primary rounded-2xl opacity-20"
+              className="absolute inset-0 border-2 border-slate-300 rounded-2xl opacity-20"
             />
             <motion.div 
               animate={{ rotate: -360 }}
@@ -60,10 +60,10 @@ export default function AetherGridIntro({ onComplete }: AetherGridIntroProps) {
             </div>
           </div>
           
-          <h1 className="text-6xl sm:text-8xl md:text-9xl font-black tracking-tighter text-white mb-6 uppercase px-4 leading-none">
-            ECO<span className="text-accent-secondary">-</span>SYNC <span className="text-accent-primary">NEXUS</span>
+          <h1 className="text-6xl sm:text-8xl md:text-9xl font-black tracking-tighter text-slate-100 mb-6 uppercase px-4 leading-none">
+            ECO<span className="text-accent-secondary">-</span>SYNC <span className="text-slate-200">NEXUS</span>
           </h1>
-          <p className="text-white/30 font-mono tracking-[0.5em] uppercase text-[10px] sm:text-xs px-6">
+          <p className="text-slate-400/50 font-mono tracking-[0.5em] uppercase text-[10px] sm:text-xs px-6">
             THE ARCHITECTURE OF ENERGY SOVEREIGNTY
           </p>
         </motion.div>

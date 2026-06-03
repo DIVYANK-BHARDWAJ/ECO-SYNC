@@ -17,9 +17,14 @@ import SavingsPlans from "@/components/SavingsPlans";
 import ScrollyHotspots from "@/components/ScrollyHotspots";
 import AddDeviceModal from "@/components/AddDeviceModal";
 import { Device, SolarBatteryState } from "@/types/device";
-import { X, Terminal } from "lucide-react";
+import { X, Terminal, Loader2 } from "lucide-react";
 import SolarPanelManager from "@/components/SolarPanelManager";
 import BudgetManager from "@/components/BudgetManager";
+import UserProfileHeader from "@/components/UserProfileHeader";
+import AuthModal from "@/components/AuthModal";
+import SettingsDrawer from "@/components/SettingsDrawer";
+import { useAuth } from "@/context/AuthContext";
+import AuthPage from "@/components/AuthPage";
 
 const PLAN_CONFIG: Record<string, { reduction: string; multiplier: number }> = {
   "Core Nexus": { reduction: "15%", multiplier: 0.85 },
@@ -39,7 +44,10 @@ const INITIAL_DEVICES: Device[] = [
 ];
 
 export default function Home() {
-  const [showIntro, setShowIntro] = useState(false);
+  const { user, loading } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showSettingsDrawer, setShowSettingsDrawer] = useState(false);
+  const [showIntro, setShowIntro] = useState(true);
   const [activeMetric, setActiveMetric] = useState<MetricType>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [notifications, setNotifications] = useState<{ id: string; message: string; type: "info" | "success" | "warning" }[]>([]);
@@ -51,6 +59,23 @@ export default function Home() {
   const [showLogs, setShowLogs] = useState(false);
   const [showPlans, setShowPlans] = useState(false);
   const [activePlanId, setActivePlanId] = useState<string | null>(null);
+
+  // Load active plan from localStorage on mount
+  useEffect(() => {
+    const savedPlan = localStorage.getItem("eco-sync-active-plan");
+    if (savedPlan) {
+      setActivePlanId(savedPlan);
+    }
+  }, []);
+
+  // Save active plan to localStorage on change
+  useEffect(() => {
+    if (activePlanId) {
+      localStorage.setItem("eco-sync-active-plan", activePlanId);
+    } else {
+      localStorage.removeItem("eco-sync-active-plan");
+    }
+  }, [activePlanId]);
   const [activeRoutine, setActiveRoutine] = useState<string | null>(null);
   
   const [solarState, setSolarState] = useState<SolarBatteryState>({
@@ -60,6 +85,45 @@ export default function Home() {
     batteryChargeRate: 5.0,
     gridDependency: 0,
   });
+
+  // Sync profile settings with simulator values
+  useEffect(() => {
+    if (user) {
+      setSolarState(prev => {
+        const updated = {
+          ...prev,
+          batteryCapacity: user.batteryCap,
+          batteryLevel: Math.min(prev.batteryLevel, user.batteryCap),
+        };
+        localStorage.setItem("eco-sync-solar", JSON.stringify(updated));
+        return updated;
+      });
+    }
+  }, [user]);
+
+  // Local Storage Backed Simulator Settings
+  const [lowBatteryThreshold, setLowBatteryThreshold] = useState(15);
+  const [refreshRate, setRefreshRate] = useState("3s");
+  const [gridSellback, setGridSellback] = useState(false);
+
+  useEffect(() => {
+    function loadLocalSettings() {
+      const savedThreshold = localStorage.getItem("eco-sync-low-battery-threshold");
+      if (savedThreshold) setLowBatteryThreshold(parseInt(savedThreshold, 10));
+
+      const savedRate = localStorage.getItem("eco-sync-refresh-rate");
+      if (savedRate) setRefreshRate(savedRate);
+
+      const savedSellback = localStorage.getItem("eco-sync-grid-sellback");
+      if (savedSellback) setGridSellback(savedSellback === "true");
+    }
+
+    loadLocalSettings();
+    window.addEventListener("eco-sync-settings-updated", loadLocalSettings);
+    return () => window.removeEventListener("eco-sync-settings-updated", loadLocalSettings);
+  }, []);
+
+  const refreshRateMs = refreshRate === "1s" ? 1000 : refreshRate === "5s" ? 5000 : 3000;
 
   const [solarHistory, setSolarHistory] = useState<number[]>(new Array(30).fill(0));
   const solarGenRef = useRef(solarState.solarGeneration);
@@ -277,9 +341,29 @@ export default function Home() {
     setLoadHistory((prev: number[]) => [...prev.slice(1), load]);
   }, [devices, activePlanId]);
 
+  // Trigger notification when battery level falls below threshold
+  useEffect(() => {
+    if (solarState.batteryCapacity > 0) {
+      const pct = Math.round((solarState.batteryLevel / solarState.batteryCapacity) * 100);
+      if (pct <= lowBatteryThreshold && solarState.batteryLevel > 0) {
+        setNotifications(prevN => {
+          const hasAlert = prevN.some(n => n.message.includes("CRITICAL"));
+          if (hasAlert) return prevN;
+          const nId = "battery-critical-" + Date.now();
+          setTimeout(() => {
+            setNotifications(current => current.filter(n => n.id !== nId));
+          }, 5000);
+          return [{ id: nId, message: `CRITICAL ALERT: BATTERY AT ${pct}%`, type: "warning" }, ...prevN];
+        });
+      }
+    }
+  }, [solarState.batteryLevel, solarState.batteryCapacity, lowBatteryThreshold]);
+
   useEffect(() => {
     const interval = setInterval(() => {
-      const addedKwh = totalLoad / 3600;
+      const SIMULATION_SPEED_MULTIPLIER = 300; // 300x faster than real-time
+      const intervalHours = (refreshRateMs * SIMULATION_SPEED_MULTIPLIER) / 3600000;
+      const addedKwh = totalLoad * intervalHours;
       setAccumulatedKwh((prev: number) => prev + addedKwh);
       
       setSolarState(prev => {
@@ -292,17 +376,40 @@ export default function Home() {
         if (dependency < 0) {
            // charge battery
            const availableChargeKw = Math.min(-dependency, prev.batteryChargeRate);
-           const chargeKwh = availableChargeKw / 3600;
-           newLevel = Math.min(prev.batteryCapacity, prev.batteryLevel + (chargeKwh * chargeEfficiency));
+           const chargeKwh = availableChargeKw * intervalHours;
+           
+           if (newLevel >= prev.batteryCapacity && gridSellback) {
+             const surplusKw = -dependency;
+             const surplusKwh = surplusKw * intervalHours;
+             
+             // Sell surplus to grid automatically
+             const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+             setDeviceHistory(h => {
+               const lastLog = h[0];
+               if (lastLog && lastLog.label === "P2P Smart Sellback") {
+                 return h;
+               }
+               return [{
+                 id: Date.now(),
+                 label: "P2P Smart Sellback",
+                 action: "SELL" as const,
+                 time,
+                 details: `Exported ${surplusKwh.toFixed(4)} kWh to regional grid`,
+                 iconName: "Zap"
+               }, ...h].slice(0, 100);
+             });
+           } else {
+             newLevel = Math.min(prev.batteryCapacity, prev.batteryLevel + (chargeKwh * chargeEfficiency));
+           }
            dependency = 0; 
         } else if (dependency > 0 && prev.batteryLevel > 0) {
            // discharge battery
            const requiredFromBatteryKw = dependency / dischargeEfficiency;
            const actualDrawKw = Math.min(requiredFromBatteryKw, prev.batteryChargeRate);
-           const actualDrawKwh = actualDrawKw / 3600;
+           const actualDrawKwh = actualDrawKw * intervalHours;
            
            const finalDrawKwh = Math.min(actualDrawKwh, prev.batteryLevel);
-           const energyProvidedKw = (finalDrawKwh * 3600) * dischargeEfficiency;
+           const energyProvidedKw = (finalDrawKwh / intervalHours) * dischargeEfficiency;
            
            newLevel = prev.batteryLevel - finalDrawKwh;
            dependency = totalLoad - prev.solarGeneration - energyProvidedKw;
@@ -311,21 +418,34 @@ export default function Home() {
         return { ...prev, batteryLevel: newLevel, gridDependency: Math.max(0, dependency) };
       });
 
-      // Move graph forward every second for real-time scrolling
+      // Move graph forward
       setLoadHistory((prev: number[]) => {
          return [...prev.slice(1), totalLoad];
       });
       setSolarHistory((prev: number[]) => [...prev.slice(1), solarGenRef.current]);
-    }, 1000);
+    }, refreshRateMs);
     return () => clearInterval(interval);
-  }, [totalLoad]);
+  }, [totalLoad, refreshRateMs, gridSellback, user]);
 
   const removeNotification = (id: string) => {
     setNotifications(prev => prev.filter(n => n.id !== id));
   };
 
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center font-mono text-zinc-600 z-[500]">
+        <Loader2 className="w-8 h-8 text-amber-500 animate-spin mb-4" />
+        <p className="text-[10px] uppercase tracking-[0.3em] font-bold">Initializing Connection...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <AuthPage />;
+  }
+
   return (
-    <main className="relative bg-[#09090b] min-h-screen selection:bg-zinc-800 selection:text-white">
+    <main className="relative bg-background text-foreground min-h-screen selection:bg-zinc-800 selection:text-white">
       
       <AnimatePresence>
         {showIntro && (
@@ -333,7 +453,27 @@ export default function Home() {
         )}
       </AnimatePresence>
 
+      {/* Floating Header Actions */}
+      <div className="fixed top-6 right-6 z-[150] flex items-center gap-4">
+        <UserProfileHeader
+          onOpenAuth={() => setShowAuthModal(true)}
+          onOpenSettings={() => setShowSettingsDrawer(true)}
+        />
+      </div>
+
       <AnimatePresence>
+        {showAuthModal && (
+          <AuthModal
+            isOpen={showAuthModal}
+            onClose={() => setShowAuthModal(false)}
+          />
+        )}
+        {showSettingsDrawer && (
+          <SettingsDrawer
+            isOpen={showSettingsDrawer}
+            onClose={() => setShowSettingsDrawer(false)}
+          />
+        )}
         {showAddModal && (
           <AddDeviceModal 
             isOpen={showAddModal} 
@@ -456,8 +596,9 @@ export default function Home() {
                      solarState={solarState}
                      onUpdateSolarState={(updates) => setSolarState(prev => ({ ...prev, ...updates }))}
                      totalLoad={totalLoad}
+                     lowBatteryThreshold={lowBatteryThreshold}
                    />
-                   <BudgetManager totalLoad={totalLoad} costFactor={8} />
+                   <BudgetManager totalLoad={totalLoad} costFactor={user ? user.costFactor : 8} />
                    <div className="p-8 rounded-2xl bg-[#121214] text-white border border-white/5 shadow-2xl relative overflow-hidden group">
                       <div className="relative z-10">
                         <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-widest mb-4">System Console</p>

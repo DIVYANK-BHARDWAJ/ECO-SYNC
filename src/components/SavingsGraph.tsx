@@ -47,7 +47,7 @@ export default function SavingsGraph({ data, solarData }: SavingsGraphProps) {
   return (
     <div className="bg-zinc-900/40 backdrop-blur-3xl p-6 sm:p-10 border border-white/5 shadow-xl relative w-full overflow-hidden rounded-2xl">
       {/* Background Radar Mesh */}
-      <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: "radial-gradient(white 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
+      <div className="absolute inset-0 opacity-40 pointer-events-none" style={{ backgroundImage: "radial-gradient(var(--border-strong) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
       
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-16 gap-8 relative z-10">
         <div>
@@ -59,10 +59,10 @@ export default function SavingsGraph({ data, solarData }: SavingsGraphProps) {
               <div className="w-2 h-2 rounded-full bg-accent-secondary animate-pulse" />
               <span className="text-[10px] font-black uppercase tracking-widest text-accent-secondary">Solar</span>
            </div>
-           <div className="px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-white flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-white">Grid</span>
-           </div>
+            <div className="px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-white flex items-center gap-3">
+               <div className="w-2 h-2 rounded-full bg-accent-primary animate-pulse" />
+               <span className="text-[10px] font-black uppercase tracking-widest text-white">Grid</span>
+            </div>
         </div>
       </div>
 
@@ -96,9 +96,8 @@ export default function SavingsGraph({ data, solarData }: SavingsGraphProps) {
               key={i} 
               x1="0" y1={height * p} 
               x2={width} y2={height * p} 
-              stroke="white" 
+              stroke="var(--border-medium)" 
               strokeWidth="1" 
-              opacity="0.05"
               strokeDasharray="4 4"
             />
           ))}
@@ -107,9 +106,8 @@ export default function SavingsGraph({ data, solarData }: SavingsGraphProps) {
               key={i} 
               x1={width * p} y1="0" 
               x2={width * p} y2={height} 
-              stroke="white" 
+              stroke="var(--border-medium)" 
               strokeWidth="1" 
-              opacity="0.05"
               strokeDasharray="4 4"
             />
           ))}
@@ -117,8 +115,8 @@ export default function SavingsGraph({ data, solarData }: SavingsGraphProps) {
           {/* Area Gradient */}
           <defs>
             <linearGradient id="live-gradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.08" />
-              <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+              <stop offset="0%" stopColor="var(--accent-primary)" stopOpacity="0.08" />
+              <stop offset="100%" stopColor="var(--accent-primary)" stopOpacity="0" />
             </linearGradient>
             <linearGradient id="solar-gradient" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.08" />
@@ -159,7 +157,7 @@ export default function SavingsGraph({ data, solarData }: SavingsGraphProps) {
           <motion.path
             d={linearPath}
             fill="none"
-            stroke="#FFFFFF"
+            stroke="var(--accent-primary)"
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -186,7 +184,7 @@ export default function SavingsGraph({ data, solarData }: SavingsGraphProps) {
                 cx={(data.length - 1) / (data.length - 1) * width} 
                 cy={height - (data[data.length - 1] / maxVal) * height} 
                 r="4" 
-                fill="#FFFFFF" 
+                fill="var(--accent-primary)" 
                 animate={{ scale: [1, 1.3, 1], opacity: [1, 0.6, 1] }}
                 transition={{ repeat: Infinity, duration: 1.5 }}
              />
@@ -203,8 +201,8 @@ export default function SavingsGraph({ data, solarData }: SavingsGraphProps) {
               <g key={i} className="cursor-pointer" onMouseEnter={() => setHoveredPoint(i)} onMouseLeave={() => setHoveredPoint(null)}>
                 <circle 
                   cx={x} cy={y} r="3" 
-                  fill={hoveredPoint === i ? "#3b82f6" : "white"} 
-                  opacity={hoveredPoint === i ? 1 : 0.1} 
+                  fill={hoveredPoint === i ? "#3b82f6" : "var(--accent-primary)"} 
+                  opacity={hoveredPoint === i ? 1 : 0.15} 
                 />
               </g>
             );
@@ -223,11 +221,11 @@ export default function SavingsGraph({ data, solarData }: SavingsGraphProps) {
                transform: "translate(-50%, 0)"
             }}
           >
-             <div>
-                <div className="flex items-center gap-2 mb-1">
-                   <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                   <p className="text-[8px] font-mono text-white/40 uppercase tracking-[0.2em] font-bold">Grid Load</p>
-                </div>
+              <div>
+                 <div className="flex items-center gap-2 mb-1">
+                    <div className="w-1.5 h-1.5 rounded-full bg-accent-primary animate-pulse" />
+                    <p className="text-[8px] font-mono text-white/40 uppercase tracking-[0.2em] font-bold">Grid Load</p>
+                 </div>
                 <p className="text-2xl font-black tracking-tighter">
                    {data[hoveredPoint].toFixed(2)}
                    <span className="text-xs ml-1 text-accent-primary uppercase font-bold tracking-widest">kW</span>
