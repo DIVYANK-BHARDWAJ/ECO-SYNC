@@ -85,21 +85,18 @@ export default function Home() {
     batteryChargeRate: 5.0,
     gridDependency: 0,
   });
+  const [isSolarLoaded, setIsSolarLoaded] = useState(false);
 
   // Sync profile settings with simulator values
   useEffect(() => {
-    if (user) {
-      setSolarState(prev => {
-        const updated = {
-          ...prev,
-          batteryCapacity: user.batteryCap,
-          batteryLevel: Math.min(prev.batteryLevel, user.batteryCap),
-        };
-        localStorage.setItem("eco-sync-solar", JSON.stringify(updated));
-        return updated;
-      });
+    if (user && isSolarLoaded) {
+      setSolarState(prev => ({
+        ...prev,
+        batteryCapacity: user.batteryCap,
+        batteryLevel: Math.min(prev.batteryLevel, user.batteryCap),
+      }));
     }
-  }, [user]);
+  }, [user, isSolarLoaded]);
 
   // Local Storage Backed Simulator Settings
   const [lowBatteryThreshold, setLowBatteryThreshold] = useState(15);
@@ -167,12 +164,15 @@ export default function Home() {
         console.error("Failed to load solar state", e);
       }
     }
+    setIsSolarLoaded(true);
   }, []);
 
-  // Save solar to localStorage on change
+  // Save solar to localStorage on change (after load is complete)
   useEffect(() => {
-    localStorage.setItem("eco-sync-solar", JSON.stringify(solarState));
-  }, [solarState]);
+    if (isSolarLoaded) {
+      localStorage.setItem("eco-sync-solar", JSON.stringify(solarState));
+    }
+  }, [solarState, isSolarLoaded]);
 
 
   const bootTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });

@@ -45,6 +45,21 @@ export default function EnergyTrading() {
     batteryChargeRate: 5.0,
     gridDependency: 0,
   });
+  const [isSolarLoaded, setIsSolarLoaded] = useState(false);
+
+  // Load solar state from localStorage on mount
+  useEffect(() => {
+    const savedSolar = localStorage.getItem("eco-sync-solar");
+    if (savedSolar) {
+      try {
+        const parsed = JSON.parse(savedSolar);
+        setSolarState(parsed);
+      } catch (e) {
+        console.error("Failed to load solar state on trading page mount", e);
+      }
+    }
+    setIsSolarLoaded(true);
+  }, []);
 
   const [walletBalance, setWalletBalance] = useState(0.00);
   const [marketPrice, setMarketPrice] = useState(0.18);
@@ -207,23 +222,21 @@ export default function EnergyTrading() {
 
   // Sync profile settings with simulator values
   useEffect(() => {
-    if (user) {
-      setSolarState(prev => {
-        const updated = {
-          ...prev,
-          batteryCapacity: user.batteryCap,
-          batteryLevel: Math.min(prev.batteryLevel, user.batteryCap),
-        };
-        localStorage.setItem("eco-sync-solar", JSON.stringify(updated));
-        return updated;
-      });
+    if (user && isSolarLoaded) {
+      setSolarState(prev => ({
+        ...prev,
+        batteryCapacity: user.batteryCap,
+        batteryLevel: Math.min(prev.batteryLevel, user.batteryCap),
+      }));
     }
-  }, [user]);
+  }, [user, isSolarLoaded]);
 
-  // Save solar to localStorage on change
+  // Save solar to localStorage on change (after load is complete)
   useEffect(() => {
-    localStorage.setItem("eco-sync-solar", JSON.stringify(solarState));
-  }, [solarState]);
+    if (isSolarLoaded) {
+      localStorage.setItem("eco-sync-solar", JSON.stringify(solarState));
+    }
+  }, [solarState, isSolarLoaded]);
 
   // Simulator settings states
   const [lowBatteryThreshold, setLowBatteryThreshold] = useState(15);
