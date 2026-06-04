@@ -15,6 +15,7 @@ export default function EnergyCanvas({ scrollProgress }: EnergyCanvasProps) {
   const requestedFrames = useRef<boolean[]>(new Array(FRAME_COUNT).fill(false));
   const loadedFrames = useRef<boolean[]>(new Array(FRAME_COUNT).fill(false));
   const [ready, setReady] = useState(false);
+  const neighborhoodTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Map scroll progress (0-1) to frame index (0-143)
   const frameIndex = useTransform(scrollProgress, [0, 1], [0, FRAME_COUNT - 1], { clamp: true });
@@ -34,10 +35,13 @@ export default function EnergyCanvas({ scrollProgress }: EnergyCanvasProps) {
 
     img.onload = () => {
       loadedFrames.current[i] = true;
-      if (i === 0) {
+      if (i === 0 && !ready) {
         resizeCanvas();
         renderFrame(0);
         setReady(true);
+      } else if (ready) {
+        // Redraw current frame to update from fallback to high-quality if this is the active frame
+        renderFrame(frameIndex.get());
       }
       if (callback) callback();
     };
@@ -54,22 +58,33 @@ export default function EnergyCanvas({ scrollProgress }: EnergyCanvasProps) {
 
     const targetIndex = Math.floor(index);
 
-    // 1. Prioritize neighborhood loading when we try to render
-    const priorityNeighborhood = [
-      targetIndex,
-      targetIndex + 1,
-      targetIndex + 2,
-      targetIndex + 3,
-      targetIndex + 4,
-      targetIndex - 1
-    ];
-    priorityNeighborhood.forEach(f => {
-      if (f >= 0 && f < FRAME_COUNT && !requestedFrames.current[f]) {
-        loadFrame(f);
-      }
-    });
+    // 1. Immediately request the active target frame
+    if (!requestedFrames.current[targetIndex]) {
+      loadFrame(targetIndex);
+    }
 
-    // 2. Search outward for the closest loaded frame (fallback)
+    // 2. Clear pending neighborhood requests
+    if (neighborhoodTimeoutRef.current) {
+      clearTimeout(neighborhoodTimeoutRef.current);
+    }
+
+    // 3. Debounce neighborhood loading by 50ms to prevent network congestion during fast scroll
+    neighborhoodTimeoutRef.current = setTimeout(() => {
+      const priorityNeighborhood = [
+        targetIndex + 1,
+        targetIndex + 2,
+        targetIndex + 3,
+        targetIndex + 4,
+        targetIndex - 1
+      ];
+      priorityNeighborhood.forEach(f => {
+        if (f >= 0 && f < FRAME_COUNT && !requestedFrames.current[f]) {
+          loadFrame(f);
+        }
+      });
+    }, 50);
+
+    // 4. Search outward for the closest loaded frame (fallback)
     let img = imagesRef.current[targetIndex];
     let isImgLoaded = img && loadedFrames.current[targetIndex] && img.complete && img.naturalWidth > 0;
 
@@ -130,71 +145,38 @@ export default function EnergyCanvas({ scrollProgress }: EnergyCanvasProps) {
   useEffect(() => {
     // Load frame 0 immediately as priority
     loadFrame(0, () => {
-      // Load keyframes: every 8th frame
+      // Load keyframes: every 8th frame in parallel with short delay spacing
       const keyframes: number[] = [];
       for (let i = 8; i < FRAME_COUNT - 1; i += 8) {
         keyframes.push(i);
       }
       keyframes.push(FRAME_COUNT - 1);
 
-      let keyframeIdx = 0;
-      const loadNextKeyframeBatch = () => {
-        if (keyframeIdx >= keyframes.length) {
-          // Keyframes done, start low-priority background fill
-          loadBackgroundFill();
-          return;
-        }
-        
-        const batch = keyframes.slice(keyframeIdx, keyframeIdx + 4);
-        keyframeIdx += 4;
-        
-        let loadedCount = 0;
-        batch.forEach(f => {
-          loadFrame(f, () => {
-            loadedCount++;
-            if (loadedCount === batch.length) {
-              loadNextKeyframeBatch();
-            }
-          });
-        });
-      };
+      keyframes.forEach((f, idx) => {
+        setTimeout(() => {
+          loadFrame(f);
+        }, idx * 30); // space requests by 30ms to prevent network surge
+      });
 
-      loadNextKeyframeBatch();
+      // Start requesting low-priority background fill frames after 1.5 seconds
+      setTimeout(() => {
+        let delayCount = 0;
+        for (let i = 1; i < FRAME_COUNT; i++) {
+          if (i % 8 !== 0 && i !== FRAME_COUNT - 1) {
+            const frameNum = i;
+            setTimeout(() => {
+              loadFrame(frameNum);
+            }, delayCount * 50); // space background requests by 50ms
+            delayCount++;
+          }
+        }
+      }, 1500);
     });
 
-    const loadBackgroundFill = () => {
-      let currentIdx = 1;
-      
-      const loadNextFillBatch = () => {
-        if (currentIdx >= FRAME_COUNT) return;
-
-        // Collect next 4 unrequested frames
-        const batch: number[] = [];
-        while (batch.length < 4 && currentIdx < FRAME_COUNT) {
-          if (!requestedFrames.current[currentIdx]) {
-            batch.push(currentIdx);
-          }
-          currentIdx++;
-        }
-
-        if (batch.length === 0) {
-          loadNextFillBatch();
-          return;
-        }
-
-        let loadedCount = 0;
-        batch.forEach(f => {
-          loadFrame(f, () => {
-            loadedCount++;
-            if (loadedCount === batch.length) {
-              // Yield main thread slightly between batches
-              setTimeout(loadNextFillBatch, 60);
-            }
-          });
-        });
-      };
-
-      loadNextFillBatch();
+    return () => {
+      if (neighborhoodTimeoutRef.current) {
+        clearTimeout(neighborhoodTimeoutRef.current);
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
