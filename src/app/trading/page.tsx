@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ArrowLeft, Sun, Zap, ArrowRight, 
@@ -264,20 +264,20 @@ export default function EnergyTrading() {
   const refreshRateMs = refreshRate === "1s" ? 1000 : refreshRate === "5s" ? 5000 : 3000;
 
   // Load simulator parameters from localStorage dynamically
-  const [simDevices, setSimDevices] = useState<Device[]>([]);
-  const [simActivePlan, setSimActivePlan] = useState<string | null>(null);
-  const [simGridSellback, setSimGridSellback] = useState(false);
+  const simDevicesRef = useRef<Device[]>([]);
+  const simActivePlanRef = useRef<string | null>(null);
+  const simGridSellbackRef = useRef(false);
 
   useEffect(() => {
     const loadParams = () => {
       const savedDevices = localStorage.getItem("eco-sync-devices");
       if (savedDevices) {
         try {
-          setSimDevices(JSON.parse(savedDevices));
+          simDevicesRef.current = JSON.parse(savedDevices);
         } catch (e) {}
       }
-      setSimActivePlan(localStorage.getItem("eco-sync-active-plan"));
-      setSimGridSellback(localStorage.getItem("eco-sync-grid-sellback") === "true");
+      simActivePlanRef.current = localStorage.getItem("eco-sync-active-plan");
+      simGridSellbackRef.current = localStorage.getItem("eco-sync-grid-sellback") === "true";
     };
 
     loadParams();
@@ -322,11 +322,11 @@ export default function EnergyTrading() {
       
       // Calculate current load based on localStorage devices list
       let load = 0.2; // Baseline
-      simDevices.forEach(d => {
+      simDevicesRef.current.forEach(d => {
         if (d.isOn) load += d.power;
       });
-      if (simActivePlan && PLAN_CONFIG[simActivePlan]) {
-        load *= PLAN_CONFIG[simActivePlan].multiplier;
+      if (simActivePlanRef.current && PLAN_CONFIG[simActivePlanRef.current]) {
+        load *= PLAN_CONFIG[simActivePlanRef.current].multiplier;
       }
 
       // Read latest solar state from localStorage first to prevent React state stale overrides
@@ -393,7 +393,7 @@ export default function EnergyTrading() {
         } catch (e) {}
       }
     };
-  }, [simDevices, simActivePlan, refreshRateMs, simGridSellback, isSolarLoaded, tabId]);
+  }, [refreshRateMs, isSolarLoaded, tabId]);
 
   // Synchronize solar state with localStorage in real-time
   useEffect(() => {
