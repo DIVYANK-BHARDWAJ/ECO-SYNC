@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { 
   Sun, Battery, Zap, AlertTriangle, ArrowRight, 
   ArrowUpRight, ArrowDownRight, BatteryCharging,
-  Cloud, CloudRain, Moon
+  Cloud, CloudRain, Moon, RotateCcw
 } from "lucide-react";
 import Link from "next/link";
 import { SolarBatteryState } from "@/types/device";
@@ -15,6 +15,7 @@ interface SolarPanelManagerProps {
   totalLoad: number;
   lowBatteryThreshold?: number;
   refreshRateMs?: number;
+  onRechargeBattery?: () => void;
 }
 
 export default function SolarPanelManager({ 
@@ -23,9 +24,13 @@ export default function SolarPanelManager({
   totalLoad, 
   lowBatteryThreshold = 15,
   refreshRateMs = 3000,
+  onRechargeBattery,
 }: SolarPanelManagerProps) {
   
-  const batteryPct = Math.round((solarState.batteryLevel / solarState.batteryCapacity) * 100);
+  const batteryPct = solarState.batteryCapacity > 0
+    ? Math.round((solarState.batteryLevel / solarState.batteryCapacity) * 100)
+    : 0;
+  const isBatteryEmpty = batteryPct === 0;
   const isLowBattery = batteryPct <= lowBatteryThreshold;
 
   const weatherPresets = [
@@ -98,12 +103,24 @@ export default function SolarPanelManager({
               </p>
             </div>
           </div>
-          <button 
-            onClick={handleSimulateSun}
-            className="px-4 py-2 bg-accent-solar/10 hover:bg-accent-solar/20 text-accent-solar rounded-xl text-[9px] font-black uppercase tracking-widest border border-accent-solar/20 transition-all font-heading cursor-pointer"
-          >
-            {solarState.solarGeneration > 0 ? "Eclipse" : "Simulate Sun"}
-          </button>
+          <div className="flex items-center gap-2">
+            {isBatteryEmpty && onRechargeBattery && (
+              <button 
+                onClick={onRechargeBattery}
+                className="px-3 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-xl text-[9px] font-black uppercase tracking-widest border border-emerald-500/20 transition-all font-heading cursor-pointer flex items-center gap-1.5"
+                title="Restore battery to full capacity"
+              >
+                <RotateCcw className="w-3 h-3" />
+                Recharge
+              </button>
+            )}
+            <button 
+              onClick={handleSimulateSun}
+              className="px-4 py-2 bg-accent-solar/10 hover:bg-accent-solar/20 text-accent-solar rounded-xl text-[9px] font-black uppercase tracking-widest border border-accent-solar/20 transition-all font-heading cursor-pointer"
+            >
+              {solarState.solarGeneration > 0 ? "Eclipse" : "Simulate Sun"}
+            </button>
+          </div>
         </div>
 
         {/* PV Generator Slide Controls */}
@@ -202,7 +219,9 @@ export default function SolarPanelManager({
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center mt-1">
-                <span className={`text-base font-black font-mono tracking-tighter ${isLowBattery ? "text-red-500 animate-pulse" : "text-white"}`}>
+                <span className={`text-base font-black font-mono tracking-tighter ${
+                  isBatteryEmpty ? "text-zinc-600" : isLowBattery ? "text-red-500 animate-pulse" : "text-white"
+                }`}>
                   {batteryPct}%
                 </span>
                 <span className="text-[7px] text-white/30 uppercase font-mono tracking-widest leading-none">Storage</span>

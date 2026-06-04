@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   ArrowLeft, Sun, Zap, ArrowRight, 
   History, ShieldCheck, Check, Fingerprint, Coins, Network, 
-  Wallet, TrendingUp, AlertTriangle, Loader2
+  Wallet, TrendingUp, AlertTriangle, Loader2, RotateCcw
 } from "lucide-react";
 import Link from "next/link";
 import { Device, SolarBatteryState } from "@/types/device";
@@ -589,6 +589,11 @@ export default function EnergyTrading() {
     }
   };
 
+  const handleRechargeBattery = () => {
+    const capacity = user?.batteryCap ?? solarState.batteryCapacity;
+    updateSolarState({ batteryLevel: capacity });
+  };
+
   if (loading) {
     return (
       <div className="fixed inset-0 bg-black flex flex-col items-center justify-center font-mono text-zinc-600 z-[500]">
@@ -706,7 +711,7 @@ export default function EnergyTrading() {
               </div>
             </div>
 
-            <div className={`bg-zinc-900/40 backdrop-blur-xl border rounded-2xl p-8 shadow-xl relative overflow-hidden transition-all duration-300 ${
+             <div className={`bg-zinc-900/40 backdrop-blur-xl border rounded-2xl p-8 shadow-xl relative overflow-hidden transition-all duration-300 ${
               isLowBattery ? "border-red-900/40" : "border-white/5"
             }`}>
                <div className={`flex items-center gap-3 mb-8 ${isLowBattery ? "text-red-500" : "text-accent-primary"}`}>
@@ -715,6 +720,24 @@ export default function EnergyTrading() {
                     {isLowBattery ? "Battery Critical Alert" : "Local Generation"}
                   </h3>
                </div>
+               
+               {/* Zero battery warning + recharge button */}
+               {batteryPct === 0 && (
+                 <div className="mb-6 p-4 rounded-xl bg-zinc-800/60 border border-zinc-600/40 flex items-start gap-3">
+                   <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
+                   <div className="flex-1">
+                     <p className="font-mono text-[10px] uppercase tracking-widest text-amber-400 font-black mb-1">Battery Depleted</p>
+                     <p className="text-white/50 text-[10px] font-mono">No stored energy available to trade. Recharge your battery or return to the dashboard and set solar generation above 0 kW to start charging.</p>
+                   </div>
+                   <button
+                     onClick={handleRechargeBattery}
+                     className="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-xl text-emerald-400 font-mono text-[9px] uppercase tracking-widest transition-colors cursor-pointer font-black"
+                   >
+                     <RotateCcw className="w-3 h-3" />
+                     Recharge
+                   </button>
+                 </div>
+               )}
                
                <div className="grid grid-cols-2 gap-4">
                  <div className="bg-black/50 rounded-xl p-6 border border-white/5">
@@ -817,7 +840,7 @@ export default function EnergyTrading() {
                       >
                         <ShieldCheck className="w-6 h-6" />
                         <span className="font-black uppercase tracking-[0.2em] text-sm">
-                          {!account ? "Connect Wallet to Trade" : isWrongNetwork ? "Switch Network to Trade" : "Finalize Peer-to-Peer Settlement"}
+                          {!account ? "Connect Wallet to Trade" : isWrongNetwork ? "Switch Network to Trade" : batteryPct === 0 ? "Battery Empty — Recharge First" : "Finalize Peer-to-Peer Settlement"}
                         </span>
                       </motion.div>
                     )}

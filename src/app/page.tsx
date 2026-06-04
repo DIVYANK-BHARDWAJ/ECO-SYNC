@@ -314,6 +314,13 @@ export default function Home() {
     setActiveRoutine(null);
   };
 
+  const handleRechargeBattery = () => {
+    const capacity = user?.batteryCap ?? solarState.batteryCapacity;
+    updateSolarState({ batteryLevel: capacity });
+    const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    setDeviceHistory(h => [{ id: Date.now(), label: "Battery System", action: "RECHARGE", time, details: `Restored to ${capacity} kWh (100%)`, iconName: "Battery" }, ...h]);
+  };
+
   const handleExecuteRoutine = useCallback((routineId: string) => {
     setActiveRoutine(routineId);
     
@@ -488,7 +495,7 @@ export default function Home() {
       const dischargeEfficiency = 0.95;
       
       if (dependency < 0) {
-         // charge battery
+         // Solar surplus — charge battery
          const availableChargeKw = Math.min(-dependency, currentSolar.batteryChargeRate);
          const chargeKwh = availableChargeKw * intervalHours;
          
@@ -731,6 +738,7 @@ export default function Home() {
                      totalLoad={totalLoad}
                      lowBatteryThreshold={lowBatteryThreshold}
                      refreshRateMs={refreshRateMs}
+                     onRechargeBattery={handleRechargeBattery}
                    />
                    <BudgetManager totalLoad={totalLoad} costFactor={user ? user.costFactor : 8} />
                    <div className="p-8 rounded-2xl bg-[#121214] text-white border border-white/5 shadow-2xl relative overflow-hidden group">
