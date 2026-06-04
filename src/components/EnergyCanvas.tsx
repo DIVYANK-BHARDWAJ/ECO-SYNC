@@ -68,13 +68,11 @@ export default function EnergyCanvas({ scrollProgress }: EnergyCanvasProps) {
       clearTimeout(neighborhoodTimeoutRef.current);
     }
 
-    // 3. Debounce neighborhood loading by 50ms to prevent network congestion during fast scroll
+    // 3. Debounce neighborhood loading by 100ms to prevent network congestion during fast scroll
     neighborhoodTimeoutRef.current = setTimeout(() => {
       const priorityNeighborhood = [
         targetIndex + 1,
         targetIndex + 2,
-        targetIndex + 3,
-        targetIndex + 4,
         targetIndex - 1
       ];
       priorityNeighborhood.forEach(f => {
@@ -82,7 +80,7 @@ export default function EnergyCanvas({ scrollProgress }: EnergyCanvasProps) {
           loadFrame(f);
         }
       });
-    }, 50);
+    }, 100);
 
     // 4. Search outward for the closest loaded frame (fallback)
     let img = imagesRef.current[targetIndex];
@@ -141,13 +139,13 @@ export default function EnergyCanvas({ scrollProgress }: EnergyCanvasProps) {
     canvas.height = window.innerHeight * window.devicePixelRatio;
   };
 
-  // Mount logic: Phase 1 & Phase 3
+  // Mount logic: Load frame 0 immediately and prefetch a sparse set of keyframes
   useEffect(() => {
     // Load frame 0 immediately as priority
     loadFrame(0, () => {
-      // Load keyframes: every 8th frame in parallel with short delay spacing
+      // Load keyframes: every 16th frame (very sparse) to provide basic scroll fallbacks
       const keyframes: number[] = [];
-      for (let i = 8; i < FRAME_COUNT - 1; i += 8) {
+      for (let i = 16; i < FRAME_COUNT - 1; i += 16) {
         keyframes.push(i);
       }
       keyframes.push(FRAME_COUNT - 1);
@@ -155,22 +153,8 @@ export default function EnergyCanvas({ scrollProgress }: EnergyCanvasProps) {
       keyframes.forEach((f, idx) => {
         setTimeout(() => {
           loadFrame(f);
-        }, idx * 30); // space requests by 30ms to prevent network surge
+        }, idx * 100); // Spaced gently by 100ms to avoid network congestion
       });
-
-      // Start requesting low-priority background fill frames after 1.5 seconds
-      setTimeout(() => {
-        let delayCount = 0;
-        for (let i = 1; i < FRAME_COUNT; i++) {
-          if (i % 8 !== 0 && i !== FRAME_COUNT - 1) {
-            const frameNum = i;
-            setTimeout(() => {
-              loadFrame(frameNum);
-            }, delayCount * 50); // space background requests by 50ms
-            delayCount++;
-          }
-        }
-      }, 1500);
     });
 
     return () => {
