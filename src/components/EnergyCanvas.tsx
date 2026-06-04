@@ -68,11 +68,12 @@ export default function EnergyCanvas({ scrollProgress }: EnergyCanvasProps) {
       clearTimeout(neighborhoodTimeoutRef.current);
     }
 
-    // 3. Debounce neighborhood loading by 100ms to prevent network congestion during fast scroll
+    // 3. Debounce neighborhood loading by 50ms to anticipate scroll direction
     neighborhoodTimeoutRef.current = setTimeout(() => {
       const priorityNeighborhood = [
         targetIndex + 1,
         targetIndex + 2,
+        targetIndex + 3,
         targetIndex - 1
       ];
       priorityNeighborhood.forEach(f => {
@@ -80,7 +81,7 @@ export default function EnergyCanvas({ scrollProgress }: EnergyCanvasProps) {
           loadFrame(f);
         }
       });
-    }, 100);
+    }, 50);
 
     // 4. Search outward for the closest loaded frame (fallback)
     let img = imagesRef.current[targetIndex];
@@ -139,21 +140,53 @@ export default function EnergyCanvas({ scrollProgress }: EnergyCanvasProps) {
     canvas.height = window.innerHeight * window.devicePixelRatio;
   };
 
-  // Mount logic: Load frame 0 immediately and prefetch a sparse set of keyframes
+  // Mount logic: Load frame 0 immediately, then prefetch remaining frames sequentially to avoid network congestion
   useEffect(() => {
+    const loadSequentially = (indices: number[], startIndex: number, onComplete?: () => void) => {
+      let pointer = startIndex;
+
+      const next = () => {
+        if (pointer >= indices.length) {
+          if (onComplete) onComplete();
+          return;
+        }
+        const frameNum = indices[pointer];
+        if (!requestedFrames.current[frameNum]) {
+          loadFrame(frameNum, () => {
+            pointer++;
+            setTimeout(next, 20); // space requests by 20ms to keep main thread completely free
+          });
+        } else {
+          pointer++;
+          next();
+        }
+      };
+
+      next();
+    };
+
     // Load frame 0 immediately as priority
     loadFrame(0, () => {
-      // Load keyframes: every 16th frame (very sparse) to provide basic scroll fallbacks
+      // 1. Prepare keyframe indices (every 4th frame: 4, 8, 12, 16...)
       const keyframes: number[] = [];
-      for (let i = 16; i < FRAME_COUNT - 1; i += 16) {
+      for (let i = 4; i < FRAME_COUNT - 1; i += 4) {
         keyframes.push(i);
       }
       keyframes.push(FRAME_COUNT - 1);
 
-      keyframes.forEach((f, idx) => {
+      // 2. Prepare remaining fill-in frames
+      const fillFrames: number[] = [];
+      for (let i = 1; i < FRAME_COUNT; i++) {
+        if (i % 4 !== 0 && i !== FRAME_COUNT - 1) {
+          fillFrames.push(i);
+        }
+      }
+
+      // 3. Load keyframes sequentially first. Once done, load fill-in frames after 1 second.
+      loadSequentially(keyframes, 0, () => {
         setTimeout(() => {
-          loadFrame(f);
-        }, idx * 100); // Spaced gently by 100ms to avoid network congestion
+          loadSequentially(fillFrames, 0);
+        }, 1000);
       });
     });
 
