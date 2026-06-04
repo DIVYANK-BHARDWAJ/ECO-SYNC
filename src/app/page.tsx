@@ -472,6 +472,14 @@ export default function Home() {
         } catch (e) {}
       }
 
+      console.log("[Eco-Sync Dashboard Sim] Running Step:", {
+        isLeader,
+        totalLoad,
+        solarGeneration: currentSolar.solarGeneration,
+        batteryLevel: currentSolar.batteryLevel,
+        batteryCapacity: currentSolar.batteryCapacity,
+      });
+
       let dependency = totalLoad - currentSolar.solarGeneration;
       let newLevel = currentSolar.batteryLevel;
       
@@ -525,6 +533,8 @@ export default function Home() {
         batteryLevel: newLevel,
         gridDependency: Math.max(0, dependency)
       };
+
+      console.log("[Eco-Sync Dashboard Sim] Updated State:", updatedState);
 
       // Save back to localStorage and update state
       localStorage.setItem("eco-sync-solar", JSON.stringify(updatedState));

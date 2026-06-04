@@ -344,6 +344,14 @@ export default function EnergyTrading() {
         } catch (e) {}
       }
 
+      console.log("[Eco-Sync Trading Sim] Running Step:", {
+        isLeader,
+        load,
+        solarGeneration: currentSolar.solarGeneration,
+        batteryLevel: currentSolar.batteryLevel,
+        batteryCapacity: currentSolar.batteryCapacity,
+      });
+
       let dependency = load - currentSolar.solarGeneration;
       let newLevel = currentSolar.batteryLevel;
       
@@ -373,6 +381,8 @@ export default function EnergyTrading() {
         batteryLevel: newLevel,
         gridDependency: Math.max(0, dependency)
       };
+
+      console.log("[Eco-Sync Trading Sim] Updated State:", updatedState);
 
       // Save back to localStorage and update state
       localStorage.setItem("eco-sync-solar", JSON.stringify(updatedState));
