@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ArrowLeft, Sun, Zap, ArrowRight, 
@@ -45,6 +45,19 @@ export default function EnergyTrading() {
     batteryChargeRate: 5.0,
     gridDependency: 0,
   });
+
+  const updateSolarState = useCallback((updates: Partial<SolarBatteryState> | ((prev: SolarBatteryState) => Partial<SolarBatteryState>)) => {
+    setSolarState(prev => {
+      const nextUpdates = typeof updates === "function" ? updates(prev) : updates;
+      const next = { ...prev, ...nextUpdates };
+      localStorage.setItem("eco-sync-solar", JSON.stringify(next));
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("storage"));
+      }
+      return next;
+    });
+  }, []);
+
   const [isSolarLoaded, setIsSolarLoaded] = useState(false);
   const [tabId] = useState(() => Math.random().toString(36).substring(2, 11));
 
@@ -215,33 +228,27 @@ export default function EnergyTrading() {
   }, [account]);
 
   // Keep sellAmount synchronized with stored energy (batteryLevel) in real-time
+  // Only auto-fill when the field is empty or the typed value now exceeds current capacity
   useEffect(() => {
     if (solarState.batteryLevel >= 0) {
-      setSellAmount(Number(solarState.batteryLevel.toFixed(1)));
+      setSellAmount(prev => {
+        if (prev === "" || Number(prev) > solarState.batteryLevel) {
+          return Number(solarState.batteryLevel.toFixed(1));
+        }
+        return prev;
+      });
     }
   }, [solarState.batteryLevel]);
 
   // Sync profile settings with simulator values
   useEffect(() => {
     if (user && isSolarLoaded) {
-      setSolarState(prev => ({
-        ...prev,
+      updateSolarState(prev => ({
         batteryCapacity: user.batteryCap,
         batteryLevel: Math.min(prev.batteryLevel, user.batteryCap),
       }));
     }
-  }, [user, isSolarLoaded]);
-
-  // Save solar to localStorage on change (after load is complete, checking for differences)
-  useEffect(() => {
-    if (isSolarLoaded) {
-      const currentStateString = JSON.stringify(solarState);
-      const savedStateString = localStorage.getItem("eco-sync-solar");
-      if (currentStateString !== savedStateString) {
-        localStorage.setItem("eco-sync-solar", currentStateString);
-      }
-    }
-  }, [solarState, isSolarLoaded]);
+  }, [user, isSolarLoaded, updateSolarState]);
 
   // Simulator settings states
   const [lowBatteryThreshold, setLowBatteryThreshold] = useState(15);
@@ -377,16 +384,13 @@ export default function EnergyTrading() {
       }
 
       const updatedState = {
-        ...currentSolar,
         batteryLevel: newLevel,
         gridDependency: Math.max(0, dependency)
       };
 
       console.log("[Eco-Sync Trading Sim] Updated State:", updatedState);
 
-      // Save back to localStorage and update state
-      localStorage.setItem("eco-sync-solar", JSON.stringify(updatedState));
-      setSolarState(updatedState);
+      updateSolarState(updatedState);
 
     }, refreshRateMs);
 
@@ -403,7 +407,7 @@ export default function EnergyTrading() {
         } catch (e) {}
       }
     };
-  }, [refreshRateMs, isSolarLoaded, tabId]);
+  }, [refreshRateMs, isSolarLoaded, tabId, updateSolarState]);
 
   // Synchronize solar state with localStorage in real-time
   useEffect(() => {
@@ -568,9 +572,7 @@ export default function EnergyTrading() {
       // 4. Update local states on success
       setWalletBalance(prev => prev + earned);
       
-      const newState = { ...solarState, batteryLevel: solarState.batteryLevel - amount };
-      setSolarState(newState);
-      localStorage.setItem("eco-sync-solar", JSON.stringify(newState));
+      updateSolarState({ batteryLevel: solarState.batteryLevel - amount });
       
       await fetchTransactionHistory();
       

@@ -111,19 +111,31 @@ export default function Home() {
     batteryChargeRate: 5.0,
     gridDependency: 0,
   });
+
+  const updateSolarState = useCallback((updates: Partial<SolarBatteryState> | ((prev: SolarBatteryState) => Partial<SolarBatteryState>)) => {
+    setSolarState(prev => {
+      const nextUpdates = typeof updates === "function" ? updates(prev) : updates;
+      const next = { ...prev, ...nextUpdates };
+      localStorage.setItem("eco-sync-solar", JSON.stringify(next));
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("storage"));
+      }
+      return next;
+    });
+  }, []);
+
   const [isSolarLoaded, setIsSolarLoaded] = useState(false);
   const [tabId] = useState(() => Math.random().toString(36).substring(2, 11));
 
   // Sync profile settings with simulator values
   useEffect(() => {
     if (user && isSolarLoaded) {
-      setSolarState(prev => ({
-        ...prev,
+      updateSolarState(prev => ({
         batteryCapacity: user.batteryCap,
         batteryLevel: Math.min(prev.batteryLevel, user.batteryCap),
       }));
     }
-  }, [user, isSolarLoaded]);
+  }, [user, isSolarLoaded, updateSolarState]);
 
   // Local Storage Backed Simulator Settings
   const [lowBatteryThreshold, setLowBatteryThreshold] = useState(15);
@@ -193,17 +205,6 @@ export default function Home() {
     }
     setIsSolarLoaded(true);
   }, []);
-
-  // Save solar to localStorage on change (after load is complete, checking for differences)
-  useEffect(() => {
-    if (isSolarLoaded) {
-      const currentStateString = JSON.stringify(solarState);
-      const savedStateString = localStorage.getItem("eco-sync-solar");
-      if (currentStateString !== savedStateString) {
-        localStorage.setItem("eco-sync-solar", currentStateString);
-      }
-    }
-  }, [solarState, isSolarLoaded]);
 
   // Synchronize solar state with localStorage in real-time
   useEffect(() => {
@@ -301,7 +302,7 @@ export default function Home() {
     localStorage.removeItem("eco-sync-devices");
     localStorage.removeItem("eco-sync-solar");
     setDevices(INITIAL_DEVICES);
-    setSolarState({
+    updateSolarState({
       solarGeneration: 0,
       batteryCapacity: 13.5,
       batteryLevel: 13.5,
@@ -529,16 +530,13 @@ export default function Home() {
       }
       
       const updatedState = {
-        ...currentSolar,
         batteryLevel: newLevel,
         gridDependency: Math.max(0, dependency)
       };
 
       console.log("[Eco-Sync Dashboard Sim] Updated State:", updatedState);
 
-      // Save back to localStorage and update state
-      localStorage.setItem("eco-sync-solar", JSON.stringify(updatedState));
-      setSolarState(updatedState);
+      updateSolarState(updatedState);
 
       // Move graph forward
       setLoadHistory((prev: number[]) => {
@@ -560,7 +558,7 @@ export default function Home() {
         } catch (e) {}
       }
     };
-  }, [totalLoad, refreshRateMs, gridSellback, user, isSolarLoaded, tabId]);
+  }, [totalLoad, refreshRateMs, gridSellback, user, isSolarLoaded, tabId, updateSolarState]);
 
   const removeNotification = (id: string) => {
     setNotifications(prev => prev.filter(n => n.id !== id));
@@ -729,7 +727,7 @@ export default function Home() {
                  <div className="flex flex-col gap-12 sticky top-32">
                    <SolarPanelManager 
                      solarState={solarState}
-                     onUpdateSolarState={(updates) => setSolarState(prev => ({ ...prev, ...updates }))}
+                     onUpdateSolarState={updateSolarState}
                      totalLoad={totalLoad}
                      lowBatteryThreshold={lowBatteryThreshold}
                    />
