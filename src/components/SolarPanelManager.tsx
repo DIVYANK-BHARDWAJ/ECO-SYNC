@@ -14,13 +14,15 @@ interface SolarPanelManagerProps {
   onUpdateSolarState: (updates: Partial<SolarBatteryState>) => void;
   totalLoad: number;
   lowBatteryThreshold?: number;
+  refreshRateMs?: number;
 }
 
 export default function SolarPanelManager({ 
   solarState, 
   onUpdateSolarState, 
   totalLoad, 
-  lowBatteryThreshold = 15 
+  lowBatteryThreshold = 15,
+  refreshRateMs = 3000,
 }: SolarPanelManagerProps) {
   
   const batteryPct = Math.round((solarState.batteryLevel / solarState.batteryCapacity) * 100);
@@ -138,7 +140,29 @@ export default function SolarPanelManager({
                   <button
                     key={preset.label}
                     type="button"
-                    onClick={() => onUpdateSolarState({ solarGeneration: preset.val })}
+                    onClick={() => {
+                      const newGen = preset.val;
+                      // Immediately compute one simulation step so charging starts right away
+                      const SIMULATION_SPEED_MULTIPLIER = 300;
+                      const intervalHours = (refreshRateMs * SIMULATION_SPEED_MULTIPLIER) / 3600000;
+                      const dependency = totalLoad - newGen;
+                      const updates: Partial<SolarBatteryState> = { solarGeneration: newGen };
+
+                      if (dependency < 0 && solarState.batteryLevel < solarState.batteryCapacity) {
+                        // Solar surplus — charge immediately
+                        const chargeKw = Math.min(-dependency, solarState.batteryChargeRate);
+                        const chargeKwh = chargeKw * intervalHours * 0.95;
+                        updates.batteryLevel = Math.min(
+                          solarState.batteryCapacity,
+                          solarState.batteryLevel + chargeKwh
+                        );
+                        updates.gridDependency = 0;
+                      } else {
+                        updates.gridDependency = Math.max(0, dependency);
+                      }
+
+                      onUpdateSolarState(updates);
+                    }}
                     className={`py-2 rounded-lg border flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer ${
                       isActive
                         ? "bg-accent-solar/20 text-accent-solar border-accent-solar/30 shadow-[0_0_10px_rgba(245,158,11,0.1)] font-bold"

@@ -730,6 +730,7 @@ export default function Home() {
                      onUpdateSolarState={updateSolarState}
                      totalLoad={totalLoad}
                      lowBatteryThreshold={lowBatteryThreshold}
+                     refreshRateMs={refreshRateMs}
                    />
                    <BudgetManager totalLoad={totalLoad} costFactor={user ? user.costFactor : 8} />
                    <div className="p-8 rounded-2xl bg-[#121214] text-white border border-white/5 shadow-2xl relative overflow-hidden group">
