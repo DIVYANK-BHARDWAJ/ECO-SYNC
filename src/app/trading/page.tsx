@@ -46,6 +46,7 @@ export default function EnergyTrading() {
     gridDependency: 0,
   });
   const [isSolarLoaded, setIsSolarLoaded] = useState(false);
+  const [tabId] = useState(() => Math.random().toString(36).substring(2, 11));
 
   // Load solar state from localStorage on mount
   useEffect(() => {
@@ -231,10 +232,14 @@ export default function EnergyTrading() {
     }
   }, [user, isSolarLoaded]);
 
-  // Save solar to localStorage on change (after load is complete)
+  // Save solar to localStorage on change (after load is complete, checking for differences)
   useEffect(() => {
     if (isSolarLoaded) {
-      localStorage.setItem("eco-sync-solar", JSON.stringify(solarState));
+      const currentStateString = JSON.stringify(solarState);
+      const savedStateString = localStorage.getItem("eco-sync-solar");
+      if (currentStateString !== savedStateString) {
+        localStorage.setItem("eco-sync-solar", currentStateString);
+      }
     }
   }, [solarState, isSolarLoaded]);
 
@@ -282,6 +287,8 @@ export default function EnergyTrading() {
 
   // Run background simulator loop on trading page when active
   useEffect(() => {
+    if (!isSolarLoaded) return;
+
     const PLAN_CONFIG: Record<string, { reduction: string; multiplier: number }> = {
       "Core Nexus": { reduction: "15%", multiplier: 0.85 },
       "Titan Pulse": { reduction: "40%", multiplier: 0.60 },
@@ -289,6 +296,27 @@ export default function EnergyTrading() {
     };
 
     const interval = setInterval(() => {
+      // Check leadership
+      const savedLeader = localStorage.getItem("eco-sync-sim-leader");
+      let isLeader = true;
+      if (savedLeader) {
+        try {
+          const leader = JSON.parse(savedLeader);
+          const now = Date.now();
+          // If there is another active tab running the simulation, yield to it
+          if (leader.tabId !== tabId && (now - leader.timestamp) < Math.max(5000, refreshRateMs * 2)) {
+            isLeader = false;
+          }
+        } catch (e) {}
+      }
+
+      if (!isLeader) {
+        return;
+      }
+
+      // We are the leader, update leadership timestamp
+      localStorage.setItem("eco-sync-sim-leader", JSON.stringify({ tabId, timestamp: Date.now() }));
+
       const SIMULATION_SPEED_MULTIPLIER = 300; // 300x faster than real-time
       const intervalHours = (refreshRateMs * SIMULATION_SPEED_MULTIPLIER) / 3600000;
       
@@ -340,7 +368,7 @@ export default function EnergyTrading() {
     }, refreshRateMs);
 
     return () => clearInterval(interval);
-  }, [simDevices, simActivePlan, refreshRateMs, simGridSellback]);
+  }, [simDevices, simActivePlan, refreshRateMs, simGridSellback, isSolarLoaded, tabId]);
 
   // Synchronize solar state with localStorage in real-time
   useEffect(() => {

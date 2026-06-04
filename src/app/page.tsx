@@ -86,6 +86,7 @@ export default function Home() {
     gridDependency: 0,
   });
   const [isSolarLoaded, setIsSolarLoaded] = useState(false);
+  const [tabId] = useState(() => Math.random().toString(36).substring(2, 11));
 
   // Sync profile settings with simulator values
   useEffect(() => {
@@ -167,12 +168,50 @@ export default function Home() {
     setIsSolarLoaded(true);
   }, []);
 
-  // Save solar to localStorage on change (after load is complete)
+  // Save solar to localStorage on change (after load is complete, checking for differences)
   useEffect(() => {
     if (isSolarLoaded) {
-      localStorage.setItem("eco-sync-solar", JSON.stringify(solarState));
+      const currentStateString = JSON.stringify(solarState);
+      const savedStateString = localStorage.getItem("eco-sync-solar");
+      if (currentStateString !== savedStateString) {
+        localStorage.setItem("eco-sync-solar", currentStateString);
+      }
     }
   }, [solarState, isSolarLoaded]);
+
+  // Synchronize solar state with localStorage in real-time
+  useEffect(() => {
+    const syncSolar = () => {
+      const savedSolar = localStorage.getItem("eco-sync-solar");
+      if (savedSolar) {
+        try {
+          const parsed = JSON.parse(savedSolar);
+          setSolarState(prev => {
+            if (
+              prev.solarGeneration === parsed.solarGeneration &&
+              prev.batteryCapacity === parsed.batteryCapacity &&
+              prev.batteryLevel === parsed.batteryLevel &&
+              prev.batteryChargeRate === parsed.batteryChargeRate &&
+              prev.gridDependency === parsed.gridDependency
+            ) {
+              return prev;
+            }
+            return { ...prev, ...parsed };
+          });
+        } catch (e) {
+          // ignore parsing errors
+        }
+      }
+    };
+
+    window.addEventListener("storage", syncSolar);
+    const interval = setInterval(syncSolar, 500);
+
+    return () => {
+      window.removeEventListener("storage", syncSolar);
+      clearInterval(interval);
+    };
+  }, []);
 
 
   const bootTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
@@ -360,7 +399,33 @@ export default function Home() {
   }, [solarState.batteryLevel, solarState.batteryCapacity, lowBatteryThreshold]);
 
   useEffect(() => {
+    if (!isSolarLoaded) return;
+
     const interval = setInterval(() => {
+      // Check leadership
+      const savedLeader = localStorage.getItem("eco-sync-sim-leader");
+      let isLeader = true;
+      if (savedLeader) {
+        try {
+          const leader = JSON.parse(savedLeader);
+          const now = Date.now();
+          // If there is another active tab running the simulation, yield to it
+          if (leader.tabId !== tabId && (now - leader.timestamp) < Math.max(5000, refreshRateMs * 2)) {
+            isLeader = false;
+          }
+        } catch (e) {}
+      }
+
+      if (!isLeader) {
+        // We are not the leader. Just move our local graphs/history forward using the current state
+        setLoadHistory((prev: number[]) => [...prev.slice(1), totalLoad]);
+        setSolarHistory((prev: number[]) => [...prev.slice(1), solarGenRef.current]);
+        return;
+      }
+
+      // We are the leader, update leadership timestamp
+      localStorage.setItem("eco-sync-sim-leader", JSON.stringify({ tabId, timestamp: Date.now() }));
+
       const SIMULATION_SPEED_MULTIPLIER = 300; // 300x faster than real-time
       const intervalHours = (refreshRateMs * SIMULATION_SPEED_MULTIPLIER) / 3600000;
       const addedKwh = totalLoad * intervalHours;
@@ -425,7 +490,7 @@ export default function Home() {
       setSolarHistory((prev: number[]) => [...prev.slice(1), solarGenRef.current]);
     }, refreshRateMs);
     return () => clearInterval(interval);
-  }, [totalLoad, refreshRateMs, gridSellback, user]);
+  }, [totalLoad, refreshRateMs, gridSellback, user, isSolarLoaded, tabId]);
 
   const removeNotification = (id: string) => {
     setNotifications(prev => prev.filter(n => n.id !== id));
