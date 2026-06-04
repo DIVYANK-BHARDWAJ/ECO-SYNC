@@ -56,6 +56,32 @@ export default function Home() {
   const handleIntroComplete = () => {
     setShowIntro(false);
   };
+
+  // Skip intro if URL has hash or query parameters requesting to go straight to console
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (window.location.hash === "#command-center" || window.location.search.includes("skipIntro=true")) {
+        setShowIntro(false);
+      }
+    }
+  }, []);
+
+  // Handle scrolling to hash element when intro is skipped or finished
+  useEffect(() => {
+    if (!showIntro && typeof window !== "undefined") {
+      const hash = window.location.hash;
+      if (hash) {
+        const id = hash.substring(1);
+        const element = document.getElementById(id);
+        if (element) {
+          setTimeout(() => {
+            element.scrollIntoView({ behavior: "auto", block: "start" });
+          }, 100);
+        }
+      }
+    }
+  }, [showIntro]);
+
   const [showLogs, setShowLogs] = useState(false);
   const [showPlans, setShowPlans] = useState(false);
   const [activePlanId, setActivePlanId] = useState<string | null>(null);
