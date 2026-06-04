@@ -41,7 +41,7 @@ export default function EnergyTrading() {
   const [solarState, setSolarState] = useState<SolarBatteryState>({
     solarGeneration: 0,
     batteryCapacity: 13.5,
-    batteryLevel: 0,
+    batteryLevel: 13.5,
     batteryChargeRate: 5.0,
     gridDependency: 0,
   });
@@ -329,45 +329,70 @@ export default function EnergyTrading() {
         load *= PLAN_CONFIG[simActivePlan].multiplier;
       }
 
-      setSolarState(prev => {
-        let dependency = load - prev.solarGeneration;
-        let newLevel = prev.batteryLevel;
-        
-        const chargeEfficiency = 0.95;
-        const dischargeEfficiency = 0.95;
-        
-        if (dependency < 0) {
-          // charge battery
-          const availableChargeKw = Math.min(-dependency, prev.batteryChargeRate);
-          const chargeKwh = availableChargeKw * intervalHours;
-          newLevel = Math.min(prev.batteryCapacity, prev.batteryLevel + (chargeKwh * chargeEfficiency));
-          dependency = 0;
-        } else if (dependency > 0 && prev.batteryLevel > 0) {
-          // discharge battery
-          const requiredFromBatteryKw = dependency / dischargeEfficiency;
-          const actualDrawKw = Math.min(requiredFromBatteryKw, prev.batteryChargeRate);
-          const actualDrawKwh = actualDrawKw * intervalHours;
-          const finalDrawKwh = Math.min(actualDrawKwh, prev.batteryLevel);
-          const energyProvidedKw = (finalDrawKwh / intervalHours) * dischargeEfficiency;
-          
-          newLevel = prev.batteryLevel - finalDrawKwh;
-          dependency = load - prev.solarGeneration - energyProvidedKw;
-        }
+      // Read latest solar state from localStorage first to prevent React state stale overrides
+      let currentSolar = {
+        solarGeneration: 0,
+        batteryCapacity: 13.5,
+        batteryLevel: 13.5,
+        batteryChargeRate: 5.0,
+        gridDependency: 0,
+      };
+      const savedSolar = localStorage.getItem("eco-sync-solar");
+      if (savedSolar) {
+        try {
+          currentSolar = { ...currentSolar, ...JSON.parse(savedSolar) };
+        } catch (e) {}
+      }
 
-        const updatedState = {
-          ...prev,
-          batteryLevel: newLevel,
-          gridDependency: Math.max(0, dependency)
-        };
+      let dependency = load - currentSolar.solarGeneration;
+      let newLevel = currentSolar.batteryLevel;
+      
+      const chargeEfficiency = 0.95;
+      const dischargeEfficiency = 0.95;
+      
+      if (dependency < 0) {
+        // charge battery
+        const availableChargeKw = Math.min(-dependency, currentSolar.batteryChargeRate);
+        const chargeKwh = availableChargeKw * intervalHours;
+        newLevel = Math.min(currentSolar.batteryCapacity, currentSolar.batteryLevel + (chargeKwh * chargeEfficiency));
+        dependency = 0;
+      } else if (dependency > 0 && currentSolar.batteryLevel > 0) {
+        // discharge battery
+        const requiredFromBatteryKw = dependency / dischargeEfficiency;
+        const actualDrawKw = Math.min(requiredFromBatteryKw, currentSolar.batteryChargeRate);
+        const actualDrawKwh = actualDrawKw * intervalHours;
+        const finalDrawKwh = Math.min(actualDrawKwh, currentSolar.batteryLevel);
+        const energyProvidedKw = (finalDrawKwh / intervalHours) * dischargeEfficiency;
+        
+        newLevel = currentSolar.batteryLevel - finalDrawKwh;
+        dependency = load - currentSolar.solarGeneration - energyProvidedKw;
+      }
 
-        // Save back to localStorage to keep other tabs/views in sync
-        localStorage.setItem("eco-sync-solar", JSON.stringify(updatedState));
-        return updatedState;
-      });
+      const updatedState = {
+        ...currentSolar,
+        batteryLevel: newLevel,
+        gridDependency: Math.max(0, dependency)
+      };
+
+      // Save back to localStorage and update state
+      localStorage.setItem("eco-sync-solar", JSON.stringify(updatedState));
+      setSolarState(updatedState);
 
     }, refreshRateMs);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      // Clean up leadership on unmount to prevent blocking other views
+      const savedLeader = localStorage.getItem("eco-sync-sim-leader");
+      if (savedLeader) {
+        try {
+          const leader = JSON.parse(savedLeader);
+          if (leader.tabId === tabId) {
+            localStorage.removeItem("eco-sync-sim-leader");
+          }
+        } catch (e) {}
+      }
+    };
   }, [simDevices, simActivePlan, refreshRateMs, simGridSellback, isSolarLoaded, tabId]);
 
   // Synchronize solar state with localStorage in real-time
