@@ -1,18 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { verifyToken } from "@/lib/session";
+import { cookies } from "next/headers";
 
 // Fetch user profile
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const email = searchParams.get("email");
+    const sessionCookie = cookies().get("session")?.value;
+    if (!sessionCookie) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    if (!email) {
-      return NextResponse.json({ error: "Email parameter is required" }, { status: 400 });
+    const decoded = verifyToken(sessionCookie);
+    if (!decoded || !decoded.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const user = await db.user.findUnique({
-      where: { email: email.toLowerCase().trim() },
+      where: { email: decoded.email },
     });
 
     if (!user) {
@@ -29,18 +34,22 @@ export async function GET(req: NextRequest) {
 // Update user profile
 export async function PATCH(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { email, ...updates } = body;
-
-    if (!email) {
-      return NextResponse.json({ error: "Email is required" }, { status: 400 });
+    const sessionCookie = cookies().get("session")?.value;
+    if (!sessionCookie) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const targetEmail = email.toLowerCase().trim();
+    const decoded = verifyToken(sessionCookie);
+    if (!decoded || !decoded.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await req.json();
+    const { ...updates } = body;
 
     // Check if user exists
     const user = await db.user.findUnique({
-      where: { email: targetEmail },
+      where: { email: decoded.email },
     });
 
     if (!user) {
@@ -57,7 +66,7 @@ export async function PATCH(req: NextRequest) {
     if (updates.batteryCap !== undefined) allowedUpdates.batteryCap = Number(updates.batteryCap);
 
     const updatedUser = await db.user.update({
-      where: { email: targetEmail },
+      where: { email: decoded.email },
       data: allowedUpdates,
     });
 

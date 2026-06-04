@@ -1,17 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { verifyToken } from "@/lib/session";
+import { cookies } from "next/headers";
 
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const email = searchParams.get("email");
+    const sessionCookie = cookies().get("session")?.value;
+    if (!sessionCookie) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    if (!email) {
-      return NextResponse.json({ error: "Email is required" }, { status: 400 });
+    const decoded = verifyToken(sessionCookie);
+    if (!decoded || !decoded.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const user = await db.user.findUnique({
-      where: { email: email.toLowerCase().trim() },
+      where: { email: decoded.email },
       include: {
         transactions: {
           orderBy: { createdAt: "desc" },

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { signToken } from "@/lib/session";
+import { cookies } from "next/headers";
 
 export async function POST(req: NextRequest) {
   try {
@@ -50,6 +52,16 @@ export async function POST(req: NextRequest) {
         },
       });
     }
+
+    // 4. Generate token and set in secure HttpOnly cookie
+    const token = signToken({ email: targetEmail });
+    cookies().set("session", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60, // 1 week in seconds
+      path: "/",
+    });
 
     return NextResponse.json({
       success: true,

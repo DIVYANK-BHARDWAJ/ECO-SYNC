@@ -52,26 +52,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     async function loadSession() {
       try {
-        const savedEmail = localStorage.getItem("eco-sync-user-email");
-        if (savedEmail) {
-          try {
-            const response = await fetchWithTimeout(`/api/auth/profile?email=${encodeURIComponent(savedEmail)}`, {}, 8000);
+        const response = await fetchWithTimeout("/api/auth/profile", {}, 8000);
 
-            if (response.ok) {
-              const data = await response.json();
-              if (data.user) {
-                setUser(data.user);
-                if (data.user.themeMode) {
-                  setThemeMode(data.user.themeMode);
-                }
-              }
+        if (response.ok) {
+          const data = await response.json();
+          if (data.user) {
+            setUser(data.user);
+            localStorage.setItem("eco-sync-user-email", data.user.email);
+            if (data.user.themeMode) {
+              setThemeMode(data.user.themeMode);
             }
-          } catch (fetchError) {
-            console.warn("Session load fetch failed or timed out:", fetchError);
           }
+        } else {
+          setUser(null);
+          localStorage.removeItem("eco-sync-user-email");
         }
       } catch (e) {
         console.error("Failed to load user session", e);
+        setUser(null);
+        localStorage.removeItem("eco-sync-user-email");
       } finally {
         setLoading(false);
       }
@@ -132,7 +131,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const response = await fetchWithTimeout("/api/auth/profile", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: user.email, ...updates }),
+      body: JSON.stringify(updates),
     });
 
     if (!response.ok) {
@@ -151,6 +150,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = () => {
+    fetchWithTimeout("/api/auth/signout", {
+      method: "POST",
+    }, 5000).catch((err) => console.warn("Failed to clear session on server:", err));
     setUser(null);
     localStorage.removeItem("eco-sync-user-email");
   };

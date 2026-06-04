@@ -3,12 +3,24 @@ import { ethers } from "ethers";
 import fs from "fs";
 import path from "path";
 import { db } from "@/lib/db";
+import { verifyToken } from "@/lib/session";
+import { cookies } from "next/headers";
 
 export async function POST(req: NextRequest) {
   try {
-    const { userAddress, amount, price, signature, email } = await req.json();
+    const sessionCookie = cookies().get("session")?.value;
+    if (!sessionCookie) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    if (!userAddress || !amount || !price || !signature || !email) {
+    const decoded = verifyToken(sessionCookie);
+    if (!decoded || !decoded.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { userAddress, amount, price, signature } = await req.json();
+
+    if (!userAddress || !amount || !price || !signature) {
       return NextResponse.json({ error: "Missing required parameters" }, { status: 400 });
     }
 
@@ -60,7 +72,7 @@ export async function POST(req: NextRequest) {
     // 6. Save the transaction record to the database
     try {
       const user = await db.user.findUnique({
-        where: { email: email.toLowerCase().trim() }
+        where: { email: decoded.email }
       });
       if (user) {
         await db.transaction.create({

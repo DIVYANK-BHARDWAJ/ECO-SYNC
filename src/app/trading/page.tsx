@@ -397,7 +397,7 @@ export default function EnergyTrading() {
   const fetchTransactionHistory = async () => {
     if (!user?.email) return;
     try {
-      const res = await fetch(`/api/trading/history?email=${encodeURIComponent(user.email)}`);
+      const res = await fetch("/api/trading/history");
       const data = await res.json();
       if (res.ok && data.success) {
         const formatted = data.transactions.map((tx: any) => {
@@ -470,8 +470,7 @@ export default function EnergyTrading() {
           userAddress: account,
           amount: amount,
           price: marketPrice,
-          signature: signature,
-          email: user?.email
+          signature: signature
         })
       });
 
