@@ -1,6 +1,16 @@
 import crypto from "crypto";
 
-const SESSION_SECRET = process.env.SESSION_SECRET || "default-session-secret-for-eco-sync-nexus-development-only-replace-in-production";
+if (!process.env.SESSION_SECRET && process.env.NODE_ENV === "production") {
+  console.warn(
+    "=========================================================================\n" +
+    "[SECURITY WARNING] SESSION_SECRET is not configured in environment variables.\n" +
+    "A random secret has been generated at runtime, but users will be logged out\n" +
+    "whenever serverless functions spin down or restart.\n" +
+    "========================================================================="
+  );
+}
+
+const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString("hex");
 
 export function signToken(payload: { email: string }): string {
   // Expires in 7 days
