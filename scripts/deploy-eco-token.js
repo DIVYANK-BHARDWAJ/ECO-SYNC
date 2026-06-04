@@ -26,7 +26,7 @@ if (fs.existsSync(envPath)) {
 
 async function main() {
   const privateKey = process.env.BLOCKCHAIN_PRIVATE_KEY;
-  const rpcUrl = process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || "https://ethereum-sepolia-rpc.publicnode.com";
+  const rpcUrl = process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || "https://sepolia.drpc.org";
 
   if (!privateKey) {
     console.error("ERROR: BLOCKCHAIN_PRIVATE_KEY is not defined in .env.local");

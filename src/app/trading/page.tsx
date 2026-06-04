@@ -131,7 +131,7 @@ export default function EnergyTrading() {
                 {
                   chainId: SEPOLIA_CHAIN_ID,
                   chainName: "Sepolia Test Network",
-                  rpcUrls: ["https://ethereum-sepolia-rpc.publicnode.com"],
+                  rpcUrls: ["https://sepolia.drpc.org"],
                   nativeCurrency: {
                     name: "Sepolia Ether",
                     symbol: "ETH",
