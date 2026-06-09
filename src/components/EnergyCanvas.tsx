@@ -30,7 +30,7 @@ export default function EnergyCanvas({ scrollProgress }: EnergyCanvasProps) {
     requestedFrames.current[i] = true;
 
     const img = new Image();
-    img.src = `/new_animation/frame_${i.toString().padStart(3, "0")}_delay-0.055s.png`;
+    img.src = `/new_animation_webp/frame_${i.toString().padStart(3, "0")}_delay-0.055s.webp`;
     imagesRef.current[i] = img;
 
     img.onload = () => {
