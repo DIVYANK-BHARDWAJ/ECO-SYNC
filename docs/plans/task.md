@@ -1,10 +1,8 @@
-# Blockchain Integration Task Tracker
+# Task Status Tracker
 
-| Task ID | Description | Status |
-|---|---|---|
-| Task 1 | Environment & Dependencies | Completed |
-| Task 2 | EcoToken Smart Contract | Completed |
-| Task 3 | Solidity Compiler Script | Completed |
-| Task 4 | Deployment Script | Completed |
-| Task 5 | Backend API Settle Route | Completed |
-| Task 6 | Frontend Trading Integration | Completed |
+| Task | Description | Status |
+| --- | --- | --- |
+| Task 1 | Environment Variables Configuration | Completed |
+| Task 2 | Create Context Formatting Utility and Write Tests | Completed |
+| Task 3 | Implement Custom React Chatbot Component | Completed |
+| Task 4 | Mount Component on Homepage and Trading page | Completed |

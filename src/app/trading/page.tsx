@@ -15,6 +15,7 @@ import AuthModal from "@/components/AuthModal";
 import SettingsDrawer from "@/components/SettingsDrawer";
 import { useAuth } from "@/context/AuthContext";
 import AuthPage from "@/components/AuthPage";
+import BotpressChatbot from "@/components/BotpressChatbot";
 
 type Transaction = {
   id: string;
@@ -916,6 +917,18 @@ export default function EnergyTrading() {
           />
         )}
       </AnimatePresence>
+      <BotpressChatbot
+        context={{
+          name: user.name || "Nexus Explorer",
+          email: user.email,
+          batteryLevel: solarState.batteryLevel,
+          batteryCapacity: solarState.batteryCapacity,
+          solarGeneration: solarState.solarGeneration,
+          gridDependency: solarState.gridDependency,
+          walletBalance: walletBalance,
+          activeDevices: simDevicesRef.current.filter(d => d.isOn).map(d => d.label).join(", ") || "None",
+        }}
+      />
     </main>
   );
 }

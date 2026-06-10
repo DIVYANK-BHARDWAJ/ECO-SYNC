@@ -25,6 +25,7 @@ import AuthModal from "@/components/AuthModal";
 import SettingsDrawer from "@/components/SettingsDrawer";
 import { useAuth } from "@/context/AuthContext";
 import AuthPage from "@/components/AuthPage";
+import BotpressChatbot from "@/components/BotpressChatbot";
 
 const PLAN_CONFIG: Record<string, { reduction: string; multiplier: number }> = {
   "Core Nexus": { reduction: "15%", multiplier: 0.85 },
@@ -790,6 +791,18 @@ export default function Home() {
           </div>
         </div>
       )}
+      <BotpressChatbot
+        context={{
+          name: user.name || "Nexus Explorer",
+          email: user.email,
+          batteryLevel: solarState.batteryLevel,
+          batteryCapacity: solarState.batteryCapacity,
+          solarGeneration: solarState.solarGeneration,
+          gridDependency: solarState.gridDependency,
+          walletBalance: 0.00,
+          activeDevices: devices.filter(d => d.isOn).map(d => d.label).join(", ") || "None",
+        }}
+      />
     </main>
   );
 }
