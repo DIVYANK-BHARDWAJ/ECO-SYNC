@@ -12,6 +12,9 @@ interface UserData {
   themeMode: string;
   costFactor: number;
   batteryCap: number;
+  phoneNumber?: string | null;
+  notificationType?: string;
+  messageStyle?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -34,12 +37,28 @@ interface TransactionData {
   userId: string;
 }
 
+interface ApplianceScheduleData {
+  id: string;
+  deviceName: string;
+  powerDraw: number;
+  startTime: string; // HH:MM simulated time
+  duration: number; // in hours
+  status: string; // "pending" | "running" | "completed" | "cancelled"
+  createdAt: Date;
+  userId: string;
+}
+
 const MOCK_DB_PATH = path.join(process.cwd(), "mock-db.json");
 
 // Helper to read mock db from JSON
-function readMockDb(): { users: UserData[]; otps: OtpData[]; transactions: TransactionData[] } {
+function readMockDb(): { 
+  users: UserData[]; 
+  otps: OtpData[]; 
+  transactions: TransactionData[];
+  schedules: ApplianceScheduleData[];
+} {
   if (!fs.existsSync(MOCK_DB_PATH)) {
-    return { users: [], otps: [], transactions: [] };
+    return { users: [], otps: [], transactions: [], schedules: [] };
   }
   try {
     const content = fs.readFileSync(MOCK_DB_PATH, "utf-8");
@@ -59,21 +78,31 @@ function readMockDb(): { users: UserData[]; otps: OtpData[]; transactions: Trans
         ...t,
         createdAt: new Date(t.createdAt),
       })),
+      schedules: (data.schedules || []).map((s: any) => ({
+        ...s,
+        createdAt: new Date(s.createdAt),
+      })),
     };
   } catch (e) {
     console.error("Failed to read mock db, returning empty default", e);
-    return { users: [], otps: [], transactions: [] };
+    return { users: [], otps: [], transactions: [], schedules: [] };
   }
 }
 
 // Helper to write mock db to JSON
-function writeMockDb(data: { users: UserData[]; otps: OtpData[]; transactions: TransactionData[] }) {
+function writeMockDb(data: { 
+  users: UserData[]; 
+  otps: OtpData[]; 
+  transactions: TransactionData[];
+  schedules: ApplianceScheduleData[];
+}) {
   try {
     fs.writeFileSync(MOCK_DB_PATH, JSON.stringify(data, null, 2), "utf-8");
   } catch (e) {
     console.error("Failed to write mock db", e);
   }
 }
+
 
 // Create a singleton Prisma client
 let prismaInstance: PrismaClient | null = null;
@@ -93,7 +122,7 @@ export const db = {
 
   user: {
     findUnique: async (args: { 
-      where: { email: string }; 
+      where: { email?: string; id?: string }; 
       include?: { transactions: any }
     }): Promise<(UserData & { transactions?: TransactionData[] }) | null> => {
       if (prismaInstance) {
@@ -108,7 +137,11 @@ export const db = {
         }
       }
       const data = readMockDb();
-      const user = data.users.find(u => u.email.toLowerCase() === args.where.email.toLowerCase());
+      const user = data.users.find(u => {
+        if (args.where.id && u.id === args.where.id) return true;
+        if (args.where.email && u.email.toLowerCase() === args.where.email.toLowerCase()) return true;
+        return false;
+      });
       if (!user) return null;
 
       const transactions = args.include?.transactions 
@@ -147,6 +180,9 @@ export const db = {
         themeMode: args.data.themeMode || "system",
         costFactor: args.data.costFactor ?? 8.0,
         batteryCap: args.data.batteryCap ?? 13.5,
+        phoneNumber: args.data.phoneNumber || null,
+        notificationType: args.data.notificationType || "none",
+        messageStyle: args.data.messageStyle || "random",
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -289,5 +325,102 @@ export const db = {
       writeMockDb({ ...data, transactions: data.transactions });
       return newTx;
     }
+  },
+
+  applianceSchedule: {
+    findMany: async (args: { where: { userId: string } }): Promise<ApplianceScheduleData[]> => {
+      if (prismaInstance) {
+        try {
+          const prismaPromise = (prismaInstance as any).applianceSchedule.findMany(args as any);
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error("Prisma timeout")), 5000)
+          );
+          return await Promise.race([prismaPromise, timeoutPromise]) as ApplianceScheduleData[];
+        } catch (e) {
+          console.warn("Prisma schedule lookup failed or timed out, falling back to mock database", e);
+        }
+      }
+      const data = readMockDb();
+      return data.schedules.filter(s => s.userId === args.where.userId);
+    },
+
+    create: async (args: { 
+      data: { deviceName: string; powerDraw: number; startTime: string; duration: number; userId: string } 
+    }): Promise<ApplianceScheduleData> => {
+      if (prismaInstance) {
+        try {
+          const prismaPromise = (prismaInstance as any).applianceSchedule.create(args as any);
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error("Prisma timeout")), 5000)
+          );
+          return await Promise.race([prismaPromise, timeoutPromise]) as ApplianceScheduleData;
+        } catch (e) {
+          console.warn("Prisma schedule creation failed or timed out, falling back to mock database", e);
+        }
+      }
+      const data = readMockDb();
+      const newSchedule: ApplianceScheduleData = {
+        id: Math.random().toString(36).substr(2, 9),
+        deviceName: args.data.deviceName,
+        powerDraw: args.data.powerDraw,
+        startTime: args.data.startTime,
+        duration: args.data.duration,
+        status: "pending",
+        createdAt: new Date(),
+        userId: args.data.userId
+      };
+      data.schedules.push(newSchedule);
+      writeMockDb({ ...data, schedules: data.schedules });
+      return newSchedule;
+    },
+
+    update: async (args: { 
+      where: { id: string }; 
+      data: Partial<ApplianceScheduleData> 
+    }): Promise<ApplianceScheduleData> => {
+      if (prismaInstance) {
+        try {
+          const prismaPromise = (prismaInstance as any).applianceSchedule.update(args as any);
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error("Prisma timeout")), 5000)
+          );
+          return await Promise.race([prismaPromise, timeoutPromise]) as ApplianceScheduleData;
+        } catch (e) {
+          console.warn("Prisma schedule update failed or timed out, falling back to mock database", e);
+        }
+      }
+      const data = readMockDb();
+      const idx = data.schedules.findIndex(s => s.id === args.where.id);
+      if (idx === -1) {
+        throw new Error("Schedule not found");
+      }
+      const updated: ApplianceScheduleData = {
+        ...data.schedules[idx],
+        ...args.data
+      };
+      data.schedules[idx] = updated;
+      writeMockDb({ ...data, schedules: data.schedules });
+      return updated;
+    },
+
+    delete: async (args: { where: { id: string } }): Promise<{ id: string }> => {
+      if (prismaInstance) {
+        try {
+          const prismaPromise = (prismaInstance as any).applianceSchedule.delete(args as any);
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error("Prisma timeout")), 5000)
+          );
+          await Promise.race([prismaPromise, timeoutPromise]);
+          return { id: args.where.id };
+        } catch (e) {
+          console.warn("Prisma schedule deletion failed or timed out, falling back to mock database", e);
+        }
+      }
+      const data = readMockDb();
+      data.schedules = data.schedules.filter(s => s.id !== args.where.id);
+      writeMockDb({ ...data, schedules: data.schedules });
+      return { id: args.where.id };
+    }
   }
 };
+

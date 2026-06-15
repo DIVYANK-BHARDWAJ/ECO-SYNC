@@ -21,8 +21,14 @@ model User {
   costFactor  Float    @default(8.0)
   batteryCap  Float    @default(13.5)
   
+  // Twilio & WhatsApp Settings
+  phoneNumber      String?
+  notificationType String   @default("none")
+  messageStyle     String   @default("random")
+  
   otps         OtpVerification[]
   transactions Transaction[]
+  schedules    ApplianceSchedule[]
 }
 
 model OtpVerification {
@@ -45,3 +51,16 @@ model Transaction {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String
 }
+
+model ApplianceSchedule {
+  id         String   @id @default(uuid())
+  deviceName String
+  powerDraw  Float
+  startTime  String   // format "HH:MM" (simulated clock time)
+  duration   Float    // duration in hours
+  status     String   @default("pending") // "pending" | "running" | "completed" | "cancelled"
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+}
+
