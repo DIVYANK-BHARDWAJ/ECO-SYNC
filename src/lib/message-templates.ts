@@ -1,6 +1,6 @@
 export type MessageStyle = "random" | "nexus-border" | "quantum-terminal" | "neo-minimalist" | "grid-override";
 
-const STYLES: MessageStyle[] = ["nexus-border", "quantum-terminal", "neo-minimalist", "grid-override"];
+const STYLES: Exclude<MessageStyle, "random">[] = ["nexus-border", "quantum-terminal", "neo-minimalist", "grid-override"];
 
 function resolveStyle(selected: MessageStyle): Exclude<MessageStyle, "random"> {
   if (selected === "random" || !selected) {
@@ -62,5 +62,19 @@ export function getTradeMessage(style: MessageStyle, kwh: string, rate: string, 
       return `⚙️ *NEXUS ASSET EXCHANGE // SUCCESS*\n════════════════════════\n🔋 *YIELD TRANSFERRED:* \`${kwh} kWh\`\n💎 *VALUE RECEIVED:*    \`+${totalEarned} ECO\`\n🔗 *CHAIN SIGNATURE:*   \`${txHash}\`\n════════════════════════\n*STATUS:* _VERIFIED SECURE_`;
     case "grid-override":
       return `📡 [LEDGER BROADCAST CONFIRMED]\n================================\n⚡ SOLD:  ${kwh} kWh\n🪙 VALUE: ${totalEarned} ECO\n🔗 HASH:  ${txHash}\n================================\nTRANSACTION SYNCHRONIZED SECURE`;
+  }
+}
+
+export function getTestMessage(style: MessageStyle): string {
+  const actualStyle = resolveStyle(style);
+  switch (actualStyle) {
+    case "nexus-border":
+      return `┌─── ECO-SYNC NEXUS ───┐\n│   TEST NOTIFICATION  │\n├──────────────────────┤\n│ ✅ ALERTS CONNECTED  │\n│ 📱 SMS:  ACTIVE      │\n│ 💬 WA:   ACTIVE      │\n├──────────────────────┤\n│ YOUR NEXUS IS LIVE!  │\n└──────────────────────┘`;
+    case "quantum-terminal":
+      return `╔═══ ECO-SYNC: TEST ═══╗\n║  Alerts Connection   ║\n╠══════════════════════╣\n║ ✅ ALERTS: ACTIVE    ║\n║ 📱 SMS:    ACTIVE    ║\n║ 💬 WA:     ACTIVE    ║\n╠══════════════════════╣\n║ YOUR NEXUS IS ONLINE ║\n╚══════════════════════╝`;
+    case "neo-minimalist":
+      return `/// UPLINK TEST SYSTEM ///\n───────────────────────────\nAlert Channels: CONNECTED\nSMS Broadcast:  ACTIVE\nWhatsApp Link:  ACTIVE\n───────────────────────────\nSTATUS: ONLINE & VERIFIED`;
+    case "grid-override":
+      return `⚠️ NEXUS BROADCAST SYSTEM ⚠️\n===========================\nTEST NOTIFICATION SUCCESS\nALERTS STATE: ACTIVE\nGRID SYNC:    CONNECTED\n===========================\nGRID UPLINK LIVE`;
   }
 }

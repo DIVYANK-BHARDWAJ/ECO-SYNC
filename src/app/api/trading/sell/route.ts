@@ -5,6 +5,8 @@ import path from "path";
 import { db } from "@/lib/db";
 import { verifyToken } from "@/lib/session";
 import { cookies } from "next/headers";
+import { sendTwilioMessage } from "@/lib/twilio";
+import { getTradeMessage, MessageStyle } from "@/lib/message-templates";
 
 export async function POST(req: NextRequest) {
   try {
@@ -84,9 +86,29 @@ export async function POST(req: NextRequest) {
             userId: user.id
           }
         });
+
+        // Trigger Twilio Alert if user has a phone number (sends to BOTH SMS & WhatsApp)
+        if (user.phoneNumber) {
+          const txHash = `${tx.hash.substring(0, 10)}...`;
+          const kwh = Number(amount).toFixed(1);
+          const rate = Number(price).toFixed(2);
+          const totalEarned = (Number(amount) * Number(price)).toFixed(2);
+
+          const style = (user.messageStyle || "random") as MessageStyle;
+          const alertBody = getTradeMessage(style, kwh, rate, totalEarned, txHash);
+
+          // Always send via SMS
+          sendTwilioMessage(user.phoneNumber, "sms", alertBody)
+            .catch(err => console.error("Failed to send trade SMS notification:", err));
+
+          // Always send via WhatsApp (with premium cyberpunk media card)
+          const tradeMediaUrl = "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?auto=format&fit=crop&w=800&q=80";
+          sendTwilioMessage(user.phoneNumber, "whatsapp", alertBody, tradeMediaUrl)
+            .catch(err => console.error("Failed to send trade WhatsApp notification:", err));
+        }
       }
     } catch (dbError) {
-      console.error("Failed to save transaction to database:", dbError);
+      console.error("Failed to save transaction to database or send alert:", dbError);
       // We don't fail the request if the blockchain transaction itself was successful
     }
 

@@ -2,15 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { Resend } from "resend";
 import nodemailer from "nodemailer";
+import { parseIdentifier } from "@/lib/auth-utils";
+import { sendTwilioMessage } from "@/lib/twilio";
+import { getOtpMessage, MessageStyle } from "@/lib/message-templates";
 
 export async function POST(req: NextRequest) {
   try {
     const { email, isSignUp } = await req.json();
     if (!email) {
-      return NextResponse.json({ error: "Email is required" }, { status: 400 });
+      return NextResponse.json({ error: "Email or Phone is required" }, { status: 400 });
     }
 
-    const targetEmail = email.toLowerCase().trim();
+    const parsed = parseIdentifier(email);
+    const targetEmail = parsed.email;
 
     if (isSignUp) {
       const user = await db.user.findUnique({
@@ -38,6 +42,29 @@ export async function POST(req: NextRequest) {
         expiresAt,
       },
     });
+
+    if (parsed.isPhone) {
+      // Send OTP via SMS (Twilio)
+      // Try to find if user exists to read their messageStyle preference
+      const existingUser = await db.user.findUnique({
+        where: { email: parsed.email }
+      });
+      const style = (existingUser?.messageStyle || "random") as MessageStyle;
+      const selectedSms = getOtpMessage(style, code);
+
+      const twilioRes = await sendTwilioMessage(parsed.phoneNumber!, "sms", selectedSms);
+
+      if (twilioRes.success) {
+        return NextResponse.json({
+          success: true,
+          message: "Verification code sent to your phone number",
+          ...(twilioRes.fallback ? { mockOtp: code } : {}) // return mockOtp in mock mode for testing
+        });
+      } else {
+        console.error("Failed to send OTP via Twilio:", twilioRes.error);
+        return NextResponse.json({ error: twilioRes.error || "Failed to send SMS OTP" }, { status: 500 });
+      }
+    }
 
     const apiKey = process.env.RESEND_API_KEY;
     
