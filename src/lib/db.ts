@@ -15,6 +15,7 @@ interface UserData {
   phoneNumber?: string | null;
   notificationType?: string;
   messageStyle?: string;
+  telegramChatId?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -183,6 +184,7 @@ export const db = {
         phoneNumber: args.data.phoneNumber || null,
         notificationType: args.data.notificationType || "none",
         messageStyle: args.data.messageStyle || "random",
+        telegramChatId: args.data.telegramChatId || "",
         createdAt: new Date(),
         updatedAt: new Date(),
       };

@@ -25,6 +25,7 @@ model User {
   phoneNumber      String?
   notificationType String   @default("none")
   messageStyle     String   @default("random")
+  telegramChatId   String?  @default("")
   
   otps         OtpVerification[]
   transactions Transaction[]
