@@ -574,7 +574,7 @@ export default function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps)
                 {/* Message Notification Bubble */}
                 <div className="flex-1 bg-zinc-950 border border-zinc-900 rounded-xl p-2 relative overflow-y-auto min-h-0 flex flex-col justify-center">
                   <div className="text-[7px] text-zinc-500 font-mono mb-1 flex justify-between">
-                    <span>💬 TWILIO GATEWAY / ECO-SYNC UPLINK</span>
+                    <span>💬 ECO-SYNC UPLINK</span>
                     <span>JUST NOW</span>
                   </div>
                   <pre className="font-mono text-[8px] leading-tight text-emerald-400 bg-black/90 p-2 rounded-lg border border-emerald-950/80 whitespace-pre overflow-x-auto shadow-[0_0_12px_rgba(16,185,129,0.06)] scrollbar-none select-text">
