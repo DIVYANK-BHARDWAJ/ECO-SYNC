@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { verifyToken } from "@/lib/session";
 import { cookies } from "next/headers";
+import { parseIdentifier } from "@/lib/auth-utils";
 
 // Fetch user profile
 export async function GET(req: NextRequest) {
@@ -64,6 +65,21 @@ export async function PATCH(req: NextRequest) {
     if (updates.themeMode !== undefined) allowedUpdates.themeMode = updates.themeMode;
     if (updates.costFactor !== undefined) allowedUpdates.costFactor = Number(updates.costFactor);
     if (updates.batteryCap !== undefined) allowedUpdates.batteryCap = Number(updates.batteryCap);
+    
+    if (updates.phoneNumber !== undefined) {
+      if (updates.phoneNumber === null || updates.phoneNumber === "") {
+        allowedUpdates.phoneNumber = null;
+      } else {
+        const parsed = parseIdentifier(updates.phoneNumber);
+        allowedUpdates.phoneNumber = parsed.phoneNumber;
+      }
+    }
+    if (updates.notificationType !== undefined) {
+      allowedUpdates.notificationType = updates.notificationType;
+    }
+    if (updates.messageStyle !== undefined) {
+      allowedUpdates.messageStyle = updates.messageStyle;
+    }
 
     const updatedUser = await db.user.update({
       where: { email: decoded.email },
