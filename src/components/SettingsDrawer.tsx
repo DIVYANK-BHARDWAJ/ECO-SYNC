@@ -4,10 +4,11 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
   X, User, ShieldCheck, Sun, Moon, Laptop, Loader2, Cpu, 
-  BatteryCharging, RefreshCw, Zap, ShieldAlert, Check 
+  BatteryCharging, RefreshCw, Zap, ShieldAlert, Check, Smartphone 
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
+import { getOtpMessage, getTimerMessage, getDeviceMessage, getTradeMessage, MessageStyle } from "@/lib/message-templates";
 
 interface SettingsDrawerProps {
   isOpen: boolean;
@@ -31,11 +32,18 @@ export default function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps)
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [countryCode, setCountryCode] = useState("+91");
+  const [phoneDigits, setPhoneDigits] = useState("");
   
   // Section 2: System Settings State
   const [themeMode, setThemeModeState] = useState<"dark" | "light" | "system">("system");
   const [costFactor, setCostFactor] = useState(8.0);
   const [batteryCap, setBatteryCap] = useState(13.5);
+  const [notificationType, setNotificationType] = useState("both");
+  
+  // Cyberpunk Message Styles state
+  const [messageStyle, setMessageStyle] = useState<MessageStyle>("random");
+  const [previewTab, setPreviewTab] = useState<"otp" | "timer" | "trade">("trade");
   
   // New Simulator Settings (Local Storage backed)
   const [lowBatteryThreshold, setLowBatteryThreshold] = useState(15);
@@ -56,6 +64,23 @@ export default function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps)
       setThemeModeState(user.themeMode || "system");
       setCostFactor(user.costFactor ?? 8.0);
       setBatteryCap(user.batteryCap ?? 13.5);
+      if (user.phoneNumber) {
+        const phoneVal = user.phoneNumber;
+        const supportedPrefixes = ["+91", "+1", "+44", "+49", "+61", "+65"];
+        const prefix = supportedPrefixes.find(p => phoneVal.startsWith(p));
+        if (prefix) {
+          setCountryCode(prefix);
+          setPhoneDigits(phoneVal.substring(prefix.length));
+        } else {
+          setCountryCode("+91");
+          setPhoneDigits(phoneVal);
+        }
+      } else {
+        setCountryCode("+91");
+        setPhoneDigits("");
+      }
+      setNotificationType(user.notificationType || "none");
+      setMessageStyle((user.messageStyle as MessageStyle) || "random");
     }
   }, [user, isOpen]);
 
@@ -81,11 +106,22 @@ export default function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps)
     setSavingProfile(true);
     setProfileMessage("");
 
+    let finalPhoneNumber = null;
+    if (phoneDigits.trim()) {
+      let cleanDigits = phoneDigits.replace(/[^\d]/g, "");
+      const codeDigits = countryCode.replace("+", "");
+      if (cleanDigits.startsWith(codeDigits)) {
+        cleanDigits = cleanDigits.substring(codeDigits.length);
+      }
+      finalPhoneNumber = `${countryCode}${cleanDigits}`;
+    }
+
     try {
       await updateProfile({
         name,
         bio,
         avatarUrl,
+        phoneNumber: finalPhoneNumber,
       });
       setProfileMessage("Identity Profile synchronized!");
       setTimeout(() => setProfileMessage(""), 3000);
@@ -115,6 +151,8 @@ export default function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps)
     }
   };
 
+  // notificationType is always "both" — alerts go to SMS and WhatsApp automatically
+
   const handleCostFactorRelease = async () => {
     triggerSystemSyncIndicator();
     try {
@@ -130,6 +168,16 @@ export default function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps)
       await updateProfile({ batteryCap });
     } catch (err) {
       console.error("Battery capacity sync failed", err);
+    }
+  };
+
+  const handleMessageStyleChange = async (style: MessageStyle) => {
+    setMessageStyle(style);
+    triggerSystemSyncIndicator();
+    try {
+      await updateProfile({ messageStyle: style });
+    } catch (err) {
+      console.error("Message style sync failed", err);
     }
   };
 
@@ -268,6 +316,34 @@ export default function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps)
                 rows={3}
                 className="w-full bg-zinc-900/50 border border-zinc-800 focus:border-zinc-700 rounded-xl px-4 py-3 text-xs text-white focus:outline-none transition-all placeholder:text-zinc-700 leading-normal resize-none"
               />
+            </div>
+
+            {/* Phone Number Field */}
+            <div className="space-y-2">
+              <label className="block text-zinc-400 font-mono text-[9px] uppercase tracking-wider font-bold">Mobile Phone Number</label>
+              <div className="flex gap-2">
+                <select
+                  value={countryCode}
+                  onChange={(e) => setCountryCode(e.target.value)}
+                  className="bg-zinc-900/50 border border-zinc-800 focus:border-zinc-700 rounded-xl px-3 text-xs text-white focus:outline-none font-mono font-bold"
+                >
+                  <option value="+91">🇮🇳 +91</option>
+                  <option value="+1">🇺🇸 +1</option>
+                  <option value="+44">🇬🇧 +44</option>
+                  <option value="+49">🇩🇪 +49</option>
+                  <option value="+61">🇦🇺 +61</option>
+                  <option value="+65">🇸🇬 +65</option>
+                </select>
+                <div className="relative flex-1">
+                  <input
+                    type="tel"
+                    value={phoneDigits}
+                    onChange={(e) => setPhoneDigits(e.target.value)}
+                    placeholder="7678688452"
+                    className="w-full bg-zinc-900/50 border border-zinc-800 focus:border-zinc-700 rounded-xl px-4 py-3 text-xs text-white focus:outline-none transition-all placeholder:text-zinc-700 font-bold"
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Save Button for Profile */}
@@ -426,6 +502,112 @@ export default function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps)
                 <option value="3s">3s - Normal Update</option>
                 <option value="5s">5s - Eco Mode Update</option>
               </select>
+            </div>
+
+            {/* Cyberpunk Message Customizer & Phone Emulator */}
+            <div className="space-y-4 pt-4 border-t border-zinc-900">
+              <div className="flex justify-between items-center">
+                <label className="block text-zinc-400 font-mono text-[9px] uppercase tracking-wider font-bold flex items-center gap-1.5">
+                  <Smartphone className="w-3.5 h-3.5 text-zinc-500" /> Uplink Customizer // Cyber-SMS Styles
+                </label>
+              </div>
+
+              {/* Theme Selection Buttons */}
+              <div className="grid grid-cols-5 gap-1">
+                {(["nexus-border", "quantum-terminal", "neo-minimalist", "grid-override", "random"] as MessageStyle[]).map((styleOpt) => {
+                  const isSelected = messageStyle === styleOpt;
+                  const labelMap: Record<string, string> = {
+                    "nexus-border": "Nexus",
+                    "quantum-terminal": "Quantum",
+                    "neo-minimalist": "Minimal",
+                    "grid-override": "Grid",
+                    "random": "Random"
+                  };
+                  return (
+                    <button
+                      key={styleOpt}
+                      type="button"
+                      onClick={() => handleMessageStyleChange(styleOpt)}
+                      className={`py-1.5 rounded-lg border text-[9px] font-mono font-bold uppercase transition-all tracking-wider ${
+                        isSelected
+                          ? "bg-amber-500/10 text-amber-500 border-amber-500/50 shadow-[0_0_8px_rgba(245,158,11,0.15)]"
+                          : "bg-zinc-900/40 text-zinc-400 border-zinc-800 hover:text-zinc-200 hover:bg-zinc-900"
+                      }`}
+                    >
+                      {labelMap[styleOpt]}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Phone Emulator Viewport */}
+              <div className="relative border border-zinc-800 bg-zinc-950/80 rounded-2xl p-3 flex flex-col shadow-inner select-none aspect-[16/10] overflow-hidden">
+                {/* Simulated Notch & Connection Info */}
+                <div className="flex justify-between items-center text-[7px] text-zinc-500 font-mono pb-2 border-b border-zinc-900/50">
+                  <span className="flex items-center gap-1">📶 NEXUS-NET</span>
+                  <div className="w-10 h-2 bg-zinc-900 rounded-full mx-auto relative top-[-4px]" />
+                  <span>⚡ 94%</span>
+                </div>
+
+                {/* Preview Tabs */}
+                <div className="flex gap-1 my-2">
+                  {(["otp", "timer", "trade"] as const).map((tab) => {
+                    const isTabSelected = previewTab === tab;
+                    const tabLabels = { otp: "OTP Verification", timer: "Timer Scheduled", trade: "Energy Trade" };
+                    return (
+                      <button
+                        key={tab}
+                        type="button"
+                        onClick={() => setPreviewTab(tab)}
+                        className={`flex-1 py-1 rounded text-[7px] font-mono font-bold uppercase tracking-wider transition-colors border ${
+                          isTabSelected
+                            ? "bg-zinc-900 text-zinc-100 border-zinc-700"
+                            : "bg-transparent text-zinc-500 border-transparent hover:text-zinc-400"
+                        }`}
+                      >
+                        {tabLabels[tab]}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Message Notification Bubble */}
+                <div className="flex-1 bg-zinc-950 border border-zinc-900 rounded-xl p-2 relative overflow-y-auto min-h-0 flex flex-col justify-center">
+                  <div className="text-[7px] text-zinc-500 font-mono mb-1 flex justify-between">
+                    <span>💬 TWILIO GATEWAY / ECO-SYNC UPLINK</span>
+                    <span>JUST NOW</span>
+                  </div>
+                  <pre className="font-mono text-[8px] leading-tight text-emerald-400 bg-black/90 p-2 rounded-lg border border-emerald-950/80 whitespace-pre overflow-x-auto shadow-[0_0_12px_rgba(16,185,129,0.06)] scrollbar-none select-text">
+                    {previewTab === "otp"
+                      ? getOtpMessage(messageStyle, "8429")
+                      : previewTab === "timer"
+                      ? getTimerMessage(messageStyle, "Tesla Charger", "7.2", "18:00", "4.0")
+                      : getTradeMessage(messageStyle, "14.8", "8.0", "118.40", "0x7d39f...e82b")
+                    }
+                  </pre>
+                </div>
+              </div>
+            </div>
+
+            {/* Alert Channels Info Card */}
+            <div className="bg-zinc-900/40 border border-emerald-900/30 rounded-2xl p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <Zap className="w-4 h-4 text-emerald-500 animate-pulse" />
+                <span className="text-[10px] font-mono text-emerald-400 uppercase tracking-widest font-bold">Alert Channels Active</span>
+              </div>
+              <p className="text-[11px] text-zinc-400 leading-relaxed">
+                Once your mobile number is saved above, you'll automatically receive real-time alerts on <strong className="text-white">both SMS and WhatsApp</strong> for:
+              </p>
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2 text-[11px] text-zinc-300">
+                  <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                  <span>⚡ Energy trade settlements (kWh sold → ECO tokens minted)</span>
+                </div>
+                <div className="flex items-center gap-2 text-[11px] text-zinc-300">
+                  <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                  <span>🤖 Device scheduler activation (appliance timer starts)</span>
+                </div>
+              </div>
             </div>
 
             {/* P2P Grid Sellback Toggle */}
