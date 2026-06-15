@@ -2,13 +2,15 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, KeyRound, Loader2, ShieldAlert, CheckCircle2, Sparkles, Cpu, Globe, Key } from "lucide-react";
+import { Mail, Phone, KeyRound, Loader2, ShieldAlert, CheckCircle2, Sparkles, Cpu, Globe, Key } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 export default function AuthPage() {
   const { checkUserExists, sendOtp, verifyOtp } = useAuth();
   
   const [isSignUp, setIsSignUp] = useState(false);
+  const [authMethod, setAuthMethod] = useState<"email" | "phone">("email");
+  const [countryCode, setCountryCode] = useState("+91");
   const [email, setEmail] = useState("");
   const [otpCode, setOtpCode] = useState("");
   const [step, setStep] = useState<"email" | "otp">("email");
@@ -26,10 +28,23 @@ export default function AuthPage() {
     setSuccessMsg("");
     setMockOtpHint(null);
 
+    let submissionIdentifier = email;
+    if (authMethod === "phone") {
+      let cleanInput = email.replace(/[^\d]/g, "");
+      const codeDigits = countryCode.replace("+", "");
+      if (cleanInput.startsWith(codeDigits)) {
+        cleanInput = cleanInput.substring(codeDigits.length);
+      }
+      submissionIdentifier = `${countryCode}${cleanInput}`;
+    }
+    
+    // Sync state so verification uses the formatted identifier
+    setEmail(submissionIdentifier);
+
     try {
       if (!isSignUp) {
         // Sign In check
-        const check = await checkUserExists(email);
+        const check = await checkUserExists(submissionIdentifier);
         if (!check.exists) {
           setErrorMsg("Your account is not created. Please sign up.");
           setLoading(false);
@@ -38,7 +53,7 @@ export default function AuthPage() {
       }
 
       // Send OTP
-      const res = await sendOtp(email, isSignUp);
+      const res = await sendOtp(submissionIdentifier, isSignUp);
       if (res.success) {
         setStep("otp");
         setSuccessMsg(isSignUp ? "Sign-up verification code dispatched!" : "Security access key dispatched!");
@@ -190,20 +205,74 @@ export default function AuthPage() {
                 onSubmit={handleEmailSubmit}
                 className="space-y-6"
               >
+                {/* Method Switcher */}
+                <div className="flex border-b border-zinc-900 p-1 bg-zinc-900/30 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthMethod("email");
+                      setEmail("");
+                      setErrorMsg("");
+                    }}
+                    className={`flex-1 py-2 text-[10px] font-mono uppercase tracking-wider rounded-lg transition-all font-bold ${
+                      authMethod === "email"
+                        ? "bg-zinc-900 text-white border border-zinc-800 shadow"
+                        : "text-zinc-500 hover:text-zinc-300"
+                    }`}
+                  >
+                    Corporate Email
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthMethod("phone");
+                      setEmail("");
+                      setErrorMsg("");
+                    }}
+                    className={`flex-1 py-2 text-[10px] font-mono uppercase tracking-wider rounded-lg transition-all font-bold ${
+                      authMethod === "phone"
+                        ? "bg-zinc-900 text-white border border-zinc-800 shadow"
+                        : "text-zinc-500 hover:text-zinc-300"
+                    }`}
+                  >
+                    Mobile Number
+                  </button>
+                </div>
+
                 <div className="space-y-2">
                   <label className="block text-zinc-400 font-mono text-[9px] uppercase tracking-wider font-bold">
-                    Email Signature Address
+                    {authMethod === "email" ? "Email Signature Address" : "Mobile Phone Number"}
                   </label>
-                  <div className="relative group">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600 group-focus-within:text-amber-500 transition-colors" />
-                    <input
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="operator@ecosync.io"
-                      className="w-full bg-zinc-900/40 border border-zinc-800/80 focus:border-zinc-700 focus:bg-zinc-900/80 rounded-xl pl-12 pr-4 py-4 text-sm text-white focus:outline-none transition-all placeholder:text-zinc-700 font-medium"
-                    />
+                  <div className="flex gap-2">
+                    {authMethod === "phone" && (
+                      <select
+                        value={countryCode}
+                        onChange={(e) => setCountryCode(e.target.value)}
+                        className="bg-zinc-900/40 border border-zinc-800/80 focus:border-zinc-700 rounded-xl px-3 text-xs text-white focus:outline-none font-mono font-bold"
+                      >
+                        <option value="+91">🇮🇳 +91</option>
+                        <option value="+1">🇺🇸 +1</option>
+                        <option value="+44">🇬🇧 +44</option>
+                        <option value="+49">🇩🇪 +49</option>
+                        <option value="+61">🇦🇺 +61</option>
+                        <option value="+65">🇸🇬 +65</option>
+                      </select>
+                    )}
+                    <div className="relative flex-1 group">
+                      {authMethod === "email" ? (
+                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600 group-focus-within:text-amber-500 transition-colors" />
+                      ) : (
+                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600 group-focus-within:text-amber-500 transition-colors" />
+                      )}
+                      <input
+                        type={authMethod === "email" ? "email" : "tel"}
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder={authMethod === "email" ? "operator@ecosync.io" : "7678688452"}
+                        className="w-full bg-zinc-900/40 border border-zinc-800/80 focus:border-zinc-700 focus:bg-zinc-900/80 rounded-xl pl-12 pr-4 py-4 text-sm text-white focus:outline-none transition-all placeholder:text-zinc-700 font-medium"
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -226,7 +295,7 @@ export default function AuthPage() {
                 </button>
 
                 {/* Autofill Demo */}
-                {!isSignUp && (
+                {!isSignUp && authMethod === "email" && (
                   <div className="pt-2 text-center">
                     <button
                       type="button"
@@ -265,7 +334,11 @@ export default function AuthPage() {
                     />
                   </div>
 
-
+                  {/* {mockOtpHint && (
+                    <p className="mt-4 text-center text-xs font-mono text-amber-500/80 border border-dashed border-amber-500/30 p-2 bg-amber-500/5 rounded-lg">
+                      [Dev OTP code: {mockOtpHint}]
+                    </p>
+                  )} */}
                 </div>
 
                 <button
@@ -291,7 +364,7 @@ export default function AuthPage() {
                   onClick={() => setStep("email")}
                   className="w-full text-[10px] font-mono text-zinc-500 hover:text-zinc-300 transition-colors text-center uppercase tracking-wider font-bold block"
                 >
-                  Back to operator credentials
+                  {authMethod === "email" ? "Back to email credentials" : "Back to phone credentials"}
                 </button>
               </motion.form>
             )}
