@@ -21,15 +21,20 @@ model User {
   costFactor  Float    @default(8.0)
   batteryCap  Float    @default(13.5)
   
-  // Twilio & WhatsApp Settings
-  phoneNumber      String?
-  notificationType String   @default("none")
   messageStyle     String   @default("random")
-  telegramChatId   String?  @default("")
   
   otps         OtpVerification[]
   transactions Transaction[]
   schedules    ApplianceSchedule[]
+  notifications Notification[]
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  message   String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model OtpVerification {

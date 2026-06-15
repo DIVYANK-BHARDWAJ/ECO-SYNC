@@ -12,8 +12,6 @@ export interface UserProfile {
   themeMode: "dark" | "light" | "system";
   costFactor: number;
   batteryCap: number;
-  phoneNumber?: string | null;
-  notificationType?: string;
   messageStyle?: string;
 }
 

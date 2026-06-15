@@ -66,17 +66,6 @@ export async function PATCH(req: NextRequest) {
     if (updates.costFactor !== undefined) allowedUpdates.costFactor = Number(updates.costFactor);
     if (updates.batteryCap !== undefined) allowedUpdates.batteryCap = Number(updates.batteryCap);
     
-    if (updates.phoneNumber !== undefined) {
-      if (updates.phoneNumber === null || updates.phoneNumber === "") {
-        allowedUpdates.phoneNumber = null;
-      } else {
-        const parsed = parseIdentifier(updates.phoneNumber);
-        allowedUpdates.phoneNumber = parsed.phoneNumber;
-      }
-    }
-    if (updates.notificationType !== undefined) {
-      allowedUpdates.notificationType = updates.notificationType;
-    }
     if (updates.messageStyle !== undefined) {
       allowedUpdates.messageStyle = updates.messageStyle;
     }

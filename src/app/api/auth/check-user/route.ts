@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { parseIdentifier } from "@/lib/auth-utils";
 
 export async function POST(req: NextRequest) {
   try {
@@ -8,8 +9,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
 
+    const parsed = parseIdentifier(email);
     const user = await db.user.findUnique({
-      where: { email: email.toLowerCase().trim() },
+      where: { email: parsed.email },
     });
 
     if (!user) {

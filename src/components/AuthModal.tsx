@@ -14,8 +14,6 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const { checkUserExists, sendOtp, verifyOtp } = useAuth();
   
   const [isSignUp, setIsSignUp] = useState(false);
-  const [authMethod, setAuthMethod] = useState<"email" | "phone">("email");
-  const [countryCode, setCountryCode] = useState("+91");
   const [email, setEmail] = useState("");
   const [otpCode, setOtpCode] = useState("");
   const [step, setStep] = useState<"email" | "otp">("email");
@@ -36,15 +34,6 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     setMockOtpHint(null);
 
     let submissionIdentifier = email;
-    if (authMethod === "phone") {
-      let cleanInput = email.replace(/[^\d]/g, "");
-      const codeDigits = countryCode.replace("+", "");
-      if (cleanInput.startsWith(codeDigits)) {
-        cleanInput = cleanInput.substring(codeDigits.length);
-      }
-      submissionIdentifier = `${countryCode}${cleanInput}`;
-    }
-    
     // Sync state so verification uses the formatted identifier
     setEmail(submissionIdentifier);
 
@@ -193,74 +182,20 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
               onSubmit={handleEmailSubmit}
               className="space-y-6"
             >
-              {/* Method Switcher */}
-              <div className="flex border-b border-zinc-900 p-1 bg-zinc-900/30 rounded-xl">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAuthMethod("email");
-                    setEmail("");
-                    setErrorMsg("");
-                  }}
-                  className={`flex-1 py-2 text-[10px] font-mono uppercase tracking-wider rounded-lg transition-all font-bold ${
-                    authMethod === "email"
-                      ? "bg-zinc-900 text-white border border-zinc-800 shadow"
-                      : "text-zinc-500 hover:text-zinc-350"
-                  }`}
-                >
-                  Corporate Email
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAuthMethod("phone");
-                    setEmail("");
-                    setErrorMsg("");
-                  }}
-                  className={`flex-1 py-2 text-[10px] font-mono uppercase tracking-wider rounded-lg transition-all font-bold ${
-                    authMethod === "phone"
-                      ? "bg-zinc-900 text-white border border-zinc-800 shadow"
-                      : "text-zinc-500 hover:text-zinc-355"
-                  }`}
-                >
-                  Mobile Number
-                </button>
-              </div>
-
               <div>
                 <label className="block text-zinc-400 font-mono text-[10px] uppercase tracking-wider mb-2 font-bold">
-                  {authMethod === "email" ? "Enter Corporate Email" : "Enter Mobile Number"}
+                  Enter Corporate Email
                 </label>
-                <div className="flex gap-2">
-                  {authMethod === "phone" && (
-                    <select
-                      value={countryCode}
-                      onChange={(e) => setCountryCode(e.target.value)}
-                      className="bg-zinc-900 border border-zinc-800 focus:border-zinc-700 rounded-xl px-3 text-xs text-white focus:outline-none font-mono font-bold"
-                    >
-                      <option value="+91">🇮🇳 +91</option>
-                      <option value="+1">🇺🇸 +1</option>
-                      <option value="+44">🇬🇧 +44</option>
-                      <option value="+49">🇩🇪 +49</option>
-                      <option value="+61">🇦🇺 +61</option>
-                      <option value="+65">🇸🇬 +65</option>
-                    </select>
-                  )}
-                  <div className="relative flex-1">
-                    {authMethod === "email" ? (
-                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600" />
-                    ) : (
-                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600" />
-                    )}
-                    <input
-                      type={authMethod === "email" ? "email" : "tel"}
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder={authMethod === "email" ? "name@ecosync.io" : "7678688452"}
-                      className="w-full bg-zinc-900/50 border border-zinc-800 focus:border-zinc-700 rounded-xl pl-12 pr-4 py-4 text-sm text-white focus:outline-none transition-all placeholder:text-zinc-600 font-medium"
-                    />
-                  </div>
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600" />
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@ecosync.io"
+                    className="w-full bg-zinc-900/50 border border-zinc-800 focus:border-zinc-700 rounded-xl pl-12 pr-4 py-4 text-sm text-white focus:outline-none transition-all placeholder:text-zinc-600 font-medium"
+                  />
                 </div>
               </div>
 
@@ -296,7 +231,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   )}
                 </button>
 
-                {!isSignUp && authMethod === "email" && (
+                {!isSignUp && (
                   <button
                     type="button"
                     onClick={autofillDemo}
@@ -364,7 +299,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 onClick={() => setStep("email")}
                 className="w-full text-xs text-zinc-500 hover:text-zinc-300 transition-colors text-center block uppercase tracking-wider font-bold"
               >
-                {authMethod === "email" ? "Change Email" : "Change Phone Number"}
+                Change Email
               </button>
             </motion.form>
           )}

@@ -69,12 +69,12 @@ export function getTestMessage(style: MessageStyle): string {
   const actualStyle = resolveStyle(style);
   switch (actualStyle) {
     case "nexus-border":
-      return `┌─── ECO-SYNC NEXUS ───┐\n│   TEST NOTIFICATION  │\n├──────────────────────┤\n│ ✅ ALERTS CONNECTED  │\n│ 📱 SMS:  ACTIVE      │\n│ 💬 WA:   ACTIVE      │\n├──────────────────────┤\n│ YOUR NEXUS IS LIVE!  │\n└──────────────────────┘`;
+      return `┌─── ECO-SYNC NEXUS ───┐\n│   TEST NOTIFICATION  │\n├──────────────────────┤\n│ ✅ UPLINK: ACTIVE    │\n│ 📟 CONSOLE: ONLINE   │\n│ 📢 CHANNELS: OK      │\n├──────────────────────┤\n│ YOUR NEXUS IS LIVE!  │\n└──────────────────────┘`;
     case "quantum-terminal":
-      return `╔═══ ECO-SYNC: TEST ═══╗\n║  Alerts Connection   ║\n╠══════════════════════╣\n║ ✅ ALERTS: ACTIVE    ║\n║ 📱 SMS:    ACTIVE    ║\n║ 💬 WA:     ACTIVE    ║\n╠══════════════════════╣\n║ YOUR NEXUS IS ONLINE ║\n╚══════════════════════╝`;
+      return `╔═══ ECO-SYNC: TEST ═══╗\n║  Alerts Connection   ║\n╠══════════════════════╣\n║ ✅ ALERTS: ACTIVE    ║\n║ 📟 CONSOLE: ONLINE   ║\n║ 🛡️ SECURITY: VERIFIED ║\n╠══════════════════════╣\n║ YOUR NEXUS IS ONLINE ║\n╚══════════════════════╝`;
     case "neo-minimalist":
-      return `/// UPLINK TEST SYSTEM ///\n───────────────────────────\nAlert Channels: CONNECTED\nSMS Broadcast:  ACTIVE\nWhatsApp Link:  ACTIVE\n───────────────────────────\nSTATUS: ONLINE & VERIFIED`;
+      return `/// UPLINK TEST SYSTEM ///\n───────────────────────────\nAlert Channels: CONNECTED\nConsole Logs:   ACTIVE\nTerminal Link:  ONLINE\n───────────────────────────\nSTATUS: ONLINE & VERIFIED`;
     case "grid-override":
-      return `⚠️ NEXUS BROADCAST SYSTEM ⚠️\n===========================\nTEST NOTIFICATION SUCCESS\nALERTS STATE: ACTIVE\nGRID SYNC:    CONNECTED\n===========================\nGRID UPLINK LIVE`;
+      return `⚠️ NEXUS BROADCAST SYSTEM ⚠️\n===========================\nTEST NOTIFICATION SUCCESS\nALERTS STATE: ACTIVE\nCONSOLE:      ONLINE\n===========================\nGRID UPLINK LIVE`;
   }
 }

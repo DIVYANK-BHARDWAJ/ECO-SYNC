@@ -35,3 +35,6 @@ next-env.d.ts
 
 # context documentation
 /eco_sync_god_mode_documentation.md
+
+# local mock db
+/mock-db.json

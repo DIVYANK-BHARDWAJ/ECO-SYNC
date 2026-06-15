@@ -32,14 +32,11 @@ export default function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps)
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
-  const [countryCode, setCountryCode] = useState("+91");
-  const [phoneDigits, setPhoneDigits] = useState("");
   
   // Section 2: System Settings State
   const [themeMode, setThemeModeState] = useState<"dark" | "light" | "system">("system");
   const [costFactor, setCostFactor] = useState(8.0);
   const [batteryCap, setBatteryCap] = useState(13.5);
-  const [notificationType, setNotificationType] = useState("both");
   
   // Cyberpunk Message Styles state
   const [messageStyle, setMessageStyle] = useState<MessageStyle>("random");
@@ -64,22 +61,6 @@ export default function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps)
       setThemeModeState(user.themeMode || "system");
       setCostFactor(user.costFactor ?? 8.0);
       setBatteryCap(user.batteryCap ?? 13.5);
-      if (user.phoneNumber) {
-        const phoneVal = user.phoneNumber;
-        const supportedPrefixes = ["+91", "+1", "+44", "+49", "+61", "+65"];
-        const prefix = supportedPrefixes.find(p => phoneVal.startsWith(p));
-        if (prefix) {
-          setCountryCode(prefix);
-          setPhoneDigits(phoneVal.substring(prefix.length));
-        } else {
-          setCountryCode("+91");
-          setPhoneDigits(phoneVal);
-        }
-      } else {
-        setCountryCode("+91");
-        setPhoneDigits("");
-      }
-      setNotificationType(user.notificationType || "none");
       setMessageStyle((user.messageStyle as MessageStyle) || "random");
     }
   }, [user, isOpen]);
@@ -106,22 +87,11 @@ export default function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps)
     setSavingProfile(true);
     setProfileMessage("");
 
-    let finalPhoneNumber = null;
-    if (phoneDigits.trim()) {
-      let cleanDigits = phoneDigits.replace(/[^\d]/g, "");
-      const codeDigits = countryCode.replace("+", "");
-      if (cleanDigits.startsWith(codeDigits)) {
-        cleanDigits = cleanDigits.substring(codeDigits.length);
-      }
-      finalPhoneNumber = `${countryCode}${cleanDigits}`;
-    }
-
     try {
       await updateProfile({
         name,
         bio,
         avatarUrl,
-        phoneNumber: finalPhoneNumber,
       });
       setProfileMessage("Identity Profile synchronized!");
       setTimeout(() => setProfileMessage(""), 3000);
@@ -151,7 +121,7 @@ export default function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps)
     }
   };
 
-  // notificationType is always "both" — alerts go to SMS and WhatsApp automatically
+  // Alerts go to the in-app terminal console dynamically
 
   const handleCostFactorRelease = async () => {
     triggerSystemSyncIndicator();
@@ -318,32 +288,16 @@ export default function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps)
               />
             </div>
 
-            {/* Phone Number Field */}
-            <div className="space-y-2">
-              <label className="block text-zinc-400 font-mono text-[9px] uppercase tracking-wider font-bold">Mobile Phone Number</label>
-              <div className="flex gap-2">
-                <select
-                  value={countryCode}
-                  onChange={(e) => setCountryCode(e.target.value)}
-                  className="bg-zinc-900/50 border border-zinc-800 focus:border-zinc-700 rounded-xl px-3 text-xs text-white focus:outline-none font-mono font-bold"
-                >
-                  <option value="+91">🇮🇳 +91</option>
-                  <option value="+1">🇺🇸 +1</option>
-                  <option value="+44">🇬🇧 +44</option>
-                  <option value="+49">🇩🇪 +49</option>
-                  <option value="+61">🇦🇺 +61</option>
-                  <option value="+65">🇸🇬 +65</option>
-                </select>
-                <div className="relative flex-1">
-                  <input
-                    type="tel"
-                    value={phoneDigits}
-                    onChange={(e) => setPhoneDigits(e.target.value)}
-                    placeholder="7678688452"
-                    className="w-full bg-zinc-900/50 border border-zinc-800 focus:border-zinc-700 rounded-xl px-4 py-3 text-xs text-white focus:outline-none transition-all placeholder:text-zinc-700 font-bold"
-                  />
-                </div>
+            {/* Uplink Console Stream Status */}
+            <div className="space-y-2.5 bg-zinc-950 p-4 rounded-2xl border border-zinc-900">
+              <label className="block text-zinc-500 font-mono text-[9px] uppercase tracking-wider font-bold">Uplink Console Stream</label>
+              <div className="flex items-center gap-3">
+                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-xs font-mono text-emerald-400 font-black uppercase tracking-widest">CONSOLE LINKED</span>
               </div>
+              <p className="text-[10px] text-zinc-500 leading-normal">
+                Real-time transactions, automation permits, and security grid updates are streamed directly to the terminal at the bottom-left of the viewport.
+              </p>
             </div>
 
             {/* Save Button for Profile */}
@@ -593,10 +547,10 @@ export default function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps)
             <div className="bg-zinc-900/40 border border-emerald-900/30 rounded-2xl p-4 space-y-3">
               <div className="flex items-center gap-2">
                 <Zap className="w-4 h-4 text-emerald-500 animate-pulse" />
-                <span className="text-[10px] font-mono text-emerald-400 uppercase tracking-widest font-bold">Alert Channels Active</span>
+                <span className="text-[10px] font-mono text-emerald-400 uppercase tracking-widest font-bold">Terminal Logs Stream</span>
               </div>
               <p className="text-[11px] text-zinc-400 leading-relaxed">
-                Once your mobile number is saved above, you'll automatically receive real-time alerts on <strong className="text-white">both SMS and WhatsApp</strong> for:
+                You will automatically receive real-time alerts printed inside the <strong className="text-white">Cyberpunk Terminal Console</strong> for:
               </p>
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2 text-[11px] text-zinc-300">

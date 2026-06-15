@@ -26,6 +26,8 @@ import SettingsDrawer from "@/components/SettingsDrawer";
 import { useAuth } from "@/context/AuthContext";
 import AuthPage from "@/components/AuthPage";
 import BotpressChatbot from "@/components/BotpressChatbot";
+import CarbonSchedulerSection from "@/components/CarbonSchedulerSection";
+import NexusTerminal from "@/components/NexusTerminal";
 
 const PLAN_CONFIG: Record<string, { reduction: string; multiplier: number }> = {
   "Core Nexus": { reduction: "15%", multiplier: 0.85 },
@@ -52,6 +54,39 @@ export default function Home() {
   const [activeMetric, setActiveMetric] = useState<MetricType>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [notifications, setNotifications] = useState<{ id: string; message: string; type: "info" | "success" | "warning" }[]>([]);
+
+  const [simulatedTime, setSimulatedTime] = useState(() => {
+    // Start at current hour, round minutes to nearest 15 for simulation alignment
+    const d = new Date();
+    d.setMinutes(Math.round(d.getMinutes() / 15) * 15);
+    return d;
+  });
+  const [schedules, setSchedules] = useState<any[]>([]);
+
+  const fetchSchedules = useCallback(async () => {
+    try {
+      const res = await fetch("/api/forecaster/schedule");
+      if (res.ok) {
+        const data = await res.json();
+        setSchedules(data.schedules || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch schedules", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      fetchSchedules();
+    }
+  }, [user, fetchSchedules]);
+
+  const schedulesRef = useRef(schedules);
+
+  useEffect(() => {
+    schedulesRef.current = schedules;
+  }, [schedules]);
+
 
   // Scroll to top and show main content when intro finishes
   const handleIntroComplete = () => {
@@ -169,6 +204,11 @@ export default function Home() {
   }, [solarState.solarGeneration]);
 
   const [devices, setDevices] = useState<Device[]>(INITIAL_DEVICES);
+
+  const devicesRef = useRef(devices);
+  useEffect(() => {
+    devicesRef.current = devices;
+  }, [devices]);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -465,6 +505,108 @@ export default function Home() {
       const intervalHours = (refreshRateMs * SIMULATION_SPEED_MULTIPLIER) / 3600000;
       const addedKwh = totalLoad * intervalHours;
       setAccumulatedKwh((prev: number) => prev + addedKwh);
+
+      // 1. Advance Simulated Time
+      const tickDurationMs = refreshRateMs * SIMULATION_SPEED_MULTIPLIER;
+      let nextSimTime = new Date();
+      setSimulatedTime(prev => {
+        nextSimTime = new Date(prev.getTime() + tickDurationMs);
+        return nextSimTime;
+      });
+
+      // 2. Process Schedules (checking and triggering devices)
+      const nextHour = nextSimTime.getHours();
+      const nextMin = nextSimTime.getMinutes();
+      const currentSimMinutes = nextHour * 60 + nextMin;
+
+      schedulesRef.current.forEach(async (sch) => {
+        const [schH, schM] = sch.startTime.split(":").map(Number);
+        const startMinutes = schH * 60 + schM;
+        const stopMinutes = startMinutes + sch.duration * 60;
+
+        if (sch.status === "pending") {
+          // Trigger if we enter the schedule start window
+          if (currentSimMinutes >= startMinutes && currentSimMinutes < stopMinutes) {
+            sch.status = "running";
+            setSchedules(prev => prev.map(s => s.id === sch.id ? { ...s, status: "running" } : s));
+
+            fetch("/api/forecaster/schedule", {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id: sch.id, status: "running" })
+            }).catch(err => console.error("Failed to update schedule status", err));
+
+            setDevices(prev => prev.map(d => {
+              if (d.label.toLowerCase() === sch.deviceName.toLowerCase() || d.id === sch.deviceName) {
+                if (!d.isOn) {
+                  const timeStr = nextSimTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+                  setDeviceHistory(h => [{
+                    id: Date.now(),
+                    label: d.label,
+                    action: "ON" as const,
+                    time: `${timeStr} (SIM)`,
+                    details: `Automated run cycle started • Drawing ${d.power}kW`,
+                    iconName: d.iconName
+                  }, ...h].slice(0, 100));
+                  return { ...d, isOn: true };
+                }
+              }
+              return d;
+            }));
+
+            const nId = "sch-start-" + sch.id;
+            setNotifications(prev => [{
+              id: nId,
+              message: `AUTO START: ${sch.deviceName} triggered automatically`,
+              type: "success"
+            }, ...prev]);
+            setTimeout(() => {
+              setNotifications(prev => prev.filter(n => n.id !== nId));
+            }, 5000);
+          }
+        } else if (sch.status === "running") {
+          // Stop if duration expired
+          if (currentSimMinutes >= stopMinutes) {
+            sch.status = "completed";
+            setSchedules(prev => prev.map(s => s.id === sch.id ? { ...s, status: "completed" } : s));
+
+            fetch("/api/forecaster/schedule", {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id: sch.id, status: "completed" })
+            }).catch(err => console.error("Failed to update schedule status", err));
+
+            setDevices(prev => prev.map(d => {
+              if (d.label.toLowerCase() === sch.deviceName.toLowerCase() || d.id === sch.deviceName) {
+                if (d.isOn) {
+                  const timeStr = nextSimTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+                  setDeviceHistory(h => [{
+                    id: Date.now(),
+                    label: d.label,
+                    action: "OFF" as const,
+                    time: `${timeStr} (SIM)`,
+                    details: `Automated run cycle complete`,
+                    iconName: d.iconName
+                  }, ...h].slice(0, 100));
+                  return { ...d, isOn: false };
+                }
+              }
+              return d;
+            }));
+
+            const nId = "sch-stop-" + sch.id;
+            setNotifications(prev => [{
+              id: nId,
+              message: `AUTO STOP: Completed run for ${sch.deviceName}`,
+              type: "info"
+            }, ...prev]);
+            setTimeout(() => {
+              setNotifications(prev => prev.filter(n => n.id !== nId));
+            }, 5000);
+          }
+        }
+      });
+
       
       // Load latest solar state from localStorage first to prevent React state stale overrides
       let currentSolar = {
@@ -701,6 +843,14 @@ export default function Home() {
               onExecuteRoutine={handleExecuteRoutine}
             />
 
+            <CarbonSchedulerSection
+              devices={devices}
+              schedules={schedules}
+              onRefreshSchedules={fetchSchedules}
+              currentSimulatedHour={simulatedTime.getHours()}
+              currentSimulatedMinute={simulatedTime.getMinutes()}
+            />
+
             {/* Dedicated Real-Time Radar Section */}
             <section id="grid-radar" className="bg-[#09090b] py-32 border-t border-white/5 px-12 relative overflow-hidden">
                <div className="max-w-7xl mx-auto relative z-10">
@@ -791,6 +941,7 @@ export default function Home() {
           </div>
         </div>
       )}
+      <NexusTerminal />
       <BotpressChatbot
         context={{
           name: user.name || "Nexus Explorer",

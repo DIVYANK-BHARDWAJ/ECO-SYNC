@@ -12,10 +12,7 @@ interface UserData {
   themeMode: string;
   costFactor: number;
   batteryCap: number;
-  phoneNumber?: string | null;
-  notificationType?: string;
   messageStyle?: string;
-  telegramChatId?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -49,6 +46,13 @@ interface ApplianceScheduleData {
   userId: string;
 }
 
+interface NotificationData {
+  id: string;
+  userId: string;
+  message: string;
+  createdAt: Date;
+}
+
 const MOCK_DB_PATH = path.join(process.cwd(), "mock-db.json");
 
 // Helper to read mock db from JSON
@@ -57,9 +61,10 @@ function readMockDb(): {
   otps: OtpData[]; 
   transactions: TransactionData[];
   schedules: ApplianceScheduleData[];
+  notifications: NotificationData[];
 } {
   if (!fs.existsSync(MOCK_DB_PATH)) {
-    return { users: [], otps: [], transactions: [], schedules: [] };
+    return { users: [], otps: [], transactions: [], schedules: [], notifications: [] };
   }
   try {
     const content = fs.readFileSync(MOCK_DB_PATH, "utf-8");
@@ -83,10 +88,14 @@ function readMockDb(): {
         ...s,
         createdAt: new Date(s.createdAt),
       })),
+      notifications: (data.notifications || []).map((n: any) => ({
+        ...n,
+        createdAt: new Date(n.createdAt),
+      })),
     };
   } catch (e) {
     console.error("Failed to read mock db, returning empty default", e);
-    return { users: [], otps: [], transactions: [], schedules: [] };
+    return { users: [], otps: [], transactions: [], schedules: [], notifications: [] };
   }
 }
 
@@ -96,6 +105,7 @@ function writeMockDb(data: {
   otps: OtpData[]; 
   transactions: TransactionData[];
   schedules: ApplianceScheduleData[];
+  notifications: NotificationData[];
 }) {
   try {
     fs.writeFileSync(MOCK_DB_PATH, JSON.stringify(data, null, 2), "utf-8");
@@ -181,10 +191,7 @@ export const db = {
         themeMode: args.data.themeMode || "system",
         costFactor: args.data.costFactor ?? 8.0,
         batteryCap: args.data.batteryCap ?? 13.5,
-        phoneNumber: args.data.phoneNumber || null,
-        notificationType: args.data.notificationType || "none",
         messageStyle: args.data.messageStyle || "random",
-        telegramChatId: args.data.telegramChatId || "",
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -422,6 +429,78 @@ export const db = {
       data.schedules = data.schedules.filter(s => s.id !== args.where.id);
       writeMockDb({ ...data, schedules: data.schedules });
       return { id: args.where.id };
+    }
+  },
+
+  notification: {
+    create: async (args: { 
+      data: { userId: string; message: string } 
+    }): Promise<NotificationData> => {
+      if (prismaInstance) {
+        try {
+          const prismaPromise = prismaInstance.notification.create(args as any);
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error("Prisma timeout")), 5000)
+          );
+          return await Promise.race([prismaPromise, timeoutPromise]) as NotificationData;
+        } catch (e) {
+          console.warn("Prisma notification creation failed or timed out, falling back to mock database", e);
+        }
+      }
+      const data = readMockDb();
+      const newNotification: NotificationData = {
+        id: Math.random().toString(36).substr(2, 9),
+        userId: args.data.userId,
+        message: args.data.message,
+        createdAt: new Date(),
+      };
+      data.notifications.push(newNotification);
+      writeMockDb({ ...data, notifications: data.notifications });
+      return newNotification;
+    },
+
+    findMany: async (args: { 
+      where: { userId: string };
+      orderBy?: { createdAt: "asc" | "desc" }
+    }): Promise<NotificationData[]> => {
+      if (prismaInstance) {
+        try {
+          const prismaPromise = prismaInstance.notification.findMany(args as any);
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error("Prisma timeout")), 5000)
+          );
+          return await Promise.race([prismaPromise, timeoutPromise]) as NotificationData[];
+        } catch (e) {
+          console.warn("Prisma notifications lookup failed or timed out, falling back to mock database", e);
+        }
+      }
+      const data = readMockDb();
+      let list = data.notifications.filter(n => n.userId === args.where.userId);
+      if (args.orderBy?.createdAt === "desc") {
+        list.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      } else {
+        list.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+      }
+      return list;
+    },
+
+    deleteMany: async (args: { where: { userId: string } }): Promise<{ count: number }> => {
+      if (prismaInstance) {
+        try {
+          const prismaPromise = prismaInstance.notification.deleteMany(args as any);
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error("Prisma timeout")), 5000)
+          );
+          return await Promise.race([prismaPromise, timeoutPromise]) as { count: number };
+        } catch (e) {
+          console.warn("Prisma notifications deletion failed or timed out, falling back to mock database", e);
+        }
+      }
+      const data = readMockDb();
+      const initialCount = data.notifications.length;
+      data.notifications = data.notifications.filter(n => n.userId !== args.where.userId);
+      writeMockDb({ ...data, notifications: data.notifications });
+      return { count: initialCount - data.notifications.length };
     }
   }
 };

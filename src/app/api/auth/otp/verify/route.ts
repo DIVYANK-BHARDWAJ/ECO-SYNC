@@ -2,15 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { signToken } from "@/lib/session";
 import { cookies } from "next/headers";
+import { parseIdentifier } from "@/lib/auth-utils";
 
 export async function POST(req: NextRequest) {
   try {
     const { email, code } = await req.json();
     if (!email || !code) {
-      return NextResponse.json({ error: "Email and code are required" }, { status: 400 });
+      return NextResponse.json({ error: "Email/Phone and code are required" }, { status: 400 });
     }
 
-    const targetEmail = email.toLowerCase().trim();
+    const parsed = parseIdentifier(email);
+    const targetEmail = parsed.email;
     const verificationCode = code.trim();
 
     // 1. Find valid OTP
@@ -55,13 +57,22 @@ export async function POST(req: NextRequest) {
 
     // 4. Generate token and set in secure HttpOnly cookie
     const token = signToken({ email: targetEmail });
-    cookies().set("session", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60, // 1 week in seconds
-      path: "/",
-    });
+    
+    try {
+      cookies().set("session", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 7 * 24 * 60 * 60, // 1 week in seconds
+        path: "/",
+      });
+    } catch (cookieError: any) {
+      if (process.env.NODE_ENV === "test" || !process.env.NEXT_RUNTIME) {
+        console.warn("Bypassed cookies() storage in non-Next.js runtime");
+      } else {
+        throw cookieError;
+      }
+    }
 
     return NextResponse.json({
       success: true,

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { verifyToken } from "@/lib/session";
 import { cookies } from "next/headers";
-import { sendTwilioMessage } from "@/lib/twilio";
+import { sendSystemNotification } from "@/lib/notifications";
 import { getTimerMessage, getDeviceMessage, MessageStyle } from "@/lib/message-templates";
 
 export async function GET(req: NextRequest) {
@@ -73,23 +73,15 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Send notification immediately when timer is SET (PENDING)
-    if (user.phoneNumber) {
-      const device = deviceName;
-      const kw = Number(powerDraw).toFixed(2);
-      const hrs = Number(duration).toFixed(1);
+    // Send in-app Cyberpunk notification immediately when timer is SET (PENDING)
+    const device = deviceName;
+    const kw = Number(powerDraw).toFixed(2);
+    const hrs = Number(duration).toFixed(1);
 
-      const style = (user.messageStyle || "random") as MessageStyle;
-      const alertBody = getTimerMessage(style, device, kw, startTime, hrs);
+    const style = (user.messageStyle || "random") as MessageStyle;
+    const alertBody = getTimerMessage(style, device, kw, startTime, hrs);
 
-      // Send via SMS
-      sendTwilioMessage(user.phoneNumber, "sms", alertBody)
-        .catch(err => console.error("Failed to send timer set SMS:", err));
-
-      // Send via WhatsApp
-      sendTwilioMessage(user.phoneNumber, "whatsapp", alertBody)
-        .catch(err => console.error("Failed to send timer set WhatsApp:", err));
-    }
+    await sendSystemNotification(user.id, alertBody);
 
     return NextResponse.json({ success: true, schedule });
   } catch (error: any) {
@@ -156,20 +148,14 @@ export async function PATCH(req: NextRequest) {
       data: { status },
     });
 
-    if (status === "running" && user && user.phoneNumber) {
+    if (status === "running" && user) {
       const device = updated.deviceName;
       const kw = Number(updated.powerDraw).toFixed(1);
 
       const style = (user.messageStyle || "random") as MessageStyle;
       const alertBody = getDeviceMessage(style, device, kw);
 
-      // Always send via SMS
-      sendTwilioMessage(user.phoneNumber, "sms", alertBody)
-        .catch(err => console.error("Failed to send schedule SMS notification:", err));
-
-      // Always send via WhatsApp
-      sendTwilioMessage(user.phoneNumber, "whatsapp", alertBody)
-        .catch(err => console.error("Failed to send schedule WhatsApp notification:", err));
+      await sendSystemNotification(user.id, alertBody);
     }
 
     return NextResponse.json({ success: true, schedule: updated });
