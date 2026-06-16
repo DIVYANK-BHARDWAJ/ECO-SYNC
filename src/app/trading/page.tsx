@@ -298,9 +298,9 @@ export default function EnergyTrading() {
     if (!isSolarLoaded) return;
 
     const PLAN_CONFIG: Record<string, { reduction: string; multiplier: number }> = {
-      "Core Nexus": { reduction: "15%", multiplier: 0.85 },
-      "Titan Pulse": { reduction: "40%", multiplier: 0.60 },
-      "Zenith Zero": { reduction: "75%", multiplier: 0.25 },
+      "Eco-Baseline": { reduction: "15%", multiplier: 0.85 },
+      "Aether Pro": { reduction: "40%", multiplier: 0.60 },
+      "Carbon Zero": { reduction: "75%", multiplier: 0.25 },
     };
 
     const interval = setInterval(() => {

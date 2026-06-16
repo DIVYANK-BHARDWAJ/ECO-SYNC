@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { Resend } from "resend";
-import nodemailer from "nodemailer";
 import { parseIdentifier } from "@/lib/auth-utils";
 import { getOtpMessage, MessageStyle } from "@/lib/message-templates";
+import { sendRawEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -300,117 +299,17 @@ export async function POST(req: NextRequest) {
     const htmlContent = selectedTemplate.html(code);
     const subject = selectedTemplate.subject;
     
-    const smtpUser = process.env.SMTP_USER;
-    const smtpPass = process.env.SMTP_PASSWORD;
-    const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
-    const smtpPort = parseInt(process.env.SMTP_PORT || "465");
-    const smtpSender = process.env.SMTP_SENDER || smtpUser;
+    const result = await sendRawEmail(targetEmail, subject, htmlContent);
 
-    const brevoApiKey = process.env.BREVO_API_KEY || (smtpPass?.startsWith("xkeysib-") ? smtpPass : null);
-
-    // 1. Try sending via Brevo HTTP API if API key is provided
-    if (brevoApiKey && smtpSender) {
-      try {
-        const response = await fetch("https://api.brevo.com/v3/smtp/email", {
-          method: "POST",
-          headers: {
-            "accept": "application/json",
-            "api-key": brevoApiKey,
-            "content-type": "application/json",
-          },
-          body: JSON.stringify({
-            sender: {
-              name: "Eco-Sync Nexus",
-              email: smtpSender,
-            },
-            to: [
-              {
-                email: targetEmail,
-              },
-            ],
-            subject: subject,
-            htmlContent: htmlContent,
-          }),
-        });
-
-        if (response.ok) {
-          return NextResponse.json({
-            success: true,
-            message: "Verification code sent to your email",
-          });
-        } else {
-          const errData = await response.json();
-          console.error("Brevo API delivery failed:", errData);
-        }
-      } catch (err: any) {
-        console.error("Brevo API delivery failed, falling back", err);
-      }
+    if (result.success) {
+      return NextResponse.json({
+        success: true,
+        message: result.mockUsed ? "Verification code sent (mock environment)" : "Verification code sent to your email",
+        ...(result.mockUsed ? { mockOtp: code } : {})
+      });
+    } else {
+      throw new Error(result.error || "Delivery failed");
     }
-
-    // 2. Try sending via SMTP if credentials are provided (allows sending to any address)
-    if (smtpUser && smtpPass) {
-      try {
-        const transporter = nodemailer.createTransport({
-          host: smtpHost,
-          port: smtpPort,
-          secure: smtpPort === 465,
-          auth: {
-            user: smtpUser,
-            pass: smtpPass,
-          },
-        });
-
-        await transporter.sendMail({
-          from: `"Eco-Sync Nexus" <${smtpSender}>`,
-          to: targetEmail,
-          subject: subject,
-          html: htmlContent,
-        });
-
-        return NextResponse.json({
-          success: true,
-          message: "Verification code sent to your email",
-        });
-      } catch (err: any) {
-        console.error("SMTP delivery failed, falling back to Resend or mock logs", err);
-      }
-    }
-
-    // 3. Check if we can use Resend (fallback or primary if SMTP not configured)
-    if (apiKey && apiKey !== "mock" && !apiKey.startsWith("your_")) {
-      try {
-        const resend = new Resend(apiKey);
-        const { data, error } = await resend.emails.send({
-          from: "Eco-Sync Nexus <onboarding@resend.dev>",
-          to: targetEmail,
-          subject: subject,
-          html: htmlContent,
-        });
-
-        if (error) {
-          throw error;
-        }
-
-        return NextResponse.json({
-          success: true,
-          message: "Verification code sent to your email",
-        });
-      } catch (err: any) {
-        console.error("Resend delivery failed, falling back to mock logs", err);
-      }
-    }
-
-    // Fallback: Mock mode
-    console.log("\n==================================================");
-    console.log(`[MOCK AUTH] [Template: "${subject}"]`);
-    console.log(`Verification Code for ${targetEmail}: ${code}`);
-    console.log("==================================================\n");
-
-    return NextResponse.json({
-      success: true,
-      message: "Verification code sent (mock environment)",
-      mockOtp: code, // Return in response only for testing
-    });
   } catch (e: any) {
     console.error("Error in OTP send route:", e);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

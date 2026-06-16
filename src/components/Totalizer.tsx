@@ -12,23 +12,26 @@ interface TotalizerProps {
   onOpenMetric: (type: MetricType) => void;
   activePlanId: string | null;
   solarState: SolarBatteryState;
+  estimatedMonthlyBill: number;
+  estimatedMonthlyCarbon: number;
 }
 
-export default function Totalizer({ totalLoad, accumulatedKwh, devices, onOpenMetric, activePlanId, solarState }: TotalizerProps) {
-  const carbonFactor = 0.82; // India Standard (0.82kg/unit)
-  const costFactor = 8; // ₹8 per unit (Standard Indian Rate)
-  
-  const currentCost = accumulatedKwh * costFactor;
-  const currentCarbon = accumulatedKwh * carbonFactor;
+import { useAuth } from "@/context/AuthContext";
 
+export default function Totalizer({ 
+  totalLoad, 
+  accumulatedKwh, 
+  devices, 
+  onOpenMetric, 
+  activePlanId, 
+  solarState,
+  estimatedMonthlyBill,
+  estimatedMonthlyCarbon
+}: TotalizerProps) {
   const BASELINE_LOAD = 0.2; 
   const totalPowerCapacity = devices.reduce((sum, d) => sum + d.power, 0);
-  const maxPotentialLoad = totalPowerCapacity + BASELINE_LOAD;
   
-  // Calculate a smarter optimization score:
-  // 1. Base score of 85 (nominal efficiency)
-  // 2. Penalty based on load intensity (max 50% penalty)
-  // 3. Bonus for active savings plans (up to 40% bonus)
+  // Calculate a smarter optimization score
   const loadIntensity = (totalLoad - BASELINE_LOAD) / (totalPowerCapacity || 1);
   const usagePenalty = loadIntensity * 50;
   const planBonus = activePlanId === "Carbon Zero" ? 40 : activePlanId === "Aether Pro" ? 25 : activePlanId === "Eco-Baseline" ? 15 : 0;
@@ -45,17 +48,17 @@ export default function Totalizer({ totalLoad, accumulatedKwh, devices, onOpenMe
     <div className="w-full">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
         <SummaryCard 
-          title="Monthly Estimate"
-          value={`₹${(currentCost * 720 / 24).toFixed(0)}`}
-          label="Estimated Bill"
-          suffix="/mo"
+          title="Live Cost Incurred"
+          value={estimatedMonthlyBill < 0 ? `-₹${Math.abs(estimatedMonthlyBill).toFixed(3)}` : `₹${estimatedMonthlyBill.toFixed(3)}`}
+          label="Active Session Cost"
+          suffix=""
           accent="tertiary"
           onClick={() => onOpenMetric("COST")}
         />
         <SummaryCard 
-          title="Carbon Footprint"
-          value={currentCarbon.toFixed(3)}
-          label="kg CO2 Output"
+          title="Live Carbon Output"
+          value={estimatedMonthlyCarbon.toFixed(3)}
+          label="Active Session CO₂"
           suffix=" kg"
           accent="tertiary"
           onClick={() => onOpenMetric("CARBON")}
@@ -74,7 +77,7 @@ export default function Totalizer({ totalLoad, accumulatedKwh, devices, onOpenMe
           label={efficiency > 70 ? "OPTIMAL EFFICIENCY REACHED" : "OPTIMIZATION REQUIRED"}
           suffix="%"
           accent="tertiary"
-          onClick={() => onOpenMetric("MAX_EFFICIENCY")}
+          onClick={() => onOpenMetric("EFFICIENCY")}
         />
       </div>
     </div>

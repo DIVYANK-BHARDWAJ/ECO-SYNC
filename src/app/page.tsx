@@ -30,20 +30,20 @@ import CarbonSchedulerSection from "@/components/CarbonSchedulerSection";
 import NexusTerminal from "@/components/NexusTerminal";
 
 const PLAN_CONFIG: Record<string, { reduction: string; multiplier: number }> = {
-  "Core Nexus": { reduction: "15%", multiplier: 0.85 },
-  "Titan Pulse": { reduction: "40%", multiplier: 0.60 },
-  "Zenith Zero": { reduction: "75%", multiplier: 0.25 },
+  "Eco-Baseline": { reduction: "15%", multiplier: 0.85 },
+  "Aether Pro": { reduction: "40%", multiplier: 0.60 },
+  "Carbon Zero": { reduction: "75%", multiplier: 0.25 },
 };
 
 const INITIAL_DEVICES: Device[] = [
   { id: "hvac-1", label: "Climate Control", power: 1.8, isOn: false, iconName: "Wind", desc: "Zoned Heating & Cooling" },
   { id: "ev-1", label: "EV Charger", power: 7.2, isOn: false, iconName: "Zap", desc: "Level 2 Fast Charger" },
-  { id: "fridge-1", label: "Refrigerator", power: 0.15, isOn: true, iconName: "Snowflake", desc: "Kitchen Refrigerator" },
+  { id: "fridge-1", label: "Refrigerator", power: 0.15, isOn: false, iconName: "Snowflake", desc: "Kitchen Refrigerator" },
   { id: "tv-1", label: "Living Room TV", power: 0.18, isOn: false, iconName: "Tv", desc: "4K Smart TV" },
-  { id: "lights-1", label: "Home Lighting", power: 0.08, isOn: true, iconName: "Lightbulb", desc: "Smart LED Grid" },
+  { id: "lights-1", label: "Home Lighting", power: 0.08, isOn: false, iconName: "Lightbulb", desc: "Smart LED Grid" },
   { id: "dish-1", label: "Dishwasher", power: 1.5, isOn: false, iconName: "Waves", desc: "Energy Star Cycle" },
-  { id: "purifier-1", label: "Air Purifier", power: 0.07, isOn: true, iconName: "Search", desc: "HEPA Filter Unit" },
-  { id: "router-1", label: "Smart Router", power: 0.02, isOn: true, iconName: "Wifi", desc: "Dual-Band Mesh Uplink" },
+  { id: "purifier-1", label: "Air Purifier", power: 0.07, isOn: false, iconName: "Search", desc: "HEPA Filter Unit" },
+  { id: "router-1", label: "Smart Router", power: 0.02, isOn: false, iconName: "Wifi", desc: "Dual-Band Mesh Uplink" },
 ];
 
 export default function Home() {
@@ -54,6 +54,30 @@ export default function Home() {
   const [activeMetric, setActiveMetric] = useState<MetricType>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [notifications, setNotifications] = useState<{ id: string; message: string; type: "info" | "success" | "warning" }[]>([]);
+
+  // Real-time second-by-second tracker states
+  const [deviceActiveSeconds, setDeviceActiveSeconds] = useState<Record<string, number>>({});
+  const [accumulatedSessionKwh, setAccumulatedSessionKwh] = useState(0);
+  const [budgetTarget, setBudgetTarget] = useState<number>(3000);
+  const [budgetAlertSent, setBudgetAlertSent] = useState(false);
+
+  const costFactor = user?.costFactor ?? 8.0;
+  const carbonFactor = 0.82; // India standard
+
+  // Load budget target from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("eco-sync-budget-target");
+    if (saved) {
+      setBudgetTarget(parseFloat(saved));
+    }
+  }, []);
+
+  const handleUpdateBudgetTarget = (newTarget: number) => {
+    setBudgetTarget(newTarget);
+    localStorage.setItem("eco-sync-budget-target", newTarget.toString());
+  };
+
+
 
   const [simulatedTime, setSimulatedTime] = useState(() => {
     // Start at current hour, round minutes to nearest 15 for simulation alignment
@@ -87,7 +111,7 @@ export default function Home() {
     schedulesRef.current = schedules;
   }, [schedules]);
 
-
+  // Force-refresh editor cache
   // Scroll to top and show main content when intro finishes
   const handleIntroComplete = () => {
     setShowIntro(false);
@@ -233,6 +257,83 @@ export default function Home() {
     localStorage.setItem("eco-sync-devices", JSON.stringify(devices));
   }, [devices]);
 
+  // 1-second interval to accumulate energy consumption and active seconds dynamically
+  useEffect(() => {
+    const activeDevices = devices.filter(d => d.isOn);
+    if (activeDevices.length === 0) {
+      // Clear when idle to avoid lingering calculations
+      setDeviceActiveSeconds({});
+      setAccumulatedSessionKwh(0);
+      setBudgetAlertSent(false); // Reset alert flag when all devices are turned off
+      return;
+    }
+
+    const interval = setInterval(() => {
+      let planMultiplier = 1.0;
+      if (activePlanId && PLAN_CONFIG[activePlanId]) {
+        planMultiplier = PLAN_CONFIG[activePlanId].multiplier;
+      }
+
+      setDeviceActiveSeconds(prev => {
+        const next = { ...prev };
+        activeDevices.forEach(d => {
+          next[d.id] = (next[d.id] || 0) + 1;
+        });
+        return next;
+      });
+
+      let incrementalKwh = 0;
+      activeDevices.forEach(d => {
+        incrementalKwh += d.power * (1 / 3600); // 1 sec = 1/3600 of an hour
+      });
+      incrementalKwh *= planMultiplier;
+
+      setAccumulatedSessionKwh(prev => {
+        const newKwh = prev + incrementalKwh;
+        const currentCost = newKwh * costFactor;
+
+        if (currentCost >= budgetTarget && !budgetAlertSent) {
+          setBudgetAlertSent(true);
+
+          // 1. Deactivate all devices immediately
+          setDevices(prevDevices => prevDevices.map(d => ({ ...d, isOn: false })));
+
+          // 2. Trigger local notification
+          const nId = "budget-limit-reached-" + Date.now();
+          setNotifications(prevN => [
+            { id: nId, message: `BUDGET SHUTDOWN: Target of ₹${budgetTarget} reached! All devices deactivated.`, type: "warning" },
+            ...prevN
+          ]);
+          setTimeout(() => {
+            setNotifications(current => current.filter(n => n.id !== nId));
+          }, 6000);
+
+          // 3. Append warning log to console history
+          const logTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+          setDeviceHistory(h => [{
+            id: Date.now(),
+            label: "Nexus Core",
+            action: "OFF" as const,
+            time: logTime,
+            details: `Target of ₹${budgetTarget} reached. Hard disconnect activated.`,
+            iconName: "ShieldAlert"
+          }, ...h].slice(0, 100));
+
+          // 4. Send email notification via endpoint
+          fetch("/api/auth/budget-exceeded", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ spent: currentCost, target: budgetTarget }),
+          }).catch(err => console.error("Failed to trigger budget exceeded email:", err));
+        }
+
+        return newKwh;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [devices, activePlanId, budgetTarget, budgetAlertSent, costFactor]);
+
   // Load solar from localStorage on mount
   useEffect(() => {
     const savedSolar = localStorage.getItem("eco-sync-solar");
@@ -343,6 +444,8 @@ export default function Home() {
     localStorage.removeItem("eco-sync-devices");
     localStorage.removeItem("eco-sync-solar");
     setDevices(INITIAL_DEVICES);
+    setDeviceActiveSeconds({});
+    setAccumulatedSessionKwh(0);
     updateSolarState({
       solarGeneration: 0,
       batteryCapacity: 13.5,
@@ -428,9 +531,9 @@ export default function Home() {
     });
   }, []);
 
-  const [totalLoad, setTotalLoad] = useState(0.2);
+  const [totalLoad, setTotalLoad] = useState(0.0);
   const [accumulatedKwh, setAccumulatedKwh] = useState(0);
-  const [loadHistory, setLoadHistory] = useState<number[]>(new Array(30).fill(0.2));
+  const [loadHistory, setLoadHistory] = useState<number[]>(new Array(30).fill(0.0));
 
   const scrollTarget = useRef<HTMLDivElement>(null);
   const { scrollYProgress: rawScrollProgress } = useScroll({
@@ -441,7 +544,7 @@ export default function Home() {
   const scrollYProgress = rawScrollProgress;
 
   useEffect(() => {
-    let load = 0.2; // Baseline
+    let load = 0.0;
     devices.forEach(device => {
       if (device.isOn) load += device.power;
     });
@@ -503,8 +606,6 @@ export default function Home() {
 
       const SIMULATION_SPEED_MULTIPLIER = 300; // 300x faster than real-time
       const intervalHours = (refreshRateMs * SIMULATION_SPEED_MULTIPLIER) / 3600000;
-      const addedKwh = totalLoad * intervalHours;
-      setAccumulatedKwh((prev: number) => prev + addedKwh);
 
       // 1. Advance Simulated Time
       const tickDurationMs = refreshRateMs * SIMULATION_SPEED_MULTIPLIER;
@@ -642,7 +743,7 @@ export default function Home() {
          const availableChargeKw = Math.min(-dependency, currentSolar.batteryChargeRate);
          const chargeKwh = availableChargeKw * intervalHours;
          
-         if (newLevel >= currentSolar.batteryCapacity && gridSellback) {
+         if (newLevel >= currentSolar.batteryCapacity && gridSellback && totalLoad > 0) {
            const surplusKw = -dependency;
            const surplusKwh = surplusKw * intervalHours;
            
@@ -688,6 +789,9 @@ export default function Home() {
 
       updateSolarState(updatedState);
 
+      const addedKwh = updatedState.gridDependency * intervalHours;
+      setAccumulatedKwh((prev: number) => prev + addedKwh);
+
       // Move graph forward
       setLoadHistory((prev: number[]) => {
          return [...prev.slice(1), totalLoad];
@@ -727,6 +831,11 @@ export default function Home() {
     return <AuthPage />;
   }
 
+  // CENTRAL BILLING & CARBON CALCULATION
+
+  const estimatedMonthlyBill = accumulatedSessionKwh * costFactor;
+  const estimatedMonthlyCarbon = accumulatedSessionKwh * carbonFactor;
+
   return (
     <main className="relative bg-background text-foreground min-h-screen selection:bg-zinc-800 selection:text-white">
       
@@ -765,7 +874,16 @@ export default function Home() {
           />
         )}
         {activeMetric && (
-          <CalculationOverlay type={activeMetric} onClose={() => setActiveMetric(null)} />
+          <CalculationOverlay 
+            type={activeMetric} 
+            onClose={() => setActiveMetric(null)} 
+            devices={devices}
+            activePlanId={activePlanId}
+            solarState={solarState}
+            gridSellback={gridSellback}
+            deviceActiveSeconds={deviceActiveSeconds}
+            accumulatedSessionKwh={accumulatedSessionKwh}
+          />
         )}
         {showLogs && (
           <LogsOverlay 
@@ -849,6 +967,7 @@ export default function Home() {
               onRefreshSchedules={fetchSchedules}
               currentSimulatedHour={simulatedTime.getHours()}
               currentSimulatedMinute={simulatedTime.getMinutes()}
+              solarState={solarState}
             />
 
             {/* Dedicated Real-Time Radar Section */}
@@ -873,14 +992,16 @@ export default function Home() {
                      <h2 className="text-7xl font-black text-white tracking-tighter uppercase mb-2 font-heading">Energy <span className="text-accent-tertiary">Dynamics</span></h2>
                      <p className="text-white/40 font-mono text-[10px] uppercase tracking-[0.4em] font-black">Your usage, costs & carbon — updated every second</p>
                    </div>
-                   <Totalizer 
-                    totalLoad={totalLoad} 
-                    accumulatedKwh={accumulatedKwh}
-                    devices={devices}
-                    onOpenMetric={(type) => setActiveMetric(type)}
-                    activePlanId={activePlanId}
-                    solarState={solarState}
-                   />
+                    <Totalizer 
+                     totalLoad={totalLoad} 
+                     accumulatedKwh={accumulatedKwh}
+                     devices={devices}
+                     onOpenMetric={(type) => setActiveMetric(type)}
+                     activePlanId={activePlanId}
+                     solarState={solarState}
+                     estimatedMonthlyBill={estimatedMonthlyBill}
+                     estimatedMonthlyCarbon={estimatedMonthlyCarbon}
+                    />
                  </div>
                  <div className="flex flex-col gap-12 sticky top-32">
                    <SolarPanelManager 
@@ -891,7 +1012,12 @@ export default function Home() {
                      refreshRateMs={refreshRateMs}
                      onRechargeBattery={handleRechargeBattery}
                    />
-                   <BudgetManager totalLoad={totalLoad} costFactor={user ? user.costFactor : 8} />
+                     <BudgetManager 
+                       liveSessionCost={estimatedMonthlyBill} 
+                       costFactor={costFactor} 
+                       budgetTarget={budgetTarget}
+                       onUpdateTarget={handleUpdateBudgetTarget}
+                     />
                    <div className="p-8 rounded-2xl bg-[#121214] text-white border border-white/5 shadow-2xl relative overflow-hidden group">
                       <div className="relative z-10">
                         <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-widest mb-4">System Console</p>

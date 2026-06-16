@@ -4,9 +4,11 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Clock, Leaf, Zap, Trash2, Loader2, Calendar, 
-  ChevronRight, Sparkles, AlertTriangle, CheckCircle 
+  ChevronRight, Sparkles, AlertTriangle, CheckCircle,
+  Activity, Coins, BatteryCharging
 } from "lucide-react";
-import { Device } from "@/types/device";
+import { Device, SolarBatteryState } from "@/types/device";
+import { useAuth } from "@/context/AuthContext";
 
 interface CarbonSchedulerSectionProps {
   devices: Device[];
@@ -14,6 +16,7 @@ interface CarbonSchedulerSectionProps {
   onRefreshSchedules: () => void;
   currentSimulatedHour: number;
   currentSimulatedMinute: number;
+  solarState: SolarBatteryState;
 }
 
 interface ForecastItem {
@@ -27,7 +30,8 @@ export default function CarbonSchedulerSection({
   schedules, 
   onRefreshSchedules, 
   currentSimulatedHour, 
-  currentSimulatedMinute 
+  currentSimulatedMinute,
+  solarState
 }: CarbonSchedulerSectionProps) {
   const [forecast, setForecast] = useState<ForecastItem[]>([]);
   const [loadingForecast, setLoadingForecast] = useState(true);
@@ -41,6 +45,20 @@ export default function CarbonSchedulerSection({
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+
+  const { user } = useAuth();
+  const batteryCap = solarState.batteryCapacity;
+  const costFactor = user?.costFactor ?? 8.0;
+
+  // Simulated live market price for trade opportunity calculations
+  const [marketPrice, setMarketPrice] = useState(0.18);
+
+  useEffect(() => {
+    const basePrice = 0.15 * (costFactor / 8.0);
+    const demandPremium = (solarState.gridDependency / 100) * 0.15;
+    const fluctuation = (Math.random() - 0.5) * 0.01;
+    setMarketPrice(Math.max(0.02, Math.min(2.00, basePrice + demandPremium + fluctuation)));
+  }, [costFactor, solarState.gridDependency]);
 
   // Fetch forecast data
   useEffect(() => {
@@ -334,9 +352,9 @@ export default function CarbonSchedulerSection({
               </div>
 
               {/* Form Selects */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-6">
                 <div className="space-y-2">
-                  <label className="text-zinc-400 text-[10px] uppercase font-mono tracking-widest font-bold">Select Interface</label>
+                  <label className="text-zinc-400 text-[10px] uppercase font-mono tracking-widest font-bold">Select Appliance Interface</label>
                   <select
                     value={selectedDeviceId}
                     onChange={(e) => setSelectedDeviceId(e.target.value)}
@@ -344,25 +362,67 @@ export default function CarbonSchedulerSection({
                   >
                     {devices.map((d) => (
                       <option key={d.id} value={d.id}>
-                        {d.label} ({d.power} kW)
+                        {d.label} (Rating: {d.power} kW draw)
                       </option>
                     ))}
                   </select>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-zinc-400 text-[10px] uppercase font-mono tracking-widest font-bold">Run Duration</label>
-                  <select
-                    value={duration}
-                    onChange={(e) => setDuration(Number(e.target.value))}
-                    className="w-full bg-zinc-950 border border-white/5 p-4 rounded-xl text-white text-xs outline-none focus:border-accent-tertiary transition-all"
-                  >
-                    <option value={1}>1.0 Hour</option>
-                    <option value={1.5}>1.5 Hours</option>
-                    <option value={2}>2.0 Hours</option>
-                    <option value={3}>3.0 Hours</option>
-                    <option value={4}>4.0 Hours</option>
-                    <option value={6}>6.0 Hours</option>
-                  </select>
+
+                {/* Duration Controller */}
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <label className="text-zinc-400 text-[10px] uppercase font-mono tracking-widest font-bold">Run Duration</label>
+                    <span className="text-accent-tertiary font-mono font-bold text-xs bg-accent-tertiary/10 border border-accent-tertiary/20 px-2.5 py-1 rounded">
+                      [ {duration.toFixed(1)} Hrs ]
+                    </span>
+                  </div>
+
+                  {/* Preset Duration Cards */}
+                  <div className="grid grid-cols-4 gap-2">
+                    {[
+                      { val: 1.0, label: "Flash", desc: "1h cycle", icon: Zap },
+                      { val: 2.0, label: "Standard", desc: "2h cycle", icon: Clock },
+                      { val: 4.0, label: "Deep", desc: "4h charge", icon: BatteryCharging },
+                      { val: 6.0, label: "Industrial", desc: "6h draw", icon: Activity },
+                    ].map((preset) => {
+                      const isPresetSelected = duration === preset.val;
+                      const Icon = preset.icon;
+                      return (
+                        <button
+                          key={preset.label}
+                          type="button"
+                          onClick={() => setDuration(preset.val)}
+                          className={`flex flex-col items-center justify-center p-3 rounded-xl border text-center transition-all cursor-pointer ${
+                            isPresetSelected
+                              ? "bg-accent-tertiary/10 border-accent-tertiary text-white shadow-[0_0_12px_rgba(20,184,166,0.18)]"
+                              : "bg-zinc-950 border-white/5 text-zinc-400 hover:text-zinc-200 hover:border-white/10 hover:bg-zinc-900/40"
+                          }`}
+                        >
+                          <Icon className={`w-4 h-4 mb-1.5 ${isPresetSelected ? "text-accent-tertiary" : "text-zinc-500"}`} />
+                          <span className="text-[10px] font-black uppercase font-heading tracking-wider">{preset.label}</span>
+                          <span className="text-[8px] text-zinc-500 font-mono mt-0.5">{preset.desc}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Fine-Tuning Range Slider */}
+                  <div className="space-y-1">
+                    <input
+                      type="range"
+                      min="0.5"
+                      max="12"
+                      step="0.5"
+                      value={duration}
+                      onChange={(e) => setDuration(Number(e.target.value))}
+                      className="w-full accent-accent-tertiary cursor-pointer bg-zinc-900 rounded-lg appearance-none h-1.5"
+                    />
+                    <div className="flex justify-between text-[8px] font-mono text-zinc-600">
+                      <span>0.5 Hrs Min</span>
+                      <span>6.0 Hrs</span>
+                      <span>12.0 Hrs Max</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -391,19 +451,77 @@ export default function CarbonSchedulerSection({
                 </div>
               </div>
 
-              {/* Live Calculator Panel */}
-              <div className="flex items-center gap-4 bg-accent-tertiary/5 border border-accent-tertiary/10 p-5 rounded-xl">
-                <div className="p-3 bg-accent-tertiary/10 rounded-lg text-accent-tertiary">
-                  <Sparkles className="w-5 h-5 animate-pulse" />
+              {/* System Impact & Trade Diagnostic Panel */}
+              <div className="bg-zinc-950 border border-white/5 rounded-xl p-5 space-y-4 shadow-inner">
+                <div className="flex items-center gap-2 border-b border-white/5 pb-2.5">
+                  <Activity className="w-4 h-4 text-accent-tertiary" />
+                  <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest font-bold">System Impact & Trade Diagnostics</span>
                 </div>
-                <div className="flex-1">
-                  <p className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest mb-0.5">Projection Carbon Savings</p>
-                  <p className="text-white text-lg font-black font-heading uppercase">
-                    Saves <span className="text-accent-tertiary font-mono">{savingsKg.toFixed(2)} kg</span> CO2
-                  </p>
-                  <p className="text-zinc-500 text-[9px] font-mono">
-                    Footprint: {carbonFootprintGrams.toFixed(0)}g CO2 compared to {worstHourFootprintGrams.toFixed(0)}g peak.
-                  </p>
+
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Energy Consumed Card */}
+                  <div className="bg-white/2 border border-white/5 rounded-lg p-3">
+                    <p className="text-zinc-500 font-mono text-[8px] uppercase tracking-wider mb-1">Total Consumption</p>
+                    <p className="text-white text-lg font-black font-heading">
+                      {(powerKw * duration).toFixed(1)} <span className="text-[10px] text-zinc-500 font-normal">kWh</span>
+                    </p>
+                    <p className="text-[8px] text-zinc-600 font-mono">
+                      Rating: {powerKw.toFixed(1)} kW × {duration.toFixed(1)} h
+                    </p>
+                  </div>
+
+                  {/* Deferred Trade Opportunity Card */}
+                  <div className="bg-white/2 border border-white/5 rounded-lg p-3">
+                    <p className="text-zinc-500 font-mono text-[8px] uppercase tracking-wider mb-1">Deferred Trade Yield</p>
+                    <p className="text-accent-secondary text-lg font-black font-mono flex items-center gap-1">
+                      <Coins className="w-3.5 h-3.5" />
+                      +{((powerKw * duration) * marketPrice).toFixed(2)}
+                    </p>
+                    <p className="text-[8px] text-zinc-600 font-mono">
+                      Est. Rate: {marketPrice.toFixed(3)} ECO/kWh
+                    </p>
+                  </div>
+                </div>
+
+                {/* Battery capacity progress bar */}
+                <div className="space-y-1.5 bg-white/2 border border-white/5 rounded-lg p-3">
+                  <div className="flex justify-between items-center text-[9px] font-mono">
+                    <span className="text-zinc-500 uppercase tracking-wider font-bold">Storage Draw Allocation</span>
+                    <span className={`font-bold ${
+                      (powerKw * duration) > batteryCap ? "text-red-400 animate-pulse" : "text-accent-tertiary"
+                    }`}>
+                      {((powerKw * duration) / batteryCap * 100).toFixed(0)}% of Stored Capacity
+                    </span>
+                  </div>
+                  
+                  {/* Visual battery bar */}
+                  <div className="w-full h-2.5 bg-zinc-900 border border-white/5 rounded-full overflow-hidden flex">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-300 ${
+                        (powerKw * duration) > batteryCap 
+                          ? "bg-gradient-to-r from-red-600 to-amber-500" 
+                          : "bg-gradient-to-r from-accent-tertiary to-emerald-400"
+                      }`}
+                      style={{ width: `${Math.min(100, ((powerKw * duration) / batteryCap * 100))}%` }}
+                    />
+                  </div>
+
+                  <div className="flex justify-between text-[8px] font-mono text-zinc-600">
+                    <span>Capacity: {batteryCap.toFixed(1)} kWh</span>
+                    { (powerKw * duration) > batteryCap && (
+                      <span className="text-red-400 font-bold flex items-center gap-1 uppercase tracking-wide">
+                        <AlertTriangle className="w-3 h-3" /> Overdraw +{((powerKw * duration) - batteryCap).toFixed(1)} kWh (Grid dependency)
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Carbon Savings Summary */}
+                <div className="flex items-start gap-2 text-[10px] text-zinc-400 leading-snug bg-accent-tertiary/5 border border-accent-tertiary/10 p-3.5 rounded-lg">
+                  <Sparkles className="w-4 h-4 text-accent-tertiary shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <span className="font-bold text-white uppercase tracking-wider">Carbon Optimization Output:</span> Saves <span className="text-accent-tertiary font-bold font-mono">{savingsKg.toFixed(2)} kg</span> of CO2 emission compared to worst grid hour peak (Offset: {carbonFootprintGrams.toFixed(0)}g vs {worstHourFootprintGrams.toFixed(0)}g).
+                  </div>
                 </div>
               </div>
 

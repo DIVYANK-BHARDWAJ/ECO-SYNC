@@ -467,14 +467,17 @@ export default function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps)
               </div>
 
               {/* Theme Selection Buttons */}
-              <div className="grid grid-cols-5 gap-1">
-                {(["nexus-border", "quantum-terminal", "neo-minimalist", "grid-override", "random"] as MessageStyle[]).map((styleOpt) => {
+              <div className="grid grid-cols-4 gap-1.5">
+                {(["nexus-border", "quantum-terminal", "neo-minimalist", "grid-override", "carbon-crimson", "bio-sovereignty", "neon-hacker", "random"] as MessageStyle[]).map((styleOpt) => {
                   const isSelected = messageStyle === styleOpt;
                   const labelMap: Record<string, string> = {
                     "nexus-border": "Nexus",
                     "quantum-terminal": "Quantum",
                     "neo-minimalist": "Minimal",
                     "grid-override": "Grid",
+                    "carbon-crimson": "Crimson",
+                    "bio-sovereignty": "Bio",
+                    "neon-hacker": "Hacker",
                     "random": "Random"
                   };
                   return (

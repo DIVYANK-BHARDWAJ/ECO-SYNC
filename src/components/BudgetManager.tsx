@@ -1,28 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { IndianRupee, AlertCircle, CheckCircle2, TrendingUp, TrendingDown } from "lucide-react";
 
 interface BudgetManagerProps {
-  totalLoad: number; // current kW load
+  liveSessionCost: number;
   costFactor: number; // cost per kWh
+  budgetTarget: number;
+  onUpdateTarget: (newTarget: number) => void;
 }
 
-export default function BudgetManager({ totalLoad, costFactor }: BudgetManagerProps) {
-  const [budgetTarget, setBudgetTarget] = useState<number>(3000);
+export default function BudgetManager({ liveSessionCost, costFactor, budgetTarget, onUpdateTarget }: BudgetManagerProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState(budgetTarget.toString());
 
-  // Projected monthly based on current load: kW * 24h * 30 days * cost/kWh
-  const projectedMonthlyCost = totalLoad * 720 * costFactor;
-  const isOverBudget = projectedMonthlyCost > budgetTarget;
-  const percentageOfBudget = Math.min(200, (projectedMonthlyCost / budgetTarget) * 100);
+  useEffect(() => {
+    setInputValue(budgetTarget.toString());
+  }, [budgetTarget]);
+
+  const isOverBudget = liveSessionCost > budgetTarget;
+  const percentageOfBudget = Math.min(200, (liveSessionCost / budgetTarget) * 100);
 
   const handleSave = () => {
     const val = parseFloat(inputValue);
     if (!isNaN(val) && val > 0) {
-      setBudgetTarget(val);
+      onUpdateTarget(val);
     }
     setIsEditing(false);
   };
@@ -38,8 +41,8 @@ export default function BudgetManager({ totalLoad, costFactor }: BudgetManagerPr
               <IndianRupee className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-white font-black uppercase tracking-widest text-sm">Budget Projection</h3>
-              <p className="text-white/40 text-[10px] uppercase font-mono tracking-widest">Monthly Outlook</p>
+              <h3 className="text-white font-black uppercase tracking-widest text-sm">Budget Tracker</h3>
+              <p className="text-white/40 text-[10px] uppercase font-mono tracking-widest">Session Cost vs Target</p>
             </div>
           </div>
           <button 
@@ -57,10 +60,10 @@ export default function BudgetManager({ totalLoad, costFactor }: BudgetManagerPr
           <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
             <div className="flex items-center gap-2 mb-2 text-white/60">
               <TrendingUp className="w-4 h-4" />
-              <span className="text-[10px] uppercase font-bold tracking-wider">Projected</span>
+              <span className="text-[10px] uppercase font-bold tracking-wider">Live Spent</span>
             </div>
             <div className={`text-2xl font-bold ${isOverBudget ? 'text-red-400' : 'text-accent-budget'} font-mono tracking-tighter`}>
-              ₹{projectedMonthlyCost.toFixed(0)} <span className="text-sm text-white/40 font-sans font-black">/mo</span>
+              ₹{liveSessionCost.toFixed(3)}
             </div>
           </div>
 
@@ -94,7 +97,7 @@ export default function BudgetManager({ totalLoad, costFactor }: BudgetManagerPr
           <div className="flex justify-between items-center mb-2">
             <p className="text-[10px] uppercase font-bold tracking-wider text-white/60">Budget Utilization</p>
             <p className={`text-[10px] uppercase font-black tracking-wider ${isOverBudget ? 'text-red-400' : 'text-accent-budget'} font-mono`}>
-              {percentageOfBudget.toFixed(1)}%
+              {percentageOfBudget.toFixed(3)}%
             </p>
           </div>
           <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
