@@ -17,9 +17,31 @@ export default function EnergyCanvas({ scrollProgress }: EnergyCanvasProps) {
   const [ready, setReady] = useState(false);
   const neighborhoodTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Performance and throttling state
+  const lastDrawnIndex = useRef<number>(-1);
+  const nextFrameToRender = useRef<number | null>(null);
+  const isRenderPending = useRef<boolean>(false);
+  const animationFrameId = useRef<number | null>(null);
+
   // Map scroll progress (0-1) to frame index (0-143)
   const frameIndex = useTransform(scrollProgress, [0, 1], [0, FRAME_COUNT - 1], { clamp: true });
   const opacity = useTransform(scrollProgress, [0.9, 1], [1, 0]);
+
+  const scheduleRender = (index: number) => {
+    nextFrameToRender.current = index;
+    if (!isRenderPending.current) {
+      isRenderPending.current = true;
+      animationFrameId.current = requestAnimationFrame(performRender);
+    }
+  };
+
+  const performRender = () => {
+    isRenderPending.current = false;
+    if (nextFrameToRender.current !== null) {
+      renderFrame(nextFrameToRender.current);
+      nextFrameToRender.current = null;
+    }
+  };
 
   const loadFrame = (i: number, callback?: () => void) => {
     if (i < 0 || i >= FRAME_COUNT) return;
@@ -37,11 +59,18 @@ export default function EnergyCanvas({ scrollProgress }: EnergyCanvasProps) {
       loadedFrames.current[i] = true;
       if (i === 0 && !ready) {
         resizeCanvas();
-        renderFrame(0);
+        scheduleRender(0);
         setReady(true);
       } else if (ready) {
-        // Redraw current frame to update from fallback to high-quality if this is the active frame
-        renderFrame(frameIndex.get());
+        // Only trigger redraw if the newly loaded frame is the active frame or
+        // is a closer fallback to the active frame than what is currently drawn
+        const currentTarget = Math.floor(frameIndex.get());
+        const currentDrawn = lastDrawnIndex.current;
+        const currentDist = currentDrawn >= 0 ? Math.abs(currentDrawn - currentTarget) : Infinity;
+        const newDist = Math.abs(i - currentTarget);
+        if (i === currentTarget || newDist < currentDist) {
+          scheduleRender(currentTarget);
+        }
       }
       if (callback) callback();
     };
@@ -56,7 +85,7 @@ export default function EnergyCanvas({ scrollProgress }: EnergyCanvasProps) {
     const context = canvas.getContext("2d");
     if (!context) return;
 
-    const targetIndex = Math.floor(index);
+    const targetIndex = Math.min(FRAME_COUNT - 1, Math.max(0, Math.floor(index)));
 
     // 1. Immediately request the active target frame
     if (!requestedFrames.current[targetIndex]) {
@@ -86,6 +115,7 @@ export default function EnergyCanvas({ scrollProgress }: EnergyCanvasProps) {
     // 4. Search outward for the closest loaded frame (fallback)
     let img = imagesRef.current[targetIndex];
     let isImgLoaded = img && loadedFrames.current[targetIndex] && img.complete && img.naturalWidth > 0;
+    let drawnIndex = targetIndex;
 
     if (!isImgLoaded) {
       let foundFallback = false;
@@ -97,6 +127,7 @@ export default function EnergyCanvas({ scrollProgress }: EnergyCanvasProps) {
           const pImg = imagesRef.current[prev];
           if (pImg && loadedFrames.current[prev] && pImg.complete && pImg.naturalWidth > 0) {
             img = pImg;
+            drawnIndex = prev;
             foundFallback = true;
             break;
           }
@@ -105,6 +136,7 @@ export default function EnergyCanvas({ scrollProgress }: EnergyCanvasProps) {
           const nImg = imagesRef.current[next];
           if (nImg && loadedFrames.current[next] && nImg.complete && nImg.naturalWidth > 0) {
             img = nImg;
+            drawnIndex = next;
             foundFallback = true;
             break;
           }
@@ -112,6 +144,8 @@ export default function EnergyCanvas({ scrollProgress }: EnergyCanvasProps) {
       }
       if (!foundFallback) return; // Wait for at least frame 0
     }
+
+    lastDrawnIndex.current = drawnIndex;
 
     // Draw the image (either original or fallback)
     const canvasRatio = canvas.width / canvas.height;
@@ -194,6 +228,9 @@ export default function EnergyCanvas({ scrollProgress }: EnergyCanvasProps) {
       if (neighborhoodTimeoutRef.current) {
         clearTimeout(neighborhoodTimeoutRef.current);
       }
+      if (animationFrameId.current !== null) {
+        cancelAnimationFrame(animationFrameId.current);
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -204,17 +241,20 @@ export default function EnergyCanvas({ scrollProgress }: EnergyCanvasProps) {
 
     const handleResize = () => {
       resizeCanvas();
-      renderFrame(frameIndex.get());
+      scheduleRender(frameIndex.get());
     };
 
     handleResize();
 
     window.addEventListener("resize", handleResize);
-    const unsubscribe = frameIndex.on("change", (v) => renderFrame(v));
+    const unsubscribe = frameIndex.on("change", (v) => scheduleRender(v));
 
     return () => {
       window.removeEventListener("resize", handleResize);
       unsubscribe();
+      if (animationFrameId.current !== null) {
+        cancelAnimationFrame(animationFrameId.current);
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, frameIndex]);

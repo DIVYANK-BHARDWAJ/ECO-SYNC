@@ -837,7 +837,7 @@ export default function Home() {
   const estimatedMonthlyCarbon = accumulatedSessionKwh * carbonFactor;
 
   return (
-    <main className="relative bg-background text-foreground min-h-screen selection:bg-zinc-800 selection:text-white">
+    <main className={`relative bg-background text-foreground min-h-screen selection:bg-zinc-800 selection:text-white ${showIntro ? "h-screen overflow-hidden" : ""}`}>
       
       <AnimatePresence>
         {showIntro && (
@@ -929,10 +929,9 @@ export default function Home() {
         </AnimatePresence>
       </div>
 
-      {!showIntro && (
-        <div>
-          {/* Cinematic Scroller Canvas Area */}
-          <div ref={scrollTarget} className="h-[1000vh] relative">
+      <div>
+        {/* Cinematic Scroller Canvas Area */}
+        <div ref={scrollTarget} className="h-[1000vh] relative">
             <EnergyCanvas scrollProgress={scrollYProgress} />
             
             {/* Start Title & Summary */}
@@ -1066,7 +1065,6 @@ export default function Home() {
             </footer>
           </div>
         </div>
-      )}
       <NexusTerminal />
       <BotpressChatbot
         context={{
