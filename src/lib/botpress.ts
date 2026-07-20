@@ -7,6 +7,7 @@ export interface ProsumerContext {
   gridDependency: number;
   walletBalance: number;
   estimatedMonthlyBill: number;
+  estimatedMonthlyCarbon: number;
   activeDevices?: string; // e.g. "Refrigerator, Home Lighting"
 }
 
@@ -25,6 +26,7 @@ export function formatBotpressPayload(context: ProsumerContext) {
     gridDependency: `${context.gridDependency.toFixed(1)} kW`,
     walletBalance: `${context.walletBalance.toFixed(2)} ECO`,
     estimatedMonthlyBill: `₹${context.estimatedMonthlyBill.toFixed(2)}`,
+    estimatedMonthlyCarbon: `${context.estimatedMonthlyCarbon.toFixed(2)} kg CO2`,
     activeDevices: context.activeDevices || "None",
   };
 }

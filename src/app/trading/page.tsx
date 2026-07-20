@@ -944,6 +944,7 @@ export default function EnergyTrading() {
           gridDependency: solarState.gridDependency,
           walletBalance: walletBalance,
           estimatedMonthlyBill: accumulatedKwh * (user?.costFactor ?? 8.0),
+          estimatedMonthlyCarbon: accumulatedKwh * 0.82,
           activeDevices: simDevicesRef.current.filter(d => d.isOn).map(d => d.label).join(", ") || "None",
         }}
       />

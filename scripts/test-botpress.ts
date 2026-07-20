@@ -13,6 +13,7 @@ function runTest() {
     gridDependency: 1.84,
     walletBalance: 120.456,
     estimatedMonthlyBill: 154.20,
+    estimatedMonthlyCarbon: 126.444,
     activeDevices: "Refrigerator, Smart Router",
   };
 
@@ -27,6 +28,7 @@ function runTest() {
   assert.strictEqual(payload.gridDependency, "1.8 kW");
   assert.strictEqual(payload.walletBalance, "120.46 ECO");
   assert.strictEqual(payload.estimatedMonthlyBill, "₹154.20");
+  assert.strictEqual(payload.estimatedMonthlyCarbon, "126.44 kg CO2");
   assert.strictEqual(payload.activeDevices, "Refrigerator, Smart Router");
 
   console.log("Test PASSED!");

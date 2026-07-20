@@ -1082,6 +1082,7 @@ export default function Home() {
           gridDependency: solarState.gridDependency,
           walletBalance: 0.00,
           estimatedMonthlyBill: estimatedMonthlyBill,
+          estimatedMonthlyCarbon: estimatedMonthlyCarbon,
           activeDevices: devices.filter(d => d.isOn).map(d => d.label).join(", ") || "None",
         }}
       />
