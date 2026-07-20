@@ -64,11 +64,15 @@ export default function Home() {
   const costFactor = user?.costFactor ?? 8.0;
   const carbonFactor = 0.82; // India standard
 
-  // Load budget target from localStorage on mount
+  // Load budget target and accumulated kWh from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem("eco-sync-budget-target");
     if (saved) {
       setBudgetTarget(parseFloat(saved));
+    }
+    const savedKwh = localStorage.getItem("eco-sync-accumulated-kwh");
+    if (savedKwh) {
+      setAccumulatedSessionKwh(parseFloat(savedKwh));
     }
   }, []);
 
@@ -290,6 +294,7 @@ export default function Home() {
 
       setAccumulatedSessionKwh(prev => {
         const newKwh = prev + incrementalKwh;
+        localStorage.setItem("eco-sync-accumulated-kwh", newKwh.toString());
         const currentCost = newKwh * costFactor;
 
         if (currentCost >= budgetTarget && !budgetAlertSent) {
@@ -443,6 +448,7 @@ export default function Home() {
   const handleReset = () => {
     localStorage.removeItem("eco-sync-devices");
     localStorage.removeItem("eco-sync-solar");
+    localStorage.removeItem("eco-sync-accumulated-kwh");
     setDevices(INITIAL_DEVICES);
     setDeviceActiveSeconds({});
     setAccumulatedSessionKwh(0);
@@ -1075,6 +1081,7 @@ export default function Home() {
           solarGeneration: solarState.solarGeneration,
           gridDependency: solarState.gridDependency,
           walletBalance: 0.00,
+          estimatedMonthlyBill: estimatedMonthlyBill,
           activeDevices: devices.filter(d => d.isOn).map(d => d.label).join(", ") || "None",
         }}
       />
