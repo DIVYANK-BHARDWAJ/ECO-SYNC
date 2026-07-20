@@ -38,6 +38,23 @@ export default function EnergyTrading() {
   const { user, loading } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showSettingsDrawer, setShowSettingsDrawer] = useState(false);
+  const [accumulatedKwh, setAccumulatedKwh] = useState(0);
+
+  // Sync accumulated energy in real-time
+  useEffect(() => {
+    const syncKwh = () => {
+      const saved = localStorage.getItem("eco-sync-accumulated-kwh");
+      if (saved) {
+        setAccumulatedKwh(parseFloat(saved));
+      } else {
+        setAccumulatedKwh(0);
+      }
+    };
+    
+    syncKwh();
+    const interval = setInterval(syncKwh, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const [solarState, setSolarState] = useState<SolarBatteryState>({
     solarGeneration: 0,
@@ -926,6 +943,7 @@ export default function EnergyTrading() {
           solarGeneration: solarState.solarGeneration,
           gridDependency: solarState.gridDependency,
           walletBalance: walletBalance,
+          estimatedMonthlyBill: accumulatedKwh * (user?.costFactor ?? 8.0),
           activeDevices: simDevicesRef.current.filter(d => d.isOn).map(d => d.label).join(", ") || "None",
         }}
       />
