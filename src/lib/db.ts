@@ -117,7 +117,7 @@ function writeMockDb(data: {
 
 // Create a singleton Prisma client
 let prismaInstance: PrismaClient | null = null;
-const isDbConfigured = !!process.env.DATABASE_URL;
+const isDbConfigured = !!process.env.DATABASE_URL && process.env.FORCE_OFFLINE !== "true";
 
 if (isDbConfigured) {
   try {

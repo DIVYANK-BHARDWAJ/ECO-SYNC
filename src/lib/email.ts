@@ -177,6 +177,20 @@ export async function sendRawEmail(
   subject: string,
   htmlContent: string
 ): Promise<EmailResult> {
+  if (process.env.FORCE_OFFLINE === "true") {
+    console.log("\n==================================================");
+    console.log(`[MOCK EMAIL PIPELINE] [Subject: "${subject}"]`);
+    console.log(`Recipient: ${toEmail}`);
+    console.log("HTML Preview (first 150 chars):", htmlContent.trim().substring(0, 150) + "...");
+    console.log("==================================================\n");
+
+    return {
+      success: true,
+      message: "Email sent (mock environment fallback)",
+      mockUsed: true
+    };
+  }
+
   try {
     const smtpUser = process.env.SMTP_USER;
     const smtpPass = process.env.SMTP_PASSWORD;
