@@ -191,7 +191,7 @@ export default function CalculationOverlay({
               {/* Formula Panel */}
               <div className="p-5 bg-white/2 border border-white/5 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="space-y-1">
-                  <span className="text-[9px] uppercase font-mono text-zinc-500 tracking-wider">Formula in Plain English</span>
+                  <span className="text-[9px] uppercase font-mono text-zinc-500 tracking-wider">Calculation Logic</span>
                   <p className="text-sm font-bold text-white leading-relaxed">
                     [ Live Electricity Units Used ] × ₹{costFactor.toFixed(2)} cost per Unit
                   </p>
@@ -287,7 +287,7 @@ export default function CalculationOverlay({
               {/* Formula Panel */}
               <div className="p-5 bg-white/2 border border-white/5 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="space-y-1">
-                  <span className="text-[9px] uppercase font-mono text-zinc-500 tracking-wider">Formula in Plain English</span>
+                  <span className="text-[9px] uppercase font-mono text-zinc-500 tracking-wider">Calculation Logic</span>
                   <p className="text-sm font-bold text-white leading-relaxed">
                     [ Live Energy Used (Units) ] × 0.82 kg CO₂ released per Unit
                   </p>
@@ -382,7 +382,7 @@ export default function CalculationOverlay({
               {/* Info Header */}
               <div className="p-5 bg-white/2 border border-white/5 rounded-xl flex items-center justify-between">
                 <div className="space-y-1">
-                  <span className="text-[9px] uppercase font-mono text-zinc-500 tracking-wider">Formula in Plain English</span>
+                  <span className="text-[9px] uppercase font-mono text-zinc-500 tracking-wider">Calculation Logic</span>
                   <p className="text-sm font-bold text-white">
                     85% Baseline Score - Usage Penalty (Stressing the Grid) + Savings Plan Reward
                   </p>
@@ -466,7 +466,7 @@ export default function CalculationOverlay({
               {/* Info Header */}
               <div className="p-5 bg-white/2 border border-white/5 rounded-xl flex items-center justify-between">
                 <div className="space-y-1">
-                  <span className="text-[9px] uppercase font-mono text-zinc-500 tracking-wider">Formula in Plain English</span>
+                  <span className="text-[9px] uppercase font-mono text-zinc-500 tracking-wider">Calculation Logic</span>
                   <p className="text-sm font-bold text-white">
                     Total Appliance Load - Solar Panel Power - Stored Battery Backup
                   </p>
