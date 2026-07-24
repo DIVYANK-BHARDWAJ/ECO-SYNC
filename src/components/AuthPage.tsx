@@ -270,11 +270,11 @@ export default function AuthPage() {
                     />
                   </div>
 
-                  {/* {mockOtpHint && (
+                  {mockOtpHint && (
                     <p className="mt-4 text-center text-xs font-mono text-amber-500/80 border border-dashed border-amber-500/30 p-2 bg-amber-500/5 rounded-lg">
                       [Dev OTP code: {mockOtpHint}]
                     </p>
-                  )} */}
+                  )}
                 </div>
 
                 <button

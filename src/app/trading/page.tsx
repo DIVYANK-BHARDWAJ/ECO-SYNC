@@ -36,6 +36,7 @@ const ECO_TOKEN_ABI = [
 
 export default function EnergyTrading() {
   const { user, loading } = useAuth();
+  const [isOfflineDemo, setIsOfflineDemo] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showSettingsDrawer, setShowSettingsDrawer] = useState(false);
   const [accumulatedKwh, setAccumulatedKwh] = useState(0);
@@ -92,6 +93,19 @@ export default function EnergyTrading() {
     }
     setIsSolarLoaded(true);
   }, []);
+ 
+  // Load offline demo setting on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const isDemoActive = localStorage.getItem("eco-sync-offline-demo") === "true";
+      if (isDemoActive) {
+        setIsOfflineDemo(true);
+        setAccount("0xDemo71C7656EC326E033E502C5F78C8D0D9E4A05");
+        const savedBal = localStorage.getItem("eco-sync-demo-balance");
+        setWalletBalance(savedBal ? parseFloat(savedBal) : 100.00);
+      }
+    }
+  }, []);
 
   const [walletBalance, setWalletBalance] = useState(0.00);
   const [marketPrice, setMarketPrice] = useState(0.18);
@@ -108,6 +122,18 @@ export default function EnergyTrading() {
 
   // Connect MetaMask Wallet
   const connectWallet = async () => {
+    if (isOfflineDemo) {
+      setIsConnecting(true);
+      setTimeout(() => {
+        setAccount("0xDemo71C7656EC326E033E502C5F78C8D0D9E4A05");
+        setIsWrongNetwork(false);
+        const savedBal = localStorage.getItem("eco-sync-demo-balance");
+        setWalletBalance(savedBal ? parseFloat(savedBal) : 100.00);
+        setIsConnecting(false);
+      }, 600);
+      return;
+    }
+
     if (typeof window !== "undefined" && (window as any).ethereum) {
       try {
         setIsConnecting(true);
@@ -171,6 +197,13 @@ export default function EnergyTrading() {
 
   // Check network and fetch real token balance
   const checkNetworkAndSync = async (address: string) => {
+    if (isOfflineDemo || address?.startsWith("0xDemo")) {
+      setIsWrongNetwork(false);
+      const savedBal = localStorage.getItem("eco-sync-demo-balance");
+      setWalletBalance(savedBal ? parseFloat(savedBal) : 100.00);
+      return;
+    }
+
     if (typeof window !== "undefined" && (window as any).ethereum) {
       const provider = new ethers.BrowserProvider((window as any).ethereum);
       const network = await provider.getNetwork();
@@ -201,6 +234,11 @@ export default function EnergyTrading() {
 
   // Auto-connect and listen to changes on mount
   useEffect(() => {
+    const isDemoActive = typeof window !== "undefined" && localStorage.getItem("eco-sync-offline-demo") === "true";
+    if (isDemoActive) {
+      return;
+    }
+
     const initWallet = async () => {
       if (typeof window !== "undefined" && (window as any).ethereum) {
         try {
@@ -547,6 +585,57 @@ export default function EnergyTrading() {
     if (!amount || amount <= 0 || amount > solarState.batteryLevel || !account) return;
     
     setIsSelling(true);
+
+    if (isOfflineDemo) {
+      setTxProgressMessage("Requesting MetaMask Signature...");
+      await new Promise(r => setTimeout(r, 1200));
+
+      setTxProgressMessage("Broadcasting trade to the Sepolia Grid...");
+      const earned = amount * marketPrice;
+
+      try {
+        const res = await fetch("/api/trading/sell", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userAddress: account,
+            amount: amount,
+            price: marketPrice,
+            signature: "demo_signature",
+            isOfflineDemo: true
+          })
+        });
+
+        const result = await res.json();
+        if (!res.ok || !result.success) {
+          throw new Error(result.error || "Simulated API transaction request failed");
+        }
+
+        setTxProgressMessage("Waiting for Block Confirmation...");
+        await new Promise(r => setTimeout(r, 1500));
+
+        // Update local balance
+        const newBal = walletBalance + earned;
+        setWalletBalance(newBal);
+        localStorage.setItem("eco-sync-demo-balance", newBal.toFixed(4));
+
+        updateSolarState({ batteryLevel: solarState.batteryLevel - amount });
+        
+        await fetchTransactionHistory();
+
+        setSellAmount("");
+        setTxProgressMessage("");
+        alert("Grid Settlement Successful! Mock ECO tokens transferred to your demo wallet.");
+      } catch (err: any) {
+        console.error("Trade transaction failed:", err);
+        alert(err.message || "Failed to finalize simulated trade.");
+      } finally {
+        setIsSelling(false);
+        setTxProgressMessage("");
+      }
+      return;
+    }
+
     setTxProgressMessage("Requesting MetaMask Signature...");
 
     try {
@@ -643,6 +732,38 @@ export default function EnergyTrading() {
             <span className="font-mono text-[10px] uppercase tracking-widest font-bold">Return to Grid</span>
           </Link>
           <div className="flex items-center gap-6">
+            {/* Offline Demo Toggle */}
+            <div className="flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-2 rounded-2xl">
+              <span className="font-mono text-[9px] uppercase tracking-wider font-bold text-white/50">Offline Demo</span>
+              <button
+                onClick={() => {
+                  const nextVal = !isOfflineDemo;
+                  setIsOfflineDemo(nextVal);
+                  localStorage.setItem("eco-sync-offline-demo", nextVal ? "true" : "false");
+                  if (nextVal) {
+                    setAccount("0xDemo71C7656EC326E033E502C5F78C8D0D9E4A05");
+                    const savedBal = localStorage.getItem("eco-sync-demo-balance");
+                    setWalletBalance(savedBal ? parseFloat(savedBal) : 100.00);
+                    setIsWrongNetwork(false);
+                  } else {
+                    localStorage.removeItem("eco-sync-demo-balance");
+                    setAccount(null);
+                    setWalletBalance(0.00);
+                    window.location.reload();
+                  }
+                }}
+                className={`relative w-9 h-5 rounded-full transition-all cursor-pointer focus:outline-none border border-white/15 ${
+                  isOfflineDemo ? "bg-amber-500/80 shadow-[0_0_12px_rgba(245,158,11,0.3)]" : "bg-zinc-800"
+                }`}
+              >
+                <div
+                  className={`absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-white transition-transform shadow ${
+                    isOfflineDemo ? "translate-x-4" : "translate-x-0"
+                  }`}
+                />
+              </button>
+            </div>
+
             <div className="flex items-center gap-4">
               <div className="w-2 h-2 rounded-full bg-accent-secondary animate-pulse" />
               <span className="font-mono text-[10px] uppercase tracking-[0.3em] font-black text-accent-secondary">Grid Connected</span>
@@ -655,8 +776,13 @@ export default function EnergyTrading() {
         </header>
 
         <div className="mb-16">
-          <h1 className="text-6xl sm:text-8xl font-black uppercase tracking-tighter leading-none mb-4">
+          <h1 className="text-6xl sm:text-8xl font-black uppercase tracking-tighter leading-none mb-4 flex flex-wrap items-center gap-4">
             Energy <span className="text-accent-secondary">Exchange</span>
+            {isOfflineDemo && (
+              <span className="text-xs font-mono font-black uppercase tracking-widest text-amber-500 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-xl animate-pulse shadow-[0_0_15px_rgba(245,158,11,0.15)] h-fit">
+                LOCAL SIMULATION ACTIVE
+              </span>
+            )}
           </h1>
           <p className="text-white/40 font-mono text-xs uppercase tracking-[0.3em] font-bold">
             Peer-to-Peer Energy Sovereignty & Real-Time Settlement

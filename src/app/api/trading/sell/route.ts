@@ -20,10 +20,52 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { userAddress, amount, price, signature } = await req.json();
+    const body = await req.json();
+    const { userAddress, amount, price, signature, isOfflineDemo } = body;
 
     if (!userAddress || !amount || !price || !signature) {
       return NextResponse.json({ error: "Missing required parameters" }, { status: 400 });
+    }
+
+    // 1A. Handle Offline Demo Mode
+    if (isOfflineDemo || signature === "demo_signature" || signature?.startsWith("demo_")) {
+      const mockTxHash = "0x" + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+      
+      try {
+        const user = await db.user.findUnique({
+          where: { email: decoded.email }
+        });
+        if (user) {
+          await db.transaction.create({
+            data: {
+              hash: mockTxHash,
+              amount: Number(amount),
+              price: Number(price),
+              total: Number(amount) * Number(price),
+              userId: user.id
+            }
+          });
+
+          const txHashDisplay = `${mockTxHash.substring(0, 10)}...`;
+          const kwh = Number(amount).toFixed(1);
+          const rate = Number(price).toFixed(2);
+          const totalEarned = (Number(amount) * Number(price)).toFixed(2);
+
+          const style = (user.messageStyle || "random") as MessageStyle;
+          const alertBody = getTradeMessage(style, kwh, rate, totalEarned, txHashDisplay);
+
+          await sendSystemNotification(user.id, alertBody);
+        }
+      } catch (dbError) {
+        console.error("[Offline Demo] Failed to save transaction or send alert:", dbError);
+      }
+
+      return NextResponse.json({ 
+        success: true, 
+        txHash: mockTxHash,
+        isOfflineDemo: true,
+        message: "Transaction successfully logged (Offline Demo Mode)."
+      });
     }
 
     // 1. Verify user signature to ensure authenticity
