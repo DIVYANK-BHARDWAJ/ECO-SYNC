@@ -174,6 +174,7 @@ export default function Home() {
     batteryLevel: 13.5,
     batteryChargeRate: 5.0,
     gridDependency: 0,
+    useSolarEnergy: false,
   });
 
   const updateSolarState = useCallback((updates: Partial<SolarBatteryState> | ((prev: SolarBatteryState) => Partial<SolarBatteryState>)) => {
@@ -458,6 +459,7 @@ export default function Home() {
       batteryLevel: 13.5,
       batteryChargeRate: 5.0,
       gridDependency: 0,
+      useSolarEnergy: false,
     });
     const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
     setDeviceHistory(h => [{ id: Date.now(), label: "System", action: "BOOT", time }, ...h]);
@@ -722,6 +724,7 @@ export default function Home() {
         batteryLevel: 13.5,
         batteryChargeRate: 5.0,
         gridDependency: 0,
+        useSolarEnergy: false,
       };
       const savedSolar = localStorage.getItem("eco-sync-solar");
       if (savedSolar) {
@@ -736,6 +739,7 @@ export default function Home() {
         solarGeneration: currentSolar.solarGeneration,
         batteryLevel: currentSolar.batteryLevel,
         batteryCapacity: currentSolar.batteryCapacity,
+        useSolarEnergy: currentSolar.useSolarEnergy,
       });
 
       let dependency = totalLoad - currentSolar.solarGeneration;
@@ -744,46 +748,52 @@ export default function Home() {
       const chargeEfficiency = 0.95;
       const dischargeEfficiency = 0.95;
       
-      if (dependency < 0) {
-         // Solar surplus — charge battery
-         const availableChargeKw = Math.min(-dependency, currentSolar.batteryChargeRate);
-         const chargeKwh = availableChargeKw * intervalHours;
-         
-         if (newLevel >= currentSolar.batteryCapacity && gridSellback && totalLoad > 0) {
-           const surplusKw = -dependency;
-           const surplusKwh = surplusKw * intervalHours;
-           
-           // Sell surplus to grid automatically
-           const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-           setDeviceHistory(h => {
-             const lastLog = h[0];
-             if (lastLog && lastLog.label === "P2P Smart Sellback") {
-               return h;
-             }
-             return [{
-               id: Date.now(),
-               label: "P2P Smart Sellback",
-               action: "SELL" as const,
-               time,
-               details: `Exported ${surplusKwh.toFixed(4)} kWh to regional grid`,
-               iconName: "Zap"
-             }, ...h].slice(0, 100);
-           });
-         } else {
-           newLevel = Math.min(currentSolar.batteryCapacity, currentSolar.batteryLevel + (chargeKwh * chargeEfficiency));
+      if (!currentSolar.useSolarEnergy) {
+         // Trade mode: do not discharge to cover device draw, keep fully charged
+         newLevel = currentSolar.batteryCapacity;
+         dependency = Math.max(0, totalLoad - currentSolar.solarGeneration);
+      } else {
+         if (dependency < 0) {
+            // Solar surplus — charge battery
+            const availableChargeKw = Math.min(-dependency, currentSolar.batteryChargeRate);
+            const chargeKwh = availableChargeKw * intervalHours;
+            
+            if (newLevel >= currentSolar.batteryCapacity && gridSellback && totalLoad > 0) {
+              const surplusKw = -dependency;
+              const surplusKwh = surplusKw * intervalHours;
+              
+              // Sell surplus to grid automatically
+              const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+              setDeviceHistory(h => {
+                const lastLog = h[0];
+                if (lastLog && lastLog.label === "P2P Smart Sellback") {
+                  return h;
+                }
+                return [{
+                  id: Date.now(),
+                  label: "P2P Smart Sellback",
+                  action: "SELL" as const,
+                  time,
+                  details: `Exported ${surplusKwh.toFixed(4)} kWh to regional grid`,
+                  iconName: "Zap"
+                }, ...h].slice(0, 100);
+              });
+            } else {
+              newLevel = Math.min(currentSolar.batteryCapacity, currentSolar.batteryLevel + (chargeKwh * chargeEfficiency));
+            }
+            dependency = 0; 
+         } else if (dependency > 0 && currentSolar.batteryLevel > 0) {
+            // discharge battery
+            const requiredFromBatteryKw = dependency / dischargeEfficiency;
+            const actualDrawKw = Math.min(requiredFromBatteryKw, currentSolar.batteryChargeRate);
+            const actualDrawKwh = actualDrawKw * intervalHours;
+            
+            const finalDrawKwh = Math.min(actualDrawKwh, currentSolar.batteryLevel);
+            const energyProvidedKw = (finalDrawKwh / intervalHours) * dischargeEfficiency;
+            
+            newLevel = currentSolar.batteryLevel - finalDrawKwh;
+            dependency = totalLoad - currentSolar.solarGeneration - energyProvidedKw;
          }
-         dependency = 0; 
-      } else if (dependency > 0 && currentSolar.batteryLevel > 0) {
-         // discharge battery
-         const requiredFromBatteryKw = dependency / dischargeEfficiency;
-         const actualDrawKw = Math.min(requiredFromBatteryKw, currentSolar.batteryChargeRate);
-         const actualDrawKwh = actualDrawKw * intervalHours;
-         
-         const finalDrawKwh = Math.min(actualDrawKwh, currentSolar.batteryLevel);
-         const energyProvidedKw = (finalDrawKwh / intervalHours) * dischargeEfficiency;
-         
-         newLevel = currentSolar.batteryLevel - finalDrawKwh;
-         dependency = totalLoad - currentSolar.solarGeneration - energyProvidedKw;
       }
       
       const updatedState = {

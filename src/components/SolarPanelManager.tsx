@@ -43,10 +43,12 @@ export default function SolarPanelManager({
   // Calculate current battery state
   const netPower = solarState.solarGeneration - totalLoad;
   const isCharging = netPower > 0 && solarState.batteryLevel < solarState.batteryCapacity;
-  const isDischarging = netPower < 0 && solarState.batteryLevel > 0;
+  const isDischarging = solarState.useSolarEnergy && netPower < 0 && solarState.batteryLevel > 0;
 
   // Determine current charging/discharging rate capped by batteryChargeRate
-  const activeRate = Math.min(Math.abs(netPower), solarState.batteryChargeRate);
+  const activeRate = (isCharging || isDischarging)
+    ? Math.min(Math.abs(netPower), solarState.batteryChargeRate)
+    : 0;
 
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseFloat(e.target.value);
@@ -165,17 +167,33 @@ export default function SolarPanelManager({
                       const dependency = totalLoad - newGen;
                       const updates: Partial<SolarBatteryState> = { solarGeneration: newGen };
 
-                      if (dependency < 0 && solarState.batteryLevel < solarState.batteryCapacity) {
-                        // Solar surplus — charge immediately
-                        const chargeKw = Math.min(-dependency, solarState.batteryChargeRate);
-                        const chargeKwh = chargeKw * intervalHours * 0.95;
-                        updates.batteryLevel = Math.min(
-                          solarState.batteryCapacity,
-                          solarState.batteryLevel + chargeKwh
-                        );
-                        updates.gridDependency = 0;
-                      } else {
+                      if (!solarState.useSolarEnergy) {
+                        // Trade mode: keep battery fully charged, no discharging
+                        updates.batteryLevel = solarState.batteryCapacity;
                         updates.gridDependency = Math.max(0, dependency);
+                      } else {
+                        if (dependency < 0 && solarState.batteryLevel < solarState.batteryCapacity) {
+                          // Solar surplus — charge immediately
+                          const chargeKw = Math.min(-dependency, solarState.batteryChargeRate);
+                          const chargeKwh = chargeKw * intervalHours * 0.95;
+                          updates.batteryLevel = Math.min(
+                            solarState.batteryCapacity,
+                            solarState.batteryLevel + chargeKwh
+                          );
+                          updates.gridDependency = 0;
+                        } else if (dependency > 0 && solarState.batteryLevel > 0) {
+                          // Solar deficit — discharge immediately
+                          const requiredFromBatteryKw = dependency / 0.95;
+                          const actualDrawKw = Math.min(requiredFromBatteryKw, solarState.batteryChargeRate);
+                          const actualDrawKwh = actualDrawKw * intervalHours;
+                          const finalDrawKwh = Math.min(actualDrawKwh, solarState.batteryLevel);
+                          const energyProvidedKw = (finalDrawKwh / intervalHours) * 0.95;
+                          
+                          updates.batteryLevel = solarState.batteryLevel - finalDrawKwh;
+                          updates.gridDependency = Math.max(0, dependency - energyProvidedKw);
+                        } else {
+                          updates.gridDependency = Math.max(0, dependency);
+                        }
                       }
 
                       onUpdateSolarState(updates);
@@ -193,6 +211,35 @@ export default function SolarPanelManager({
                 );
               })}
             </div>
+          </div>
+        </div>
+
+        {/* Use Solar Energy Toggle / Battery Discharge Control */}
+        <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col gap-3">
+          <div className="flex justify-between items-center">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[10px] text-white/80 uppercase font-black tracking-widest">Use Solar Energy</span>
+              <span className="text-[8px] text-white/30 uppercase font-mono tracking-wider font-bold">Discharge battery for local devices</span>
+            </div>
+            <button
+              onClick={() => onUpdateSolarState({ useSolarEnergy: !solarState.useSolarEnergy })}
+              className={`relative w-11 h-6 rounded-full transition-all cursor-pointer focus:outline-none border border-white/10 ${
+                solarState.useSolarEnergy 
+                  ? "bg-accent-solar/80 shadow-[0_0_12px_rgba(245,158,11,0.3)] border-accent-solar/50" 
+                  : "bg-zinc-800"
+              }`}
+            >
+              <div
+                className={`absolute top-0.5 left-0.5 w-4.5 h-4.5 rounded-full bg-white transition-transform shadow ${
+                  solarState.useSolarEnergy ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
+          <div className="text-[8px] font-mono text-white/40 leading-relaxed border-t border-white/5 pt-2">
+            {solarState.useSolarEnergy 
+              ? "⚡ BATTERY ACTIVE: Powering local devices first. Battery will discharge under load." 
+              : "💎 TRADE MODE: Battery kept fully charged (100%). Ready to sell energy on the exchange."}
           </div>
         </div>
 

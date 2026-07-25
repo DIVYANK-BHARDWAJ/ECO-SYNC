@@ -13,4 +13,5 @@ export interface SolarBatteryState {
   batteryLevel: number; // Current level in kWh
   batteryChargeRate: number; // Max charge/discharge rate in kW
   gridDependency: number; // Total load minus solar generation minus battery output
+  useSolarEnergy?: boolean; // Toggle to allow battery discharge for devices
 }

@@ -63,6 +63,7 @@ export default function EnergyTrading() {
     batteryLevel: 13.5,
     batteryChargeRate: 5.0,
     gridDependency: 0,
+    useSolarEnergy: false,
   });
 
   const updateSolarState = useCallback((updates: Partial<SolarBatteryState> | ((prev: SolarBatteryState) => Partial<SolarBatteryState>)) => {
@@ -399,6 +400,7 @@ export default function EnergyTrading() {
         batteryLevel: 13.5,
         batteryChargeRate: 5.0,
         gridDependency: 0,
+        useSolarEnergy: false,
       };
       const savedSolar = localStorage.getItem("eco-sync-solar");
       if (savedSolar) {
@@ -413,6 +415,7 @@ export default function EnergyTrading() {
         solarGeneration: currentSolar.solarGeneration,
         batteryLevel: currentSolar.batteryLevel,
         batteryCapacity: currentSolar.batteryCapacity,
+        useSolarEnergy: currentSolar.useSolarEnergy,
       });
 
       let dependency = load - currentSolar.solarGeneration;
@@ -421,22 +424,28 @@ export default function EnergyTrading() {
       const chargeEfficiency = 0.95;
       const dischargeEfficiency = 0.95;
       
-      if (dependency < 0) {
-        // charge battery
-        const availableChargeKw = Math.min(-dependency, currentSolar.batteryChargeRate);
-        const chargeKwh = availableChargeKw * intervalHours;
-        newLevel = Math.min(currentSolar.batteryCapacity, currentSolar.batteryLevel + (chargeKwh * chargeEfficiency));
-        dependency = 0;
-      } else if (dependency > 0 && currentSolar.batteryLevel > 0) {
-        // discharge battery
-        const requiredFromBatteryKw = dependency / dischargeEfficiency;
-        const actualDrawKw = Math.min(requiredFromBatteryKw, currentSolar.batteryChargeRate);
-        const actualDrawKwh = actualDrawKw * intervalHours;
-        const finalDrawKwh = Math.min(actualDrawKwh, currentSolar.batteryLevel);
-        const energyProvidedKw = (finalDrawKwh / intervalHours) * dischargeEfficiency;
-        
-        newLevel = currentSolar.batteryLevel - finalDrawKwh;
-        dependency = load - currentSolar.solarGeneration - energyProvidedKw;
+      if (!currentSolar.useSolarEnergy) {
+         // Trade mode: do not discharge to cover load, keep fully charged
+         newLevel = currentSolar.batteryCapacity;
+         dependency = Math.max(0, load - currentSolar.solarGeneration);
+      } else {
+         if (dependency < 0) {
+           // charge battery
+           const availableChargeKw = Math.min(-dependency, currentSolar.batteryChargeRate);
+           const chargeKwh = availableChargeKw * intervalHours;
+           newLevel = Math.min(currentSolar.batteryCapacity, currentSolar.batteryLevel + (chargeKwh * chargeEfficiency));
+           dependency = 0;
+         } else if (dependency > 0 && currentSolar.batteryLevel > 0) {
+           // discharge battery
+           const requiredFromBatteryKw = dependency / dischargeEfficiency;
+           const actualDrawKw = Math.min(requiredFromBatteryKw, currentSolar.batteryChargeRate);
+           const actualDrawKwh = actualDrawKw * intervalHours;
+           const finalDrawKwh = Math.min(actualDrawKwh, currentSolar.batteryLevel);
+           const energyProvidedKw = (finalDrawKwh / intervalHours) * dischargeEfficiency;
+           
+           newLevel = currentSolar.batteryLevel - finalDrawKwh;
+           dependency = load - currentSolar.solarGeneration - energyProvidedKw;
+         }
       }
 
       const updatedState = {
