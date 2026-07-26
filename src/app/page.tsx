@@ -28,6 +28,8 @@ import AuthPage from "@/components/AuthPage";
 import BotpressChatbot from "@/components/BotpressChatbot";
 import CarbonSchedulerSection from "@/components/CarbonSchedulerSection";
 import NexusTerminal from "@/components/NexusTerminal";
+import StartupTelemetryPanel from "@/components/StartupTelemetryPanel";
+
 
 const PLAN_CONFIG: Record<string, { reduction: string; multiplier: number }> = {
   "Eco-Baseline": { reduction: "15%", multiplier: 0.85 },
@@ -984,6 +986,12 @@ export default function Home() {
               currentSimulatedMinute={simulatedTime.getMinutes()}
               solarState={solarState}
             />
+
+            {/* Commercial Startup Universal Telemetry & MPC Optimization Panel */}
+            <div className="px-6 md:px-12">
+              <StartupTelemetryPanel />
+            </div>
+
 
             {/* Dedicated Real-Time Radar Section */}
             <section id="grid-radar" className="bg-[#09090b] py-32 border-t border-white/5 px-12 relative overflow-hidden">
