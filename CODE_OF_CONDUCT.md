@@ -1,38 +1,49 @@
 # Code of Conduct
 
-## Our Commitment
+## Our commitment
 
-Eco-Sync Nexus is a technical project intended to support constructive engineering collaboration. Participants are expected to communicate respectfully, assume good faith, and focus criticism on code, designs, assumptions, and behavior rather than individuals.
+Eco-Sync Nexus is built for constructive technical collaboration. We are committed to maintaining a welcoming environment where people can ask questions, challenge assumptions, review code, and learn without harassment or intimidation.
 
-## Expected Behavior
+Participants are expected to focus criticism on code, designs, documentation, assumptions, and behavior—not on personal characteristics or identity.
 
-- Provide specific, actionable review feedback.
-- Welcome questions from different experience levels.
-- Share reproducible examples and explain trade-offs.
-- Distinguish experiments from verified behavior.
-- Acknowledge mistakes and correct them.
-- Protect confidential information and credentials.
-- Prioritize secure and responsible engineering.
+## Expected behavior
 
-## Unacceptable Behavior
+- Communicate respectfully and assume good faith.
+- Give specific, actionable, and technically grounded feedback.
+- Welcome contributors across experience levels and backgrounds.
+- Explain trade-offs and distinguish measured results from hypotheses.
+- Accept corrections and acknowledge mistakes.
+- Protect confidential information, credentials, and personal data.
+- Prefer reproducible examples over speculation.
+- Prioritize secure, responsible, and accessible engineering.
+- Keep discussions relevant and avoid deliberate disruption.
 
-- Harassment, threats, intimidation, or personal attacks
-- Discriminatory or hateful conduct
-- Sexual harassment
-- Deliberate disclosure of private information
-- Publishing passwords, tokens, private keys, or other secrets
-- Malicious exploitation of vulnerabilities
-- Sustained disruption of technical discussions
-- Impersonation or fraudulent attribution
+## Unacceptable behavior
 
-## Security Incidents
-
-Do not disclose vulnerabilities publicly when doing so could expose users, infrastructure, credentials, or funds. Follow [SECURITY.md](SECURITY.md).
-
-## Enforcement
-
-Maintainers may remove comments, close discussions, reject contributions, or restrict participation when behavior violates this Code of Conduct. Actions should be proportionate to the behavior.
+- Harassment, threats, intimidation, stalking, or personal attacks
+- Discriminatory, hateful, or demeaning conduct
+- Sexual harassment or unwelcome sexualized behavior
+- Publishing private information without permission
+- Sharing passwords, tokens, private keys, or other secrets
+- Malicious exploitation of vulnerabilities or infrastructure
+- Impersonation, fraudulent attribution, or deliberate deception
+- Trolling, sustained disruption, or bad-faith participation
+- Retaliation against someone who reports a concern
 
 ## Scope
 
-This Code of Conduct applies to issues, pull requests, code reviews, documentation contributions, and project-maintained community spaces.
+This Code of Conduct applies to repository issues, pull requests, code reviews, discussions, documentation, project-maintained communication channels, and public interactions where an individual is representing Eco-Sync Nexus.
+
+## Reporting concerns
+
+Report conduct concerns privately to the project maintainer through a direct, non-public channel. Include the relevant context, links, dates, and any evidence that can be shared safely. Do not publish sensitive personal information.
+
+Security vulnerabilities must be reported according to `SECURITY.md`, not through public discussions.
+
+## Enforcement
+
+Maintainers may remove content, close discussions, reject contributions, request behavior changes, or restrict participation when conduct violates this policy. Responses should be proportionate, documented where appropriate, and applied consistently.
+
+## Good-faith participation
+
+This policy is intended to support a healthy engineering community—not to prevent respectful disagreement. Technical debate is welcome when it remains evidence-based, professional, and focused on improving the project.
