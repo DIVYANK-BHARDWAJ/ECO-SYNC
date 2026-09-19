@@ -1,8 +1,18 @@
 # Contributing to Eco-Sync Nexus
 
-Thank you for contributing to Eco-Sync Nexus. The project combines a browser-based microgrid simulator, carbon-aware scheduling, a Next.js application, Prisma/PostgreSQL persistence, notification services, and an Ethereum Sepolia settlement flow.
+Thank you for your interest in contributing to **Eco-Sync Nexus**. This project explores the intersection of smart-grid simulation, carbon-aware automation, application security, persistence, AI context, and Web3 settlement.
 
-## Development Setup
+Contributions should prioritize **correctness, reproducibility, security, accessibility, and maintainability** over unnecessary complexity.
+
+## Before you begin
+
+1. Read this file, `CODE_OF_CONDUCT.md`, and `SECURITY.md`.
+2. Search existing issues and pull requests before starting work.
+3. Open an issue for substantial architectural changes.
+4. Never expose credentials, private keys, personal data, or production telemetry.
+5. Treat simulation outputs as illustrative unless backed by a documented data source.
+
+## Development setup
 
 ```bash
 git clone https://github.com/DIVYANK-BHARDWAJ/eco-sync.git
@@ -13,46 +23,56 @@ npx prisma db push
 npm run dev
 ```
 
-Use `FORCE_OFFLINE=true` for local/demo work that should not depend on external services.
+For local demonstrations, configure `FORCE_OFFLINE=true` where supported. Use a disposable development database and a dedicated test wallet for blockchain work.
 
-## Engineering Guidelines
+## Engineering principles
 
-- Keep simulated energy/carbon values clearly separated from live telemetry.
-- Preserve authentication and user-resource ownership checks in every state-changing API.
-- Never expose private keys, API credentials, or database credentials.
-- Validate API inputs at the boundary: numbers, enums, identifiers, addresses, durations, and status transitions.
-- Treat smart-contract and relayer changes as security-sensitive.
-- Document assumptions when changing simulation math or financial/token calculations.
+- **Security first:** validate inputs and enforce authentication and ownership at every state-changing boundary.
+- **Explicit assumptions:** document simulation formulas, units, time scales, and rounding behavior.
+- **Separation of concerns:** keep UI state, simulation logic, persistence, and privileged infrastructure distinct.
+- **Observable behavior:** add useful logs, test evidence, and clear error handling.
+- **Accessible UX:** support keyboard navigation, readable contrast, semantic structure, and reduced-motion preferences where practical.
+- **No silent breaking changes:** document API, schema, environment, contract, and deployment changes.
 
-## Branches and Commits
+## Branch and commit conventions
 
-Use focused branches such as `feature/carbon-scheduler`, `fix/otp-expiration`, or `security/trading-validation`. Do not commit directly to `main`.
+Do not commit directly to `main`. Use focused branches:
 
-Prefer clear imperative commit messages:
+```text
+feature/carbon-forecast-export
+fix/otp-expiration
+security/settlement-replay-protection
+docs/setup-troubleshooting
+```
+
+Prefer concise conventional-style commits:
 
 ```text
 feat: add forecast export
 fix: enforce schedule ownership
 security: harden OTP verification
-docs: clarify Sepolia settlement flow
-test: cover transaction validation
+docs: clarify settlement flow
+test: cover schedule validation
+refactor: isolate simulation engine
 ```
 
-## Pull Requests
+## Pull request requirements
 
-Include:
+Every pull request should include:
 
-1. Problem and motivation
-2. Implementation summary
-3. Scope and affected areas
-4. Tests executed and results
-5. Security, migration, or deployment impact
+1. **Problem:** what is being solved and why?
+2. **Scope:** which files, modules, routes, schemas, or contracts changed?
+3. **Implementation:** summarize the approach and important trade-offs.
+4. **Validation:** list commands run and their results.
+5. **Security impact:** explain changes to authentication, authorization, secrets, payments, wallets, or privileged actions.
+6. **Data impact:** describe migrations, seed data, destructive behavior, or compatibility concerns.
+7. **UX evidence:** add screenshots or a recording for meaningful interface changes.
 
-For UI changes, add screenshots or a short recording. For API changes, include request/response examples. For Solidity changes, describe deployment impact and provide test evidence.
+For Solidity or relayer changes, include network, contract-address impact, authorization assumptions, and test evidence. Do not include private keys or sensitive RPC details.
 
-## Validation
+## Validation checklist
 
-Run the relevant checks before opening a pull request:
+Run the checks relevant to your change:
 
 ```bash
 npm run lint
@@ -66,27 +86,66 @@ npx tsx scripts/test-profile-update-style.ts
 node scripts/compile.js
 ```
 
-## Never Commit
+If a check cannot run, explain why in the pull request. Do not claim a test passed if it was skipped or only reviewed manually.
 
-- `.env` or `.env.local`
-- private keys or mnemonics
-- API keys and SMTP passwords
-- database credentials
-- real user data or exports
-- generated local databases containing sensitive information
+## API and data changes
 
-## Documentation
+When changing an endpoint:
 
-Update documentation when changing environment variables, API routes, Prisma models, contract behavior, simulation assumptions, external integrations, or security boundaries.
+- Validate payloads at the boundary.
+- Return predictable status codes and error shapes.
+- Enforce user ownership server-side.
+- Consider replay, duplicate, race-condition, and idempotency behavior.
+- Update the README or API documentation.
+- Add tests for valid, invalid, unauthorized, and cross-user cases.
 
-For security issues, follow [SECURITY.md](SECURITY.md) instead of opening a public issue.
+When changing Prisma models:
 
-## Contributor Checklist
+- Review indexes, uniqueness, nullability, and cascade behavior.
+- Explain migration and rollback implications.
+- Avoid exposing internal database errors to users.
 
-- [ ] No secrets or sensitive data were committed.
-- [ ] Authentication and resource ownership were preserved.
-- [ ] Simulation assumptions were documented where relevant.
-- [ ] Affected tests were executed.
-- [ ] Lint/build were run when applicable.
-- [ ] Documentation was updated for behavior changes.
-- [ ] Security and deployment impact was described.
+## Web3 changes
+
+Treat contract and relayer changes as security-sensitive:
+
+- Use Sepolia or another test environment.
+- Never commit private keys or mnemonics.
+- Verify chain ID and contract address.
+- Validate signed-message intent, signer ownership, nonce/replay behavior, and amount constraints.
+- Document privileged roles and minting authority.
+- Include contract tests or a reproducible validation procedure.
+
+## Never commit
+
+- `.env`, `.env.local`, or secret files
+- Private keys, mnemonics, seed phrases, or wallet exports
+- API keys, SMTP passwords, session secrets, or database credentials
+- Real user information or production exports
+- Unreviewed generated artifacts containing sensitive data
+- Large unrelated binaries or build output
+
+## Documentation standard
+
+Documentation should be updated whenever a change affects:
+
+- Installation or environment variables
+- API routes or payloads
+- Database models or migrations
+- Simulation formulas or units
+- Smart-contract behavior
+- Security assumptions
+- External integrations
+- Deployment or operational procedures
+
+## Contributor checklist
+
+- [ ] The change has a clear purpose and limited scope.
+- [ ] No secrets or private data were committed.
+- [ ] Authentication and ownership checks were preserved.
+- [ ] Inputs and state transitions are validated.
+- [ ] Relevant tests, lint, or build checks were run.
+- [ ] Simulation assumptions are documented.
+- [ ] Documentation was updated.
+- [ ] Security, migration, and deployment impact is described.
+- [ ] The change follows the Code of Conduct.
