@@ -1,67 +1,101 @@
 # Security Policy
 
-## Supported Versions
+## Security posture
 
-Eco-Sync Nexus is actively developed and does not currently publish a long-term support matrix. Security fixes should target the current default branch unless a maintainer explicitly identifies another supported release.
+Eco-Sync Nexus is an experimental engineering prototype involving authentication, user-owned data, email integrations, simulation logic, and a privileged blockchain relayer. It is **not currently presented as production-hardened, independently audited, or suitable for handling valuable assets**.
 
-## Reporting a Vulnerability
+Security reports are welcome and should be handled responsibly.
+
+## Supported versions
+
+The project does not currently maintain a formal long-term support matrix. Unless a maintainer states otherwise, security fixes should target the current `main` branch.
+
+## Reporting a vulnerability
 
 **Do not open a public GitHub issue for a security vulnerability.**
 
-Use GitHub Private Vulnerability Reporting if enabled for this repository, or contact the repository maintainer through a private channel. Include:
+Use GitHub Private Vulnerability Reporting if enabled for the repository, or contact the maintainer through a private channel. Please include:
 
-- affected component or file
-- vulnerability type
-- affected version or commit
-- reproduction steps or proof of concept
-- security impact
-- suggested mitigation, if known
+- Affected component, route, file, contract, or integration
+- Vulnerability category
+- Affected commit, version, or deployment
+- Clear reproduction steps or a minimal proof of concept
+- Security impact and realistic attack prerequisites
+- Suggested mitigation, if known
+- Whether the issue is exploitable in offline, local, testnet, or deployed environments
 
-Do not include production credentials or unrelated personal data.
+Remove secrets, credentials, personal data, and unrelated information from the report.
 
-## High-Priority Areas
+## High-priority security surfaces
 
-Examples include authentication bypass, OTP abuse, session-token forgery, cross-user access, injection, secret leakage, private-key exposure, unsafe smart-contract behavior, transaction authorization bypass, and practical dependency vulnerabilities.
+Reports involving the following areas should be treated as high priority:
 
-## Web3-Specific Guidance
+- Authentication bypass or OTP abuse
+- Missing OTP expiry, attempt limits, or rate limiting
+- Session-token forgery or cookie weaknesses
+- Cross-user access to schedules, notifications, profiles, or transactions
+- Injection, unsafe deserialization, or unvalidated input
+- Secret or private-key exposure
+- Unauthorized contract minting or relayer abuse
+- Signature replay, signer mismatch, chain mismatch, or amount manipulation
+- Dependency vulnerabilities with a practical attack path
+- Sensitive information leakage through logs, errors, or client bundles
 
-The Sepolia settlement flow uses a server-side relayer and an owner-controlled mint function. Treat `BLOCKCHAIN_PRIVATE_KEY`, contract ownership, deployment credentials, and privileged RPC credentials as highly sensitive.
+## Web3-specific guidance
+
+The settlement flow may use a server-side relayer and an owner-controlled mint function. Treat the following as highly sensitive:
+
+- `BLOCKCHAIN_PRIVATE_KEY`
+- Contract ownership credentials
+- RPC credentials and deployment keys
+- Contract addresses paired with privileged operational details
+- Signed payloads and authorization data
 
 If a private key is exposed:
 
-1. Stop using it.
-2. Rotate or revoke it where possible.
-3. Assume associated assets may be compromised.
+1. Stop using the key immediately.
+2. Move or revoke associated permissions where possible.
+3. Assume associated assets and contracts may be at risk.
 4. Rotate dependent credentials.
-5. Preserve only the minimum evidence required.
+5. Preserve minimal forensic evidence without spreading the secret.
+6. Report the exposure privately.
 
-## Authentication Security
+Do not test against third-party wallets, production infrastructure, or funds you do not own or have explicit permission to use.
 
-The implementation uses OTPs, server-side OTP persistence, HMAC-signed session tokens, and `HttpOnly` cookies. This is a prototype authentication layer and requires further hardening before production use.
+## Authentication and application security
 
-## Smart Contract Security
+The project uses OTP-based authentication and signed session mechanisms. Before production use, the authentication layer should receive additional controls such as:
 
-`contracts/EcoToken.sol` is not audited and includes owner-controlled mint functionality. Reports involving unauthorized minting, ownership bypass, accounting errors, allowance bugs, or authorization weaknesses should be treated as high priority.
+- Strong OTP expiry and single-use enforcement
+- Attempt limits and IP/account-level throttling
+- Abuse detection and alerting
+- Secure cookie configuration appropriate to deployment
+- CSRF protections where applicable
+- Session invalidation and secret rotation procedures
+- Structured audit logging without sensitive values
+- Schema validation and consistent authorization checks
 
-## Secret Handling
+## Smart-contract security
 
-Never commit `.env`, `.env.local`, private keys, mnemonics, passwords, SMTP credentials, API keys, or database credentials. Store secrets in environment variables or a deployment platform's secret store.
+The smart contract is not independently audited. Potential issues involving access control, owner privileges, mint limits, accounting, replay protection, chain configuration, or transaction authorization should be reported privately and treated as sensitive.
 
-## Known Hardening Areas
+A successful compilation is not evidence of contract safety.
 
-- OTP rate limiting and brute-force protection
-- explicit OTP expiry verification
-- stronger schema validation
-- comprehensive resource ownership checks
-- CSRF protections appropriate to deployment
-- API abuse/rate limiting
-- security headers
-- centralized audit logging
-- session-secret rotation
-- smart-contract testing and auditing
-- dependency scanning
-- continuous security monitoring
+## Secret handling
 
-## Responsible Disclosure
+Never commit:
 
-Give maintainers reasonable time to investigate and remediate before public disclosure. Do not use a discovered vulnerability to access, modify, or destroy unrelated data or assets.
+- `.env` or `.env.local`
+- Private keys, mnemonics, or seed phrases
+- Session secrets and API keys
+- SMTP credentials or email-provider tokens
+- Database credentials
+- Production exports or personal data
+
+Use environment variables and managed secret stores. Rotate any credential that may have been exposed.
+
+## Responsible disclosure
+
+Please allow maintainers reasonable time to investigate, reproduce, and remediate a report before public disclosure. Do not exploit a vulnerability beyond what is necessary to demonstrate impact, access unrelated data, degrade availability, or modify/destroy assets.
+
+The project may acknowledge valid reports after remediation, subject to the reporter's preference and safety considerations.
